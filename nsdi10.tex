@@ -1,0 +1,139 @@
+\documentclass{sig-alternate}
+%\documentclass[10pt]{article}
+%\clubpenalty=10000
+%\widowpenalty = 10000
+%\usepackage[margin=.9in]{geometry}
+\usepackage[tight]{subfigure}
+
+%\setlength\topmargin{0in}
+%\setlength\headheight{0in}
+%\setlength\headsep{0in}
+%\setlength\oddsidemargin{0in}
+%\setlength\evensidemargin{0in}
+%\setlength\parindent{0.25in}
+%\setlength\parskip{0in}
+
+\usepackage{url}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{epsfig}
+\usepackage{footnote}
+\widowpenalty=10000
+\clubpenalty=10000
+%\usepackage{setspace}
+%\doublespacing
+
+\begin{document}
+
+\title{On the Design and Implementation of Structured P2PVPNs}
+
+\numberofauthors{2}
+\author{
+\alignauthor
+{David Isaac Wolinsky, Kyungyong Lee, Yonggang Liu, Oscar Boykin,
+Renato Figueiredo}\\
+       \affaddr{University of Florida}\\
+       \email{\{davidiw, klee, yonggang, boykin, renato\}@acis.ufl.edu}
+\alignauthor
+{Linton Abraham}\\
+  \affaddr{Clemson University}\\
+  \email{labraha@clemson.edu}
+}
+
+\maketitle
+\begin{abstract}
+\begin{sloppypar}
+In recent years, P2P VPNs have become quite popular by allowing users to connect
+directly with each other bypassing the overhead of communicating through a third
+party proxy. These P2P VPNs still require connecting to a central server for
+authentication, NAT traversal, and proxying in the off chance NAT traversal
+fails. While this significantly improves upon classical, centralized VPNs, this
+approach now requires ether maintenance of all-to-all connections during
+run-time or the involvement of a centralized authentication entity for each live
+connection attempt.  For this solution, we propose a completely run-time
+decentralized P2P model based upon a structured P2P system.  In this paper, we
+will describe the components of this model and describe and evaluate our
+reference implementation. A decentralized P2PVPN has an intuitive and simplistic
+setup, reduces the requirements for connectivity, offers better proxy selection
+in lieu of NAT traversal, and provides an opportunity for more intuitive trust
+solutions. For evaluation, we will compare system and networking overheads of
+the different VPN technology focusing on latency, bandwidth, CPU, and memory.
+\end{sloppypar}
+\end{abstract}
+
+\section{Introduction}
+A Virtual Private Network (VPN) provides the illusion of a Local Area Network
+(LAN), namely direct communication, over a wide area network such as the
+Internet while guaranteeing secure and authenticated communication amongst
+participants.  Common uses of VPNs include accessing company or academic
+network resources while traveling abroad, playing LAN based video games over the
+Internet, connecting distributed resources from multiple sites, and securing
+your Internet traffic while in unsecure locations.
+
+In the context of this paper, the focus will be on VPNs that provide
+connectivity between individual resources and so all resources that need
+symmetric connectivity will need to be configured to the VPN.  While
+traditional VPNs enable such distributed connectivity they do so at the
+cost of maintaining a central server, which becomes the conduit for all traffic,
+becoming a performance bottleneck and potentially removing end-to-end security.
+
+To that end, there have been two directions 1) support for multiple VPN servers
+for a single VPN\cite{openvpn} and 2) the use of P2P connections for bypassing central
+communication that rely on run-time central authentication\cite{hamachi, wippien}.  In this paper, we
+present a novel approach to this problem through the use of a fully run-time
+decentralized P2PVPN (Peer-To-Peer).  P2P technology enables users to
+communicate directly with each other bypassing the need for centralization
+while providing all-to-all communication without maintaining all-to-all
+connectivity with participants.  Interesting possibilities of P2P include
+efficient wide area multicast, data distribution, storage, chat applications,
+and even IP connectivity.
+
+Current generation P2PVPNs do not provide features such as full-tunneling of
+network traffic, such as forwarding Internet traffic, nor do they have efficient
+mechanisms for multicast or broadcast.  P2PVPNs rely on direct connectivity
+and in general will not work if NAT (Network Address Translation) traversal
+between peers is unsuccessful.
+
+The problems we seek to address with our P2PVPN model include:
+\begin{itemize}
+\small {
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\item fully decentralized run-time connectivity
+\item full-tunneling for Internet traffic
+\item intelligent relay selection in lieu of unsuccessful NAT traversal
+\item efficient multicast and broadcast communication
+}
+\end{itemize}
+
+A rudimentary overview of our solutions to the above problems follows and will
+be covered in depth in the rest of this paper.  To provide fully decentralized
+run-time connectivity, we use an automated certificate authority based
+upon the use of user groups.  In the case of full-tunneling, P2PVPNs introduce
+significantly more complexity since a simple routing table swap as done in
+central VPNs no longer work, as such we investigate three different mechanisms
+for tunneling all Internet traffic to our full-tunnel endpoint(s) besides our
+P2P traffic.  When nodes cannot directly communicate, they seek to connect to
+peers that are mutually physically close to each other and use them to relay
+communication.  For efficient multicast and broadcast communication, we rely on
+the use of bootstrapping a private P2P system whose members are only
+participants of the VPN.
+
+The rest of this paper is organized as follows.  Section II gives an overview
+of current VPN technologies and the efforts to decentralized.  Section III
+introduces P2P structures and our previous work IPOP (IP over P2P).  Section IV
+describes the contributions of this paper, namely a feature-full P2PVPN.  In
+Section V, we discuss our implementation and present evaluation comparing
+centralized, P2P, and our VPN.  Finally, we give some concluding remarks in
+Section VI.
+
+\section{Virtual Private Networks}
+\section{Peer-to-Peer Systems}
+\section{Components of a P2PVPN}
+\section{Evaluating VPN Models}
+\section{Conclusions}
+
+\bibliographystyle{abbrv}
+\bibliography{nsdi10}
+\suppressfloats
+\end{document}
