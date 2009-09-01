@@ -30,7 +30,7 @@
 \numberofauthors{2}
 \author{
 \alignauthor
-{David Isaac Wolinsky, Kyungyong Lee, Yonggang Liu, Oscar Boykin,
+{David Isaac Wolinsky, Kyungyong Lee, Yonggang Liu, P. Oscar Boykin,
 Renato Figueiredo}\\
        \affaddr{University of Florida}\\
        \email{\{davidiw, klee, yonggang, boykin, renato\}@acis.ufl.edu}
@@ -77,35 +77,38 @@ traditional VPNs enable such distributed connectivity they do so at the
 cost of maintaining a central server, which becomes the conduit for all traffic,
 becoming a performance bottleneck and potentially removing end-to-end security.
 
-To that end, there have been two directions 1) support for multiple VPN servers
-for a single VPN\cite{openvpn} and 2) the use of P2P connections for bypassing central
-communication that rely on run-time central authentication\cite{hamachi, wippien}.  In this paper, we
-present a novel approach to this problem through the use of a fully run-time
-decentralized P2PVPN (Peer-To-Peer).  P2P technology enables users to
-communicate directly with each other bypassing the need for centralization
-while providing all-to-all communication without maintaining all-to-all
-connectivity with participants.  Interesting possibilities of P2P include
-efficient wide area multicast, data distribution, storage, chat applications,
-and even IP connectivity.
+To that end, there have been three directions 1) support for multiple VPN
+servers for a single VPN~\cite{openvpn}, 2) the use of P2P connections for
+bypassing central communication that rely on run-time central authentication
+\cite{hamachi, wippien}, and 3) the use of unstructured P2P networks to form
+VPNs based upon shared secrets without user authentication and limitations on
+network size~\cite{p2pvpn, n2n}.  In this paper, we present a novel approach
+to forming VPNs supporting large VPN systems with user authentication through
+the use of Structured P2P systems that have no reliance on centralized systems
+after initialization.  Structured P2P technology enables users to communicate
+directly with all users without knowing anything beyond their virtual IP
+bypassing the need for centralization while providing all-to-all communication
+without maintaining all-to-all connectivity with participants.  Interesting
+possibilities of P2P include efficient wide area multicast, data distribution,
+storage, chat applications, and even IP connectivity.
 
-Current generation P2PVPNs do not provide features such as full-tunneling of
-network traffic, such as forwarding Internet traffic, nor do they have efficient
-mechanisms for multicast or broadcast.  P2PVPNs rely on direct connectivity
-and in general will not work if NAT (Network Address Translation) traversal
-between peers is unsuccessful.
+Current generation P2PVPNs do not scale well, provide features such as
+full-tunneling of network traffic, such as forwarding Internet traffic, nor do
+they have intuitive ability for scalable multicast or broadcast.  P2PVPNs rely
+on direct connectivity and in general will not work if NAT (Network Address
+Translation) traversal between peers is unsuccessful.
 
 The problems we seek to address with our P2PVPN model include:
-\begin{itemize}
 \small {
+\begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
-\item fully decentralized run-time connectivity
-\item full-tunneling for Internet traffic
-\item intelligent relay selection in lieu of unsuccessful NAT traversal
-\item efficient multicast and broadcast communication
-}
+\item reducing the role of centralization for user authentication in a VPN
+\item supporting full-tunneling of Internet traffic in a P2P system
+\item handling relay selection in lieu of unsuccessful NAT traversal
+\item supporting multicast and broadcast communication
 \end{itemize}
-
+}
 A rudimentary overview of our solutions to the above problems follows and will
 be covered in depth in the rest of this paper.  To provide fully decentralized
 run-time connectivity, we use an automated certificate authority based
@@ -119,6 +122,18 @@ communication.  For efficient multicast and broadcast communication, we rely on
 the use of bootstrapping a private P2P system whose members are only
 participants of the VPN.
 
+Explicitly, our contributions made in this paper are:
+\small{
+\begin{itemize}
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\item automated group-based certificate authority
+\item three different approaches to configuring full-tunneling
+\item intelligent selection of relays
+\item use of a private P2P VPN system bootstrapped of a general P2P system
+\end{itemize}
+}
+
 The rest of this paper is organized as follows.  Section II gives an overview
 of current VPN technologies and the efforts to decentralized.  Section III
 introduces P2P structures and our previous work IPOP (IP over P2P).  Section IV
@@ -128,7 +143,7 @@ centralized, P2P, and our VPN.  Finally, we give some concluding remarks in
 Section VI.
 
 \section{Virtual Private Networks}
-\section{Peer-to-Peer Systems}
+\section{Structured Peer-to-Peer Systems}
 \section{Components of a P2PVPN}
 \section{Evaluating VPN Models}
 \section{Conclusions}
