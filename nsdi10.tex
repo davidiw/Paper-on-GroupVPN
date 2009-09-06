@@ -45,14 +45,14 @@ Renato Figueiredo}\\
 \begin{sloppypar}
 In recent years, P2P VPNs have become quite popular by allowing users to connect
 directly with each other bypassing the overhead of communicating through a third
-party proxy. These P2P VPNs still require connecting to a central server for
+party proxy. These P2P VPNs require connecting to a central server for
 authentication, NAT traversal, and proxying in the off chance NAT traversal
-fails. While this significantly improves upon classical, centralized VPNs, this
-approach now requires ether maintenance of all-to-all connections during
+fails. This significantly improves upon classical, centralized VPNs, though it
+adds a new complexity either maintenance of all-to-all connections during
 run-time or the involvement of a centralized authentication entity for each live
 connection attempt.  For this solution, we propose a completely run-time
 decentralized P2P model based upon a structured P2P system.  In this paper, we
-will describe the components of this model and describe and evaluate our
+will describe the components of this model as well as present and evaluate our
 reference implementation. A decentralized P2PVPN has an intuitive and simplistic
 setup, reduces the requirements for connectivity, offers better proxy selection
 in lieu of NAT traversal, and provides an opportunity for more intuitive trust
@@ -68,35 +68,39 @@ Internet while guaranteeing secure and authenticated communication amongst
 participants.  Common uses of VPNs include accessing company or academic
 network resources while traveling abroad, playing LAN based video games over the
 Internet, connecting distributed resources from multiple sites, and securing
-your Internet traffic while in unsecure locations.
+your Internet traffic while in unsecure locations.  In the context of this
+paper, we focus on VPNs that provide connectivity between individual resources
+and so all resources that need symmetric connectivity will need to be
+configured wth VPN software.
 
-In the context of this paper, the focus will be on VPNs that provide
-connectivity between individual resources and so all resources that need
-symmetric connectivity will need to be configured to the VPN.  While
-traditional VPNs enable such distributed connectivity they do so at the
+While traditional VPNs enable such distributed connectivity they do so at the
 cost of maintaining a central server, which becomes the conduit for all traffic,
 becoming a performance bottleneck and potentially removing end-to-end security.
-
-To that end, there have been three directions 1) support for multiple VPN
-servers for a single VPN~\cite{openvpn}, 2) the use of P2P connections for
-bypassing central communication that rely on run-time central authentication
-\cite{hamachi, wippien}, and 3) the use of unstructured P2P networks to form
-VPNs based upon shared secrets without user authentication and limitations on
-network size~\cite{p2pvpn, n2n}.  In this paper, we present a novel approach
-to forming VPNs supporting large VPN systems with user authentication through
-the use of Structured P2P systems that have no reliance on centralized systems
-after initialization.  Structured P2P technology enables users to communicate
-directly with all users without knowing anything beyond their virtual IP
-bypassing the need for centralization while providing all-to-all communication
-without maintaining all-to-all connectivity with participants.  Interesting
-possibilities of P2P include efficient wide area multicast, data distribution,
-storage, chat applications, and even IP connectivity.
+To alleviate this, there have been three directions 1) support for multiple VPN
+servers for a single VPN~\cite{openvpn, cloudvpn}, 2) the use of P2P
+connections for bypassing central communication that rely on run-time central
+authentication \cite{hamachi, wippien}, and 3) the use of unstructured P2P
+networks to form VPNs based upon shared secrets without user authentication and
+limitations on network size~\cite{p2pvpn, n2n, tinc}.  In this paper, we present
+a novel approach to forming secure, scalable, efficient, and self-configuring VPNs
+through the the use of Structured P2P systems that has no reliance on
+centralized systems after initialization.  Structured P2P technology enables
+users to communicate directly with all users without knowing anything beyond
+their virtual IP bypassing the need for centralization while providing
+all-to-all communication without maintaining all-to-all connectivity with
+participants.  Interesting applications of P2P include efficient wide area
+multicast, data distribution, storage, chat applications, and even IP
+connectivity.
 
 Current generation P2PVPNs do not scale well, provide features such as
 full-tunneling of network traffic, such as forwarding Internet traffic, nor do
 they have intuitive ability for scalable multicast or broadcast.  P2PVPNs rely
 on direct connectivity and in general will not work if NAT (Network Address
-Translation) traversal between peers is unsuccessful.
+Translation) traversal between peers is unsuccessful.  Unstructured P2P based
+VPNs have similar issues, though have the ability to reuse the unstructured
+overlay to relay packets though typically relying on all-to-all connectivity
+in the system.  Furthermore, unstructured P2P systems currently lack the ability
+to police participants in the system.
 
 The problems we seek to address with our P2PVPN model include:
 \small {
@@ -104,6 +108,7 @@ The problems we seek to address with our P2PVPN model include:
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \item reducing the role of centralization for user authentication in a VPN
+\item managing participants in a live system
 \item supporting full-tunneling of Internet traffic in a P2P system
 \item handling relay selection in lieu of unsuccessful NAT traversal
 \item supporting multicast and broadcast communication
@@ -111,7 +116,7 @@ The problems we seek to address with our P2PVPN model include:
 }
 A rudimentary overview of our solutions to the above problems follows and will
 be covered in depth in the rest of this paper.  To provide fully decentralized
-run-time connectivity, we use an automated certificate authority based
+run-time connectivity and policing, we use an automated certificate authority based
 upon the use of user groups.  In the case of full-tunneling, P2PVPNs introduce
 significantly more complexity since a simple routing table swap as done in
 central VPNs no longer work, as such we investigate three different mechanisms
@@ -143,8 +148,167 @@ centralized, P2P, and our VPN.  Finally, we give some concluding remarks in
 Section VI.
 
 \section{Virtual Private Networks}
+There exist many different flavors of virtual networking, this paper focuses on
+those that are used to create or extend a virtual layer 3 network.  A few
+examples of such technologies include Cisco's Systems VPN and AnyConnect VPN
+Client~\cite{cisco} as well as OpenVPN~\cite{openvpn}.  In this section, we
+begin by going in depth on client configuration of VPNs, overview concepts of
+server roles in centralized VPNs,  and then roles of participants in P2P VPNs.
+Finally we conclude the section by presenting a table~\ref{tab:vpns} which
+compares qualitatively the features of VPNs that fit in these categories.
+
+\subsection{Client VPN Configuration}
+In figure~\ref{fig:vpn}, we abstract the common features of all VPNs with focus
+on the client.  The key components of the client are 1) client software that
+communicates with the VPN overlay directly and 2) a virtual network device.
+During initialization VPN software begins by authenticating with some overlay
+agent, optionally it then queries the agent for information about the network
+such as the network address space, and then starts the virtual network device.
+
+There are many different mechanisms for communicating with the overlay agent.
+For quick setup, a system may provide a shared secret password or key that is
+common for the entire network.  A more user-friendly and manageable approach
+re-uses the shared secret mechanism and then adds user accounts and passwords,
+thus blocking unauthorized users from the VPN, while still making it somewhat
+difficult for brute force attacks to work, so long as the key remains private.
+For the strongest level of security, each client can be configured to have a
+signed-certificate that makes brute force attacks all but impossible.  The
+tradeoffs come in terms of usability.  While the use of uniquely
+sign-certificates may be the most secure, it can be quite difficult for novice
+computer users.  A good balance found in many environments is the mixture of
+a shared secret and user account, where the shared secret is included with
+the installatoin of the VPN application where the application is distributed
+from a secured site.
+
+Once the user has connected with the overlay, the virtual networking device
+needs to be configured enabling the user's machine to communicate with other
+participants in the VPN.  This configuration varies by VPN, commonly though,
+this information contains the network address space, an allocation of an
+address for the user's machine, and potentially a remote peer for
+full-tunneling.
+
+In order to communicate over the VPN transparently, there must exist a network
+device driver that allows common network APIs such as Berkeley Sockets and
+hence existing application to work without modification.  There are many
+different types of virtual networking devices, though due to our focus
+on an open platform, we focus on TAP~\cite{tap}. TAP allows the creation of one
+or more Virtual Ethernet and / or IP devices and is available for almost all
+modern operating systems including Windows, Linux, Mac OS/X, BSD, and Solaris.
+A TAP device exists as a file descriptor providing read and write operations. 
+Incoming packets from the virtual network are written to the TAP device and the
+networking stack in the OS delivers the packet to the appropriate socket. 
+Packets that are read from a TAP device are those that are sent by sockets to
+the virtual network.
+
+The virtual network device is either configured using static addressing or
+dynamically through dynamic host configuration process (DHCP)
+\cite{dhcp0, dhcp1}.  This causes a new routing rule that causes all packets
+sent to the virtual network address space to be sent to the virtual network
+device.  When a packet is read from the TAP device, it can then be sent to
+the overlay via the client application.  The overlay will deliver the packet
+to another end point, which can be a client or a server enabled with virtual
+networking stack.  When receiving a packet, it will be written to the TAP
+device.  In most cases, the IP layer header will remain unchanged while
+configuration will determine how the Ethernet header will be handled.
+
+The described configuration so far, creates what is known as a split tunnel,
+or virtual network connection that only has passes traffic directly related
+to the virtual network and not Internet traffic.  Another form of tunneling
+exists called full tunneling.  Full tunneling allows a VPN client to securely
+forward all their Internet traffic through a VPN router.  This enables a user
+to ensure all their Internet communication originates from a secure and trusted
+location and provides some level of security when a user is an insecure and
+potentially hostile environment, such as an open wireless network at coffee shop.
+
+Most centralized VPNs implement full-tunneling by doing a routing rule swap,
+where the default gateway becomes an end-point in the VPNs subnet and traffic
+for the VPN server is routed to the local network gateway.  For example, on a
+typical home network, all traffic for the VPN server is sent via to the networks
+router and then via the Internet to the VPN server.  All other traffic is sent
+to the virtual network device, then sent securely to the VPN server.  In a P2P
+system, there becomes two new considerations 1) P2P traffic must not be routed
+to the VPN gateway and 2) there may be more than one VPN gateway.  Allowing
+more than one VPN gateway per VPN allows distribution of the cost of maintaining
+a full-tunnel who will have 3 additional messages for each incoming packet.
+We discuss and provide solutions to this problem in \ref{fulltunnel}.
+
+\subsection{Centralized VPN Servers}
+
+\subsection{Centralized P2P VPN Systems}
+
+\subsection{P2PVPN Client / Server Roles}
+Unlike centralized systems, pure P2P systems have no concept of dedicated
+servers, not to say that a user cannot start an instance of the P2P VPN software
+purely for enhancing or enabling connecctivity.  In these systems, all
+participants are members of a collective known as an overlay.  Current generation
+P2P, decentralized VPNs use a P2P unstructured network, where there are no
+guarantees about distance and routability between peers.  As a result
+participants tend to be connected to a random distribution of peers in the
+overlay.  Finding a peer requires either global knowledge of the pool or at
+worst case broadcasting a lookup message to the entire overlay.  While
+unstructured P2P systems have some scalability concerns, P2P systems in general
+allow for server-less systems.  In the realm of VPNs, all client VPNs are also
+servers with varying different responsibilities depending on the VPN
+application, as we present in table~\ref{vpns}.
+
+Typically, decentralized, P2P VPNs begin by attempting to connect to well known
+end points running the P2P overlay, a list of such end points is distributed
+with the application or some other out-of-band mechanism.  In the case of
+P2PVPN, this involves communication with one or more BitTorrent trackers to
+find other members of the P2PVPN group.  N2N requires knowledge of any
+existing peer in the system.  It uses this endpoint to bootstrap more
+connections to other peers in the system, allowing the application to be an
+active participant in the overlay and potentially be a bootstrap connection for
+other peers attempting to connect.
+
+\small{
+\begin{table*}[ht]
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\centering
+%\begin{tabular}[c]{|p{1.1cm}||p{3.475cm}|p{3.475cm}|p{3.475cm}|p{3.475cm}|} \hline
+\begin{tabular}[c]{|p{1.5cm}||p{2.7cm}|p{2.7cm}|p{2.7cm}|p{2.7cm}|p{2.7cm}|p{2.7cm}|} \hline
+& VPN Type & Authentication Method & Peer Discovery & NAT Traversal & Availability \\ \hline
+
+OpenVPN & Centralized with multiple servers & Certificates or passwords with a central server &
+Stored at central server(s) & Relay through server(s) & Open Source\\ \hline
+
+CloudVPN & Centralized with multiple servers & CA-signed Certificates & Broadcast &
+Relay through server(s) & Open Source\\ \hline
+
+Hamachi & Centralized P2P & Password at central server & Stored at central server &
+NAT traversal and relay through central server & personal use only, no private servers \\ \hline
+
+GBridge & Centralized P2P & Password at central server & Stored locally & NAT traversal and
+relay through central server & free to use, close source, no private relays, Windows only \\ \hline
+
+Wippien & Centralized P2P & Password at central server & Stored locally & NAT traversal,
+no relay support & Mixed Open / Closed source\\ \hline
+
+N2N & Unstructured P2P & Shared secret & Broadcast look up & NAT traversal and support of relay through
+overlay & Open Source \\ \hline
+
+P2PVPN & Unstructured P2P & Shared secret & Everyone knows about everyone else & No NAT traversal,
+support of relay through overlay & Open Source \\ \hline
+
+tinc & Unstructured P2P & CA Certificates / Private key & Everyone knows about
+everybody  & No NAT traversal, support of relay through overlay & Open Source\\ \hline
+
+IPOP & Structured P2P & CA Certificates or pre-exchanged keys &
+DHT lookup & NAT traversal and relay through physically close peers &
+Open Source\\ \hline
+
+\end{tabular}
+\caption{VPN Comparison}
+\end{table*}
+}
+
 \section{Structured Peer-to-Peer Systems}
 \section{Components of a P2PVPN}
+\label{p2pvpn}
+\subsection{Full-Tunneling over P2P}
+\label{fulltunnel}
+
 \section{Evaluating VPN Models}
 \section{Conclusions}
 
