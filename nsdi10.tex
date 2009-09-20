@@ -479,6 +479,89 @@ possible, this framework provides the basis for our design and implementation
 of our P2P VPN.
 
 \subsection{Security through Groups}
+A group infrastructruce with one or more group administrators, who verify the
+incoming members and ensuring proper behavior of current methods removing those
+that misbehave, can easily be adapted into a certificate authority model.  We
+take this model and use it to support intuitive management of VPN members.  
+The process for follows:
+\small {
+\begin{enumerate}
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\item in a groups environment, a new group is created
+\item when a user requests to join, they give relevant information for the group
+and agree to some terms of service
+\item this triggers an e-mail to be sent to the administrators for the group,
+which at a minimum will be the groups creator
+\item the administrator can either deny or accept the users access
+\item assuming access is provided, the user can then go and download configuration
+information
+\item this configuration contains the users personal information and a secret
+key
+\item the user provides the configuration information to the VPN and starts
+the service
+\item on first boot, the VPN connects with the group web server providing a
+certificate request containing his node id and his secret key, the server
+verifies the authenticity of the user through the secret and signs the
+certificate
+\item the VPN client connects to the overlay and can now communicate with other members
+in the group
+\end{enumerate}
+}
+
+The two key ambitions to using groups stem from providing a decentralized
+authentication mechanism and to reduce entry barriers into using VPNs.
+Through the use of certificate authority signed certificates, users can verify
+that they are members of the group by verifying the signature on the exchanged
+certificate.  This removes the need for users to authenticate through a
+centralized server and removes the security weakness created by using only user
+name and passwords.  Providing the user a secret key in a binary blob used to
+obtain a signed certificate significantly reduces the entry barrier into using
+a VPN.  The key to this system is ensuring that the binary blob is only
+exchanged over secure mediums, such as HTTPS, which can  be done with no user
+intervention.
+
+The other key aspect of such an environment is efficiently dealing with
+misbehaving users.  Centralized and Centralized P2P VPNs can do this by
+terminating the link between two users.  Such an approach is impossible in
+a decentralized system where the group administrator as well as the group
+site would never be anything more than another member in the P2P overlay.
+To deal with this problem, we use the following mechanisms:
+
+\small {
+\begin{enumerate}
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\item use a certificate revocation list (CRL) hosted on the web group website
+\item sign a revocation and place it into the dht, peers can verify they are
+communicating with trusted peers as often as they like
+\item broadcast to the entire P2P system the revocation of the peer
+\end{enumerate}
+}
+
+The strength of the CRL is that it can be done out of band and thus users of
+the overlay may not necessarily be able to prevent a user from updating to the
+most recent CRL.  Furthermore, if a client is unable to retrieve the latest
+CRL, it will be clear that there is a connectivity issue with the CRL server
+and it can act appropriately, depending on the security requirements.  The
+downside is that the CRL is centralized and it can be prohibitively expensive
+for peers to verify certificates on a regular, short periods.
+
+The use of a DHT provides a mechanism that allows peers to regularly verify
+peers prior to and during connections.  DHTs can also be used to implement
+event notification, so that the CA can retrieve a list of peers who would like
+to be notified if a peer has had his ceritficate revoked.  The problem with a
+DHT is that they can be easily compromised if they have not been implemented
+with significant measures to protect against maliciousness.
+
+Finally, the most rudimentary mechanism is broadcasting the certificate
+revocation  over the entire P2P
+overlay.  In small networks, the cost of such a broadcast may be negligible,
+but as a network grows, such a broadcast may become prohibitively expensive.
+A broadcast can be harder to block through malicious behavior as a malicious
+node would need to have significant collusion in order to completely interrupt
+the broadcast.  Furthermore, the broadcast acts similarly to the DHT event
+notification, as such, peers find out on a push like mechanism.  
 
 \subsection{Full-Tunneling over P2P}
 \label{fulltunnel}
@@ -521,7 +604,7 @@ We present our test environment, experiment, and results in~\ref{relay_eval}.
 
 \subsection{Bootstrapping Private Overlays}
 There have been many papers that discuss handling of distributed security via
-purely decentralized mechanism.  While the work is quite usefu, we have also
+purely decentralized mechanism.  While the work is quite useful, we have also
 heard many users state they do not trust sending their data over an insecure,
 untrusted overlay system.  Decentralized security provides only probablistic
 security and has no hard guarantees that only trusted individuals will be
@@ -539,18 +622,35 @@ Beyond security, the attractive features of a private ring for VN include:
 \item simplified multicast, broadcast routing
 \item another mechanism for selecting relays
 \item smaller overlays for faster overlay routing
-\item a sybil-resistant free P2P system
+\item a sybil-resistant P2P system
 \end{itemize}
 }
 
-A sybil-resistant system is made available through the use of the P2P
-group architecture, whereby malicious peers may be able to misbehave for a
-short period of time.  They wil be quickly detected, and through the use of
-certificate revocation, removed from the overlay.
+A key feature, which is unexplored in this paper, is that multicast and
+broadcast routing becomes much easier as all peers in the system would want
+to receive such packets.  Where as in a general P2P overlay, mechanisms such as
+scribe~\cite{scribe} are necessary to provide multiicast and broadcast
+capabilities.
+
+Members of the VPN are the only members of the overlay, providing a powerful
+feature that the entire P2P overlay can be secured through groups.  This
+prevents malicious users outside of the VPN from attacking it and more easily
+enabled the removal of misbehaving peers, primarily rooted in the fact that
+the use of a broadcast to signal a certificate revocation is now important to
+the entire overlay.
 
 \subsection{Discovering Faults}
 
-\section{Evaluating VPN Models}
+\section{Evaluation of VPN Models}
+For the purpose of quantitatively evaluation, we have added the features of
+the proposed design parameters described in Section~\ref{p2pvpn} to IPOP
+\cite{sc09} and Brunet~\cite{brunet} and compare that to what would have been
+achievable through using a more familiar P2P overlay, namely, Chord~\cite{chord}.
+Afterwards, we exam the effects of the different relay selection mechanisms.
+Finally, we evaluate the system overheads of OpenVPN, Hamachi, and our P2P VPN
+determine the OS resource costs and the cost of each in a distributed environment.
+
+\subsection{Comparing P2P Overlays}
 \subsection{Comparing Relay Selection}
 \label{relay_eval}
 \subsection{Comparing System Overheads}
