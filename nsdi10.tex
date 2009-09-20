@@ -98,7 +98,7 @@ in the system.  Furthermore, unstructured P2P systems currently lack the ability
 to police participants in the system.
 
 The problems we seek to address with our P2PVPN model include:
-\small {
+%\small {
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -109,7 +109,7 @@ The problems we seek to address with our P2PVPN model include:
 \item supporting multicast and broadcast communication
 \item debugging a P2P overlay
 \end{itemize}
-}
+%}
 A rudimentary overview of our solutions to the above problems follows and will
 be covered in depth in the rest of this paper.  To provide fully decentralized
 run-time connectivity and policing, we use an automated certificate authority based
@@ -124,7 +124,7 @@ the use of bootstrapping a private P2P system whose members are only
 participants of the VPN.
 
 Explicitly, our contributions made in this paper are:
-\small{
+%\small{
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -134,7 +134,7 @@ Explicitly, our contributions made in this paper are:
 \item use of a private P2P VPN system bootstrapped of a general P2P system
 \item discussion of our techniques used for discovering bugs in our system
 \end{itemize}
-}
+%}
 
 The rest of this paper is organized as follows.  Section II gives an overview
 of current VPN technologies and the efforts to decentralized.  Section III
@@ -236,7 +236,7 @@ different centralized VPN implementations, it is our opinion that OpenVPN
 represents the typical features of a centralized VPn and then some.  The
 key aspects of a centralized VPN server are:
 
-\small {
+%\small {
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -245,7 +245,7 @@ key aspects of a centralized VPN server are:
 \item providing a NAT to the servers local resources and Internet
 \item inter-server communication
 \end{itemize}
-}
+%}
 
 How do I login?  Central VPNs server operate at well-known end-points as in
 a universal resource identifier (URI) consisting of a hostname or IP address and
@@ -263,7 +263,7 @@ via shared secrets, password, or a CA-signed certificate.
 Not all OpenVPN servers allow inter-client communication, though the
 configuration to enable is quite simple.  When two clients communicate, the
 process involves:
-\small {
+%\small {
 \begin{enumerate}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -280,7 +280,7 @@ packet
 \item the OS writes the packet to the packet socket descriptor and the application
 receives a packet
 \end{enumerate}
-}
+%}
 All packets flow through the central server.  As can be seen from the above example,
 OpenVPN does not by default prevent a server from eavesdropping on client-to-client
 communication.  While it is possible, through a shared secret key, that requires
@@ -341,7 +341,7 @@ bootstrap more connections to other peers in the system, allowing the
 application to be an active participant in the overlay and potentially be a
 bootstrap connection for other peers attempting to connect.
 
-\small{
+%\small{
 \begin{table*}[ht]
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -381,7 +381,7 @@ Open Source\\ \hline
 \end{tabular}
 \caption{VPN Comparison}
 \end{table*}
-}
+%}
 
 \section{Structured Peer-to-Peer Systems}
 \label{structured_p2p}
@@ -392,7 +392,7 @@ most either know all the state in the system or make random walks
 in~\cite{pastry, chord, symphony, kademlia, can}.  In general structured
 systems, are able to make these guarantees by self-organization, whereby a node
 entering the system follows some form of these abstracted steps:
-\small {
+%\small {
 \begin{enumerate}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -405,7 +405,7 @@ to the one immediately smaller and larger than itself (neighbors)
 \item connect other nodes in the ring that are further in away in the address
 space (shortcuts)
 \end{enumerate}
-}
+%}
 
 The node id must be unique to each peer, otherwise there will be an address
 collision and the two peers will fight for the same neighbors.  Furthermore,
@@ -449,7 +449,7 @@ traversing a P2P structure possible.
 Our previous research involves implementing a P2P system similar to Symphony
 ~\cite{symphony}.  The specific components of the system that make it interesting
 for use in a P2P VPN system include:
-\small {
+%\small {
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -458,11 +458,11 @@ cannot directly connect~\cite{hpdc08_0}
 \item selection of shortcuts using information based upon proximity~\cite{hpdc08_0}
 \item a distributed data store based upon a distributed hash table~\cite{pcgrid07}
 \end{itemize}
-}
+%}
 
 Furthermore, in previous works, we have discussed and implemented a virtual
 networking technique with the following features:
-\small {
+%\small {
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -472,7 +472,7 @@ networking technique with the following features:
 \item ability to behave as a VN interface or router~\cite{sc09}
 \item used in grid computing for over 3 years~\cite{archer,vtdc,pcgrid08,gridappliance} 
 \end{itemize}
-}
+%}
 
 Though throughout the following sections we will attempt to be as abstract as
 possible, this framework provides the basis for our design and implementation 
@@ -484,7 +484,7 @@ incoming members and ensuring proper behavior of current methods removing those
 that misbehave, can easily be adapted into a certificate authority model.  We
 take this model and use it to support intuitive management of VPN members.  
 The process for follows:
-\small {
+%\small {
 \begin{enumerate}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -507,7 +507,7 @@ certificate
 \item the VPN client connects to the overlay and can now communicate with other members
 in the group
 \end{enumerate}
-}
+%}
 
 The two key ambitions to using groups stem from providing a decentralized
 authentication mechanism and to reduce entry barriers into using VPNs.
@@ -528,7 +528,7 @@ a decentralized system where the group administrator as well as the group
 site would never be anything more than another member in the P2P overlay.
 To deal with this problem, we use the following mechanisms:
 
-\small {
+%\small {
 \begin{enumerate}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -537,7 +537,7 @@ To deal with this problem, we use the following mechanisms:
 communicating with trusted peers as often as they like
 \item broadcast to the entire P2P system the revocation of the peer
 \end{enumerate}
-}
+%}
 
 The strength of the CRL is that it can be done out of band and thus users of
 the overlay may not necessarily be able to prevent a user from updating to the
@@ -615,7 +615,7 @@ VPN allowed access.  The use of a public overlay to bootstrap application specif
 overlay has been discussed in~\cite{one_ring}.
 
 Beyond security, the attractive features of a private ring for VN include:
-\small {
+%\small {
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -624,7 +624,7 @@ Beyond security, the attractive features of a private ring for VN include:
 \item smaller overlays for faster overlay routing
 \item a sybil-resistant P2P system
 \end{itemize}
-}
+%}
 
 A key feature, which is unexplored in this paper, is that multicast and
 broadcast routing becomes much easier as all peers in the system would want
