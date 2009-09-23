@@ -1,17 +1,7 @@
-\documentclass{sig-alternate}
-%\documentclass[10pt]{article}
-%\clubpenalty=10000
-%\widowpenalty = 10000
-%\usepackage[margin=.9in]{geometry}
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix}
+\usepackage{endnotes}
 \usepackage[tight]{subfigure}
-
-%\setlength\topmargin{0in}
-%\setlength\headheight{0in}
-%\setlength\headsep{0in}
-%\setlength\oddsidemargin{0in}
-%\setlength\evensidemargin{0in}
-%\setlength\parindent{0.25in}
-%\setlength\parskip{0in}
 
 \usepackage{url}
 \usepackage{multirow}
@@ -20,24 +10,23 @@
 \usepackage{footnote}
 \widowpenalty=10000
 \clubpenalty=10000
-%\usepackage{setspace}
-%\doublespacing
 
 \begin{document}
 
-\title{On the Design and Implementation of Structured P2PVPNs}
+\title{\Large \bf On the Design and Implementation of Structured P2PVPNs}
 
-\numberofauthors{1}
 \author{
-\alignauthor
 {David Isaac Wolinsky*, Linton Abraham\#, Kyungyong Lee*, Yonggang Liu*, \\
 Jiangyan Xu*, P. Oscar Boykin*, Renato Figueiredo*}\\
-       \affaddr{*University of Florida, \#Clemson University}\\
+{*University of Florida, \#Clemson University}\\
 }
 
 \maketitle
-\begin{abstract}
-\begin{sloppypar}
+
+%\thispagestyle{empty}
+
+\subsection*{Abstract}
+%\begin{sloppypar}
 In recent years, there have been a multitude of P2P VPNs they generally fall
 into two categories: 1) P2P communication but centralized session management and
 2) use of unstructured P2P systems.  These tend to reduce the overhead in
@@ -52,8 +41,7 @@ setup, reduces the requirements for connectivity, offers better proxy selection
 in lieu of NAT traversal, and provides an opportunity for more intuitive trust
 solutions. For evaluation, we will compare system and networking overheads of
 the different VPN technology focusing on latency, bandwidth, CPU, and memory.
-\end{sloppypar}
-\end{abstract}
+%\end{sloppypar}
 
 \section{Introduction}
 A Virtual Private Network (VPN) provides the illusion of a Local Area Network
@@ -172,7 +160,7 @@ type and presenting some qualitative overview.
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
-\begin{tabular}[c]{|m{2cm}|m{6cm}|} \hline
+\begin{tabular}[c]{|m{2cm}|m{4.5cm}|} \hline
 Type & Description \\ \hline
 Centralized & Clients communicate through one or more servers which are statically
 configured \\ \hline
@@ -386,7 +374,7 @@ bootstrap connection for other peers attempting to connect.
 \setlength{\parskip}{0pt}
 \centering
 %\begin{tabular}[c]{|p{1.1cm}||p{3.475cm}|p{3.475cm}|p{3.475cm}|p{3.475cm}|} \hline
-\begin{tabular}[c]{|m{1.5cm}||m{2.7cm}|m{2.7cm}|m{2.7cm}|m{2.7cm}|m{2.7cm}|m{2.7cm}|} \hline
+\begin{tabular}[c]{|m{1.5cm}||m{2.4cm}|m{2.5cm}|m{2.4cm}|m{2.4cm}|m{2.6cm}|m{2.4cm}|} \hline
 & VPN Type & Authentication Method & Peer Discovery & NAT Traversal & Availability \\ \hline
 
 OpenVPN & Centralized & Certificates or passwords with a central server &
