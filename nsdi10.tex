@@ -8,6 +8,7 @@
 \usepackage{array}
 \usepackage{epsfig}
 \usepackage{footnote}
+\usepackage{amsmath}
 \widowpenalty=10000
 \clubpenalty=10000
 
@@ -16,9 +17,18 @@
 \title{\Large \bf On the Design and Implementation of Structured P2PVPNs}
 
 \author{
-{David Isaac Wolinsky*, Linton Abraham\#, Kyungyong Lee*, Yonggang Liu*, \\
-Jiangyan Xu*, P. Oscar Boykin*, Renato Figueiredo*}\\
-{*University of Florida, \#Clemson University}\\
+David Isaac Wolinsky$^{\ast}$,
+Linton Abraham$^{\bullet}$,
+Kyungyong Lee$^{\ast}$,
+Yonggang Liu$^{\ast}$,
+\\
+Jiangyan Xu$^{\ast}$,
+P. Oscar Boykin$^{\ast}$,
+Renato Figueiredo$^{\ast}$
+\\
+$^{\ast}$University of Florida, 
+$^{\bullet}$Clemson University
+\\
 }
 
 \maketitle
@@ -172,7 +182,7 @@ other, i.e., P2P links \\ \hline
 Unstructured P2P & No distinction between clients and servers, members either know
 the entire network or use broadcast to discover routes between each other \\ \hline
 Structured P2P & No distinction between clients and servers, members are usually
-within O(log N) hops of each other via a greedy routing algorithm \\ \hline
+within $O(\log N)$ hops of each other via a greedy routing algorithm \\ \hline
 \end{tabular}
 \caption{VPN Classifications}
 \end{table}
@@ -413,9 +423,9 @@ Open Source\\ \hline
 \section{Structured Peer-to-Peer Systems}
 \label{structured_p2p}
 Structured P2P systems provide distributed look up services with guaranteed
-search time in O(Log N) to O(Log2 N) time unlike unstructured systems that
+search time in $O(\log N)$ to $O(\log_2 N)$ time unlike unstructured systems that
 most either know all the state in the system or make random walks
-\cite{unstructured}.  Some examples of structured systems can be found
+\cite{unstructured_v_structured}.  Some examples of structured systems can be found
 in~\cite{pastry, chord, symphony, kademlia, can}.  In general structured
 systems, are able to make these guarantees by self-organization, whereby a node
 entering the system follows some form of these abstracted steps:
@@ -685,7 +695,9 @@ determine the OS resource costs and the cost of each in a distributed environmen
 \section{Conclusions}
 
 \bibliographystyle{abbrv}
+\small {
 \bibliography{nsdi10}
 \suppressfloats
+}
 
 \end{document}
