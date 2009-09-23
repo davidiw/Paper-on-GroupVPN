@@ -38,17 +38,16 @@ Jiangyan Xu*, P. Oscar Boykin*, Renato Figueiredo*}\\
 \maketitle
 \begin{abstract}
 \begin{sloppypar}
-In recent years, P2P VPNs have become quite popular by allowing users to connect
-directly with each other bypassing the overhead of communicating through a third
-party proxy. These P2P VPNs require connecting to a central server for
-authentication, NAT traversal, and proxying in the off chance NAT traversal
-fails. This significantly improves upon classical, centralized VPNs, though it
-adds a new complexity either maintenance of all-to-all connections during
-run-time or the involvement of a centralized authentication entity for each live
-connection attempt.  For this solution, we propose a completely run-time
-decentralized P2P model based upon a structured P2P system.  In this paper, we
+In recent years, there have been a multitude of P2P VPNs they generally fall
+into two categories: 1) P2P communication but centralized session management and
+2) use of unstructured P2P systems.  These tend to reduce the overhead in
+creating a VPN and allow users to connect directly bypassing the overhead of
+communicating through a third party proxy.  This significantly improves upon
+classical, centralized VPNs, though it adds a new complexity as the approaches
+have varying scalability constraints.  To address this, we propose a run-time
+decentralized P2P model using a structured P2P system.  In this paper, we
 will describe the components of this model as well as present and evaluate our
-reference implementation. A decentralized P2PVPN has an intuitive and simplistic
+reference implementation. Our approach provides an intuitive and simplistic
 setup, reduces the requirements for connectivity, offers better proxy selection
 in lieu of NAT traversal, and provides an opportunity for more intuitive trust
 solutions. For evaluation, we will compare system and networking overheads of
@@ -66,11 +65,17 @@ Internet, connecting distributed resources from multiple sites, and securing
 your Internet traffic while in unsecure locations.  In the context of this
 paper, we focus on VPNs that provide connectivity between individual resources
 and so all resources that need symmetric connectivity will need to be
-configured wth VPN software.
+configured with VPN software.  Our work is significantly different than others
+which define VPNs `` as the 'emulation of a private Widea Area Network (WAN)
+facility using IP facilities' (including the public Internet or private IP
+backbones).''~\cite{ip_vpns}.  Those VPNs tend to be clustered where a single
+site may have a few virtual routers and many nodes on a subnet unique to the
+rest of the VN, these virtual routers  are connected to other environments
+similarly configured systems.
 
-While traditional VPNs enable such distributed connectivity they do so at the
-cost of maintaining a central server, which becomes the conduit for all traffic,
-becoming a performance bottleneck and potentially removing end-to-end security.
+Centralized VPNs enable distributed connectivity but at the cost of maintaining
+a central server, which becomes the conduit for all traffic, becoming a
+performance bottleneck and can make end-to-end security complicated.
 To alleviate this, there have been three directions 1) support for multiple VPN
 servers for a single VPN~\cite{openvpn, cloudvpn}, 2) the use of P2P
 connections for bypassing central communication that rely on run-time central
@@ -93,9 +98,10 @@ they have intuitive ability for scalable multicast or broadcast.  P2PVPNs rely
 on direct connectivity and in general will not work if NAT (Network Address
 Translation) traversal between peers is unsuccessful.  Unstructured P2P based
 VPNs have similar issues, though have the ability to reuse the unstructured
-overlay to relay packets though typically relying on all-to-all connectivity
-in the system.  Furthermore, unstructured P2P systems currently lack the ability
-to police participants in the system.
+overlay to relay packets though with scalability constraints as this requires
+complete knowledge of the system, all-to-all connectivity, or use of broadcast
+messages to find a destination.  Furthermore, current unstructured P2P systems 
+lack the ability to police participants in the system.
 
 The problems we seek to address with our P2PVPN model include:
 %\small {
@@ -136,6 +142,11 @@ Explicitly, our contributions made in this paper are:
 \end{itemize}
 %}
 
+We would like to note that many of our contributions are not novel by themselves,
+but rather, it is the culmination of these components and their interaction,
+namely a model of a structured P2P VPN, that is our novel contribution for
+this paper.
+
 The rest of this paper is organized as follows.  Section II gives an overview
 of current VPN technologies and the efforts to decentralized.  Section III
 introduces P2P structures and our previous work IPOP (IP over P2P).  Section IV
@@ -149,10 +160,34 @@ There exist many different flavors of virtual networking, this paper focuses on
 those that are used to create or extend a virtual layer 3 network.  A few
 examples of such technologies include Cisco's Systems VPN and AnyConnect VPN
 Client~\cite{ciscovpn} as well as OpenVPN~\cite{openvpn}.  In this section, we
-begin by going in depth on client configuration of VPNs, overview concepts of
-server roles in centralized VPNs,  and then roles of participants in P2P VPNs.
-Finally we conclude the section by presenting a table~\ref{tab:vpns} which
-compares qualitatively the features of VPNs that fit in these categories.
+begin by going in depth on client configuration of VPNs followed by sections
+describing different VPN server configurations as highlighted in
+Table~\ref{tab:vpn_types}.  Finally we conclude the section by presenting a
+Table~\ref{tab:vpns}, which presents actual VPN products stating the VPN server
+type and presenting some qualitative overview.
+
+
+\begin{table}[ht]
+\label{tab:vpn_types}
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\centering
+\begin{tabular}[c]{|m{2cm}|m{6cm}|} \hline
+Type & Description \\ \hline
+Centralized & Clients communicate through one or more servers which are statically
+configured \\ \hline
+Decentralized Servers & Clients communicate through one ore more servers which are
+dynamically configured \\ \hline
+Centralized Servers / P2P Clients & Servers provide authentication, session management, and
+optionally relay support while peers attempt to communicate directly with each
+other, i.e., P2P links \\ \hline
+Unstructured P2P & No distinction between clients and servers, members either know
+the entire network or use broadcast to discover routes between each other \\ \hline
+Structured P2P & No distinction between clients and servers, members are usually
+within O(log N) hops of each other via a greedy routing algorithm \\ \hline
+\end{tabular}
+\caption{VPN Classifications}
+\end{table}
 
 \subsection{Client VPN Configuration}
 In figure~\ref{fig:vpn}, we abstract the common features of all VPNs with focus
@@ -233,7 +268,7 @@ We discuss and provide solutions to this problem in \ref{fulltunnel}.
 OpenVPN presents, as its name implies, an open and clear way of implementing a
 centralized VPN system.  While there may be minor differences amongst the
 different centralized VPN implementations, it is our opinion that OpenVPN
-represents the typical features of a centralized VPn and then some.  The
+provides a reasonable representation of features found in centralized VPN.  The
 key aspects of a centralized VPN server are:
 
 %\small {
@@ -251,8 +286,9 @@ How do I login?  Central VPNs server operate at well-known end-points as in
 a universal resource identifier (URI) consisting of a hostname or IP address and
 a port.  Clients will randomly attempt to connect with one of the servers until
 successful, implementing a meek load balance.  Once connected, clients obtain an
-address that is routable in the virtual network address space, other changes may
-be instituted by the VPN client software depending on the services provided.
+address that is routable in the virtual network address space.  Depending on
+configuration this will allow a client to communicate with other clients,
+resources on the same network as the server, or Internet hosts via the VPN.
 There are many, many different ways a client and server can authenticate with
 each other.  For a server to authenicate with a client, the safest way is for the
 client to have some secure knowledge, such as the server's certificate, retrieved
@@ -301,17 +337,19 @@ There is no distributed load balancing.
 
 \subsection{Centralized P2P VPN Systems}
 With the advent of Hamachi~\cite{hamachi} began the advant of centralized VPNs
-that went with the ambiguous monicker ``P2P VPN''.  The P2P provided by these
-\cite{wippien, gbridge} types of systems is direct connectivity between peers
-bypassing a central server.  While direct connection is desirable, it does not
+that went with the ambiguous monicker ``P2P VPN''.  In reality, these systems
+would be best classified as centralized VPNs servers with P2P clients.
+Specifically, the nature of P2P in these~\cite{wippien, gbridge} types of systems
+provides direct connectivity between clients once authenticated by a central
+server.  While direct connection is desirable, it does not
 always happen due to firewalls or inpenetrable NATs, when this happens the
 central server either acts as a relay or the two machines are unable to
 communicate.  One security consideration is that each of these implementations
 use their own security protocols that involves using the server to verify the
 authenticity of each other.  Most of these projects are closed source, meaning
 that a user must trust that the server will not act as a man in the middle and
-eavesdrop.  Finally, there has been no work on full-tunnel P2P VPNs in any of
-the P2P VPN fields.
+eavesdrop.  Finally, there has been no work on full-tunneling nor accessing
+resources on the same network as the other client in any of these cases.
 
 \subsection{P2PVPN Client / Server Roles}
 \label{introp2p}
@@ -328,7 +366,7 @@ worst case broadcasting a lookup message to the entire overlay.  While
 unstructured P2P systems have some scalability concerns, P2P systems in general
 allow for server-less systems.  In the realm of VPNs, all client VPNs are also
 servers with varying different responsibilities depending on the VPN
-application, as we present in table~\ref{vpns}.
+application, as we present in Table~\ref{tab:vpns}.
 
 Typically, decentralized, P2P VPNs begin by attempting to connect to well-known
 end-points running the P2P overlay software, a list of such end points can be
@@ -343,17 +381,18 @@ bootstrap connection for other peers attempting to connect.
 
 %\small{
 \begin{table*}[ht]
+\label{tab:vpns}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
 %\begin{tabular}[c]{|p{1.1cm}||p{3.475cm}|p{3.475cm}|p{3.475cm}|p{3.475cm}|} \hline
-\begin{tabular}[c]{|p{1.5cm}||p{2.7cm}|p{2.7cm}|p{2.7cm}|p{2.7cm}|p{2.7cm}|p{2.7cm}|} \hline
+\begin{tabular}[c]{|m{1.5cm}||m{2.7cm}|m{2.7cm}|m{2.7cm}|m{2.7cm}|m{2.7cm}|m{2.7cm}|} \hline
 & VPN Type & Authentication Method & Peer Discovery & NAT Traversal & Availability \\ \hline
 
-OpenVPN & Centralized with multiple servers & Certificates or passwords with a central server &
+OpenVPN & Centralized & Certificates or passwords with a central server &
 Stored at central server(s) & Relay through server(s) & Open Source\\ \hline
 
-CloudVPN & Centralized with multiple servers & CA-signed Certificates & Broadcast &
+CloudVPN & Decentralized & CA-signed Certificates & Broadcast &
 Relay through server(s) & Open Source\\ \hline
 
 Hamachi & Centralized P2P & Password at central server & Stored at central server &
@@ -470,7 +509,7 @@ networking technique with the following features:
 \item scalability in the count of hundreds of peers in a single VN~\cite{sc09}
 \item portability to any system that supports Tap and Mono~\cite{mono}
 \item ability to behave as a VN interface or router~\cite{sc09}
-\item used in grid computing for over 3 years~\cite{archer,vtdc,pcgrid08,gridappliance} 
+\item used in grid computing for over 3 years~\cite{archer,vtdc,pcgrid08,gridappliance}
 \end{itemize}
 %}
 
