@@ -188,6 +188,7 @@ within $O(\log N)$ hops of each other via a greedy routing algorithm \\ \hline
 \end{table}
 
 \subsection{Client VPN Configuration}
+\label{clientvpn}
 In Figure~\ref{fig:vpn}, we abstract the common features of all VPNs with focus
 on the client.  The key components of the client are 1) client software that
 communicates with the VPN overlay directly and 2) a virtual network device.
@@ -517,7 +518,9 @@ networking technique with the following features:
 \setlength{\parskip}{0pt}
 \item self-configuring, low overhead use~\cite{sc09, ipop}
 \item scalability in the count of hundreds of peers in a single VN~\cite{sc09}
-\item portability to any system that supports Tap and Mono~\cite{mono}
+\item portability to any system that supports Tap and Mono\footnote{
+Mono is an open source implementation of .Net also known as the Common Language
+Runtime (CLR), which provides managed run-time environment similar to Java.}~\cite{mono}
 \item ability to behave as a VN interface or router~\cite{sc09}
 \item used in grid computing for over 3 years~\cite{archer,vtdc,pcgrid08,gridappliance}
 \end{itemize}
@@ -614,38 +617,196 @@ notification, as such, peers find out on a push like mechanism.
 
 \subsection{Full-Tunneling over P2P}
 \label{fulltunnel}
+As discussed in Section~\ref{clientvpn}, VPN tunneling is usually divided into
+two categories:  split tunneling and full tunneling.  With split tunneling, the
+clients only route VPN destined messages over the VPN; whereas in full
+tunneling, all traffic both VPN and Internet traffic with the exception of
+overlay messages route over the VPN.  Using full-tunneling ensures that a peer
+cannot easily eavesdrop into what would otherwise be public communication by
+forwarding all traffic securely to a third party who resides in a more trusted
+environment.
 
-As discussed in 2.1, generally, tunneling technology can be divided into two forms: split tunneling and full tunneling. With split tunneling, the VPN clients can only have the VPN connections with other entities that also reside in the same network. But with full tunneling, the clients' Internet traffic is also forwarded through the VPN network.
+There are two key components to this scheme, a server or traffic relayer and
+a client or a traffic forwarder.  In the following sections, we present a
+simple scheme for providing servers and a few solutions to configuring clients
+in a structured P2P overlay.
 
-The full tunneling scheme is based on the IPOP infrastructure, which is introduced in section III. An entity such as a work group, organization, or institute who wants to construct a VPN network must construct the group ID and certificate, which are used by the gateway servers and clients to identify and authenticate each other. At least one VPN gateway server is needed for one group. All packets between the client-running applications and the Internet web servers will be forwarded securely through the VPN network, and routed by the VPN gateway server.
-The packet forwarding in VPN network is based on Brunet, which means the packets may be forwarded via the peers not belonging to the group. But since the packets are encrypted, malicious peers are not able to eavesdrop them or modify them while the receiver not knowing it.
+%The full tunneling scheme is based on the IPOP infrastructure, which is introduced in section III. An entity such as a work group, organization, or institute who wants to construct a VPN network must construct the group ID and certificate, which are used by the gateway servers and clients to identify and authenticate each other. At least one VPN gateway server is needed for one group. All packets between the client-running applications and the Internet web servers will be forwarded securely through the VPN network, and routed by the VPN gateway server.
+%The packet forwarding in VPN network is based on Brunet, which means the packets may be forwarded via the peers not belonging to the group. But since the packets are encrypted, malicious peers are not able to eavesdrop them or modify them while the receiver not knowing it.
 
-On the gateway client, all Internet packets coming from the general applications (that means, except the VPN process) are directed to a local TAP interface. The IP of the TAP interface is a virtual one that is unique within the VPN network. The VPN client captures all packets sending through the TAP interface, encapsulates them into the VPN packets and encrypts them with the group certificate. Finally these packets are sent through the physical interface. When the VPN client receives a VPN packet, the packet is decrypted, and if a Internet packet is encapsulated within it, the Internet packet will be extracted and injected directly to the TAP device for the applications to receive.
+%On the gateway client, all Internet packets coming from the general applications (that means, except the VPN process) are directed to a local TAP interface. The IP of the TAP interface is a virtual one that is unique within the VPN network. The VPN client captures all packets sending through the TAP interface, encapsulates them into the VPN packets and encrypts them with the group certificate. Finally these packets are sent through the physical interface. When the VPN client receives a VPN packet, the packet is decrypted, and if a Internet packet is encapsulated within it, the Internet packet will be extracted and injected directly to the TAP device for the applications to receive.
 
-In deployment, we need to enable a TAP device for the applications to communicate with their Internet servers, while still having a physical network interface running for the VPN communication. So one problem the gateway client has to solve is how to configure the Routing Table to direct all the general application packets to the TAP device while directing all VPN packets to the physical device (and routed to the local gateway). We have three different approaches to implement the gateway client routing.
+%In deployment, we need to enable a TAP device for the applications to communicate with their Internet servers, while still having a physical network interface running for the VPN communication. So one problem the gateway client has to solve is how to configure the Routing Table to direct all the general application packets to the TAP device while directing all VPN packets to the physical device (and routed to the local gateway). We have three different approaches to implement the gateway client routing.
 
-In this paper, our evaluation is based on the client implementation according to approach 1.
+%In this paper, our evaluation is based on the client implementation according to approach 1.
 \subsubsection{The Server}
-If multiple servers exist, the client will select them randomly or depending on the load balance. The gateway server is very different from a generic one in two aspects: first, the packets between the clients and servers are in the VPN fashion (encapsulated and encrypted); second, the servers do a NAT on the packets sending though them. One Internet packet from the gateway clients is encapsulated into the VPN packet which is encrypted by the group certificate. When the gateway server receives that packet, after decryption and extraction, it is able to get the original Internet packet. The gateway server does a NAT on the packet's source IP:Port to map the original (virtual) IP:Port to the server's IP:Port. Then the gateway server sends it out, and the reply will be sent back to the gateway server. The gateway server does a deNAT on the packet's destination IP:Port, after that, the packet is encapsulated into the VPN packet, encrypted, and sent back to the previous gateway client.
+Prior to becoming a server, a machine must properly be configured, this can
+easily be done with a Linux machine using IPTables~\cite{iptables} component
+called masquerade, which will a machine to receive Internet bound packets on
+one network interface and forward them on another taking care of the
+responsibilities of changing source and destination Ethernet and IP addresses.
+The command we use is:
+\begin{center}
+iptables -t nat -A POSTROUTING -s 5.0.0.0/8 -o eth0 -j MASQUERADE
+\end{center}
+Where 5.0.0.0 is the VPN's lowest address with an 8-bit netmask, thus all
+addresses between 5.0.0.0 and 5.255.255.255 inclusive would be NATed to the
+network interface eth0.  Additionally, by default, Linux will not forward
+packets this is enabled by tweaking procfs state via:
+\begin{center}
+echo 1 $>$ /proc/sys/net/ipv4.ip\_forward
+\end{center}
+There are many ways to implement a NAT box, our goal was to get a easily
+reproducible model, which was well served through this setup.
 
-For the deployment on Linux, the gateway server adopts the functionality of "iptables". When the gateway server eventually gets one original Internet packet from the client, whose source IP is still the original (virtual) one, it just sends it out. Then "iptables" module on the server is to do a MASQUERADE NAT on POSTROUTING stage, to modify the source IP:Port to the physical one available on the server. When the reply comes back, the "iptables" will deNAT the packet automatically, so the gateway server can easily see the virtual IP of the client that should receive this packet. The gateway server encapsulates the reply packet into a VPN packet, encrypts it, and finally sends it back to the client.
-\subsubsection{The Client -- Approach 1}
-Simply rewrite the routing table will direct the traffic well in general:
-1.Make the default gateway in routing table fall into the virtual network IP space, i.g., The virtual network IP space is 5.0.0.0/8, we set the default gateway to be 5.0.0.1.
-2.Add routing rules to route all IP's that the VPN process connected to the the local gateway.
-The general applications will send their packets to the TAP device since the TAP device is within the same (virtual) subnet as the default gateway. And all the VPN traffic will be directed to the physical device because of the added entries in the routing table. This is a light-weight approach to do all the work. But there are two flaws in this solution: First, the routing table will be very big if the VPN connection number gets large. And second, the routing is only based on the packets' destination IP, and sometimes it is very imprecise. Imagine a case that one client Alice has VPN connection with Bob, Bob also runs some web server at TCP port 80. If Alice uses web browser to access Bob's web server, the traffic will not go through the VPN channel, instead, it will be directed to the local gateway because the routing table says "Route all the packets to Bob via the local gateway."
+Once the user has setup NAT capabilities, the VPN server software must be
+configured to let VPN clients that desire full tunneling where there is a
+provider.  For that purpose, we added an enable flag into the VPN configuration
+that specifies if the machine is a VPN full tunnel server.  If it is, it
+appends a value to the list of known full tunnel servers for a VPN group.
+At which point, the system acts identical to any other VPN system, no additional
+configuration is necessary.
 
-\subsubsection{The Client -- Approach 2}
-To solve the problem in approach 1, we have a more sophisticated approach, which is routing based on the port number. "iptables" provides the functionality of marking packets based on the source port number, and "iproute2" supports multiple customized routing tables and is able to direct packets to different routing tables based on the firewall marks. So the following configuration will show how "iptables" and "iproute2" work together.
-1.Make the default gateway in routing table fall into the virtual network IP space.
-2.Configure iptables to set the packets coming from VPN process port with firewall mark X.
-3.In iproute2, build routing table vpn\_table with the local gateway as default gateway.
-4.Configure iproute2 to direct the packets with firewall mark X to routing table vpn\_table.
-This approach will ensure that only the VPN packets are routed to the local physical gateway. But still, approach 2 and approach 1 may suffer from some efficiency drawbacks, and they only work on Unix / Linux operating systems.
+\subsubsection{The Client}
+VPN Clients wishing to use full tunnel must redirect their default traffic to
+their virtual network device.  Using the above example, the routing rule would
+look like:
+\begin{center}
+0.0.0.0         5.0.0.1     0.0.0.0         UG    0      0        0 tap0
+\end{center}
+There does not necessarily have to be an active node online at 5.0.0.1, this
+can be a ``virtual'' virtual address, where the result can than be forwarded
+to any machine in the network for relaying to the Internet.  This works
+because the structure of a message sent to the Internet via a gateway as shown
+in Figure~\ref{fig:tunnel_packet} contains only the Ethernet address of the
+relayer.  In our system, as described in~\cite{sc09}, each site uses a single
+Ethernet address to represent all remote hosts which differ by IP address, this
+is called a transparent subnet gateway~\cite{subnet_gateway}.  Furthermore, the
+smallest address in the subnet is used as a special address for running virtual
+network services, such as DHCP and DNS.  If a node uses that address in the
+overlay, it will not be routable.  With this in mind, the client software
+need only pay heed to the destination IP address, which points to the Internet.
+The process of handling virtual network traffic from the point of view of an
+Internet packet becomes:
 
-\subsubsection{The Client -- Approach 3}
-There is an approach not even bothering the routing table any more. In this approach, we write raw packets (frames) and inject them directly into the physical Internet interface with the destination MAC address (gateway) already configured. The "pcap" library, which works for both Linux and Window is adopted to do the injection. So in this approach, when the VPN process wants to send a packet, it  generates a link layer frame for it, and then injects the frame directly into the physical device by the "pcap" library.
-But when the reply comes back, problems emerges. The reply packet is dropped by the Operating System. This is not strange because as "pcap" bypasses the routing table, it also bypasses the OS network stack, so the OS network stack doesn't have such thread responsible for receiving the reply. Fortunately (somehow), "pcap" is able to capture these reply packets, and then these packets can be processed by the VPN process. This approach should work in theory if we do enough work, but we did not bothering implementing it because this type of communication makes the network very strange, and brings a lot of management problems (such as the flood of "tcp reset" packets). Though this approach has the potential of working for both Linux and Windows, as well as good efficiency.
+\begin{enumerate}
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\item am I packet destined for some area outside of the virtual network address
+space
+\item if I am, verify that I have full-tunnel VPN enabled
+\item if I do, discover a remote peer for full-tunneling
+\item if I find one, send the message to the remote peer
+\end{enumerate}
+
+Once we've sent the packet to the server, we simply wait for the packet to return.
+Once the packet returns, we will notice that the source IP address doesn't match
+the nodes virtual IP address and so we should confirm that we trust this entity
+to be a full-tunnel relayer.  If the packet is sent from an authenticated source,
+we can write the packet to the virtual network device completing the sending and
+receiving of an Internet request.
+
+The two issues in the client configuration are selecting the server to use as
+our relaying partner and how to route P2P packets directly so that they are not
+relayed through the server.  The problem of selecting the server is not well
+evaluated in our model, our model was to query the DHT for a list of potential
+servers and selecting one randomly from that list.  Furthermore, we check the
+liveness of the server through a ping like mechanism every 15 seconds, though
+that could be configured to provide more fault tolerance when servers are
+actively churning.  We apply a pessimistic approach to handling loss of a server,
+where we will only update the selected server upon the next outgoing Internet
+packet.
+
+The second issue, handling P2P routed packets, is the focus of our work.  In the
+centralized VPN case, namely when a client only ever communicates to a single
+point in the VPN overlay, this can be handled by having a single rule in the
+routing table that routes all packets to this end point via the networks default
+gateway, like so:
+\begin{center}
+128.227.56.121 192.168.1.1     255.255.255.255 UG    304    0        0 eth0
+\end{center}
+In this line, the VPN server is located at IP address 128.227.56.121.  Our local
+gateway is located at IP address 192.168.1.1.  The use of the netmask 255.255.255.255
+ensures that only packets destined for 128.227.56.121 are sent to the machine located
+at address 192.168.1.1.  In a P2P system, ensuring that all P2P overlay messages
+are routed directly becomes non-trivial because we will have many such routes most
+of which will not be known ahead of time.  If we maintained the model used by the
+centralized format, we would end up routing both Internet and P2P traffic over the
+relay machine and if he were disconnected, we would have to reinitialize all state
+and more importantly we would lose the advantage provided by P2P, namely
+scalability.  To solve this we look at many different possibilities but were only
+able to come up with one successful model for easily setting up a client.  We
+present all our work, including our failed attempts, such that it may be the
+ground work for further research.
+
+\subsubsection{The Client -- Approach 1 -- Adding Routes}
+The first approach taken was to follow a model similar to the centralized version,
+that is, for each P2P machine we communicated, we had an explicit rule in the
+routing table.  In order to ensure this, we added a feature to the socket handling
+code in our system that would indirectly add the remote nodes public address to
+our routing table.  This action would occur prior to the first outgoing communication
+attempt and would remain in effect until the VPN closed down.  In order to ensure
+there were not excessive rules, we check the currently active connections and
+remove those that are no longer active.
+
+This model works well but has two major flaws.  Common to all VPNs that employ
+the standard route switch technique, all communication, not just VPN, is routed
+directly to the server insecurely.  So while the VPN traffic is most likely 
+encrypted, if the server also hosts a website, that traffic will be in its natural
+state, potentially unencrypted, and visible to any eavesdroppers.  Secondly, a
+malicious user could send spoof packets to have the VPN add extra routes to the
+routing table, resulting in a similar situation as the first problem.  The next
+two solutions attempted to solve these problems.
+
+\subsubsection{The Client -- Approach 2 -- Writing Ethernet Packets}
+This approach recognizes that when using UDP, we know the source port from which
+all traffic originates, also even in the case of TCP, we can easily determine
+our source ports for outgoing connections.  While the routing rule directing all
+traffic to the VPN remains, there are no additional routing rules.  Thus all
+packets are directly sent to the virtual network device and the VPN client software
+must handle routing the packets appropriately.
+
+To distinguish P2P packets from non-P2P packets, the VPN client needs to look
+at the source port for the communication, if it matches the VPN client's source
+port, it must route the packet through the local gateway.  In order to do this,
+we need a component that can write to the hosts physical network device an
+Ethernet packet to encapsulate the P2P IP packet.  Furthermore, we need to
+modify the IP packet to change the source address to match the physical
+ethernet devices IP address.  We focused on two approaches that would be
+cross-platform capable: 1) using a bridged tap device whose sole purpose is to
+send and receive Internet packets to and from the gateway and 2) using
+PCap~\cite{pcap} to send packets.  Additionally, Linux also supports a packet
+type called packet~\cite{packet}, which allows writing complete Ethernet
+packets, a feature not enabled in Windows.  For this model, we only focused on
+approaches that were reasonably portable to other OSes.
+
+The problem with this approach is that when an incoming packet arrived at the
+clients networking stack, the client would not recognize the packet because the
+destination IP address was the physical ethernet's and not the virtual ethernet's,
+the one where it originated.  This would trigger the OS sending a TCP reset message.
+Thus the only solution would be to implement some form of NAT, a task we have not
+started yet.
+
+\subsubsection{The Client -- Approach 3 -- Using Linux Tools}
+The problem with having the VPN client redirect packets directly is that it can
+be potentially costly, so we also investigated the potential of using existing
+Linux tools to solve this problem.  IPTables~\cite{iptables} provides the ability
+to manipulate IP packets to implement firewalls and NATs, we had hoped that we
+could do redirect our packets to the gateway, somehow.
+
+Using only IPTables, this approach is not possible as we cannot manipulate the
+Ethernet addresses directly using IPTables.  The only way to manipulate the
+Ethernet addresses is by changing the destination or source IP address.  There
+was no change that could be made that would accomplish what we were looking for.
+
+IPTables had another feature, which was to mark a packet so that it could use a
+special routing table.  The routing table can be managed using iproute2
+~\cite{iproute2}.  We then can make all packets that arrive at the special
+routing table take a different default route, one that routes it to the local
+gateway.  The problem with this approach is that it does not deal with the
+source address of the packet.  In other words, the packet will have a source
+IP address of the virtual network device and not of the physical Ethernet
+device.
 
 \subsection{Autonomic Relays}
 In a handful of P2PVPNs~\cite{hamachi, gbridge}, there is support for relaying
@@ -721,46 +882,93 @@ the use of a broadcast to signal a certificate revocation is now important to
 the entire overlay.
 
 \subsection{Discovering Faults}
-In structured P2P systems, improper formation of the overlay structure would be regarded as a fault. In a structured P2P ring system[2, 25], incorrect neighbor or routing table information may result in routing delay. To keep the neighbor or routing table information vivid, Pastry [25] uses soft state to keep the routing table containing proper routing information. Thus, if a faulty node is not accessed while routing, the stale information remains in the routing table until the failure is discovered. To detect incorrect neighbor information in [2], a temporary master node contacts every node in the overlay network, and asks each node¡¯s neighbor information. After gathering all neighbor information, temporary master node can calculate neighbor information correctness using following steps :
+In literature, the argument typically directed against structured P2P systems
+is the ability to handle fault tolerance.  In this section, we share our
+techniques for finding faults in the overlay.
 
-1. Check node A¡¯s left-most neighbor information(e.g. A¡¯s left1)
-2. Check A¡¯s left1¡¯s right-most neighbor information(e.g. A¡¯s left1¡¯s right1)
-3. If A¡¯s left1¡¯s right1 is same as A, two nodes are regarded as having correct neighbor information.
+Before we even deploy our code, we heavily use unit testing.  If unit testing
+is successful, we have a virtual time simulator that allows us to test our
+software in large scale on a single machine rather quickly, where we can simulate
+well over 1,000 peers for days of virtual time in a matter of hours.  The model
+allows for easy integration testing, so that as new features are incorporated
+they can easily be tested prior to doing wide-area tests.
 
-Same step can be applied to A¡¯s second left neighbor information. After gathering whole node¡¯s neighbor information, temporary master node can instruct a node which has incorrect view of neighbor information to adjust its neighbor information correctly to prevent future incorrect routing.  We can check neighbor information further than 2 steps away at the cost of processing time.
+The next step is to run a week long test on planetlab that ensures reliability,
+stability, and consistency, or that a node is congruent with both its first and second
+left and right neighbors.  We call this a crawl.  We store this information in a
+database, and then query the database to find cases where a node may have been
+inconsistent for consecutive times.  If a node is able to fix inconsistencies in
+future crawls, the inconsistency was probably due to churn in the system.
+Otherwise, it will probably still be in an inconsistent state and we are able to
+query the node and other nodes nearby for state information.  This would at least
+help us determine if there exists a problem.  To assist in finding bugs, we have
+added liveness messages to threads to assist in finding deadlocks.  Additionally,
+Mono can print out trace logs by sending a ``USR2'' signal to the running process.
 
-We simulated node neighbor information correction check using other methods. For example, we followed above step by comparing node A¡¯s left2 neighbor¡¯s right1 address and node A¡¯s left1 address. This method misses some special cases of incorrect view of ring. Thus, we regard comparing left2 and left1 neighbor¡¯s right2 and right1 neighbor information respectively is a good metric to measure ring neighbor information correctness.
+Other information covered under stability include peer count as well as memory
+and CPU usage.  Node count can be quite difficult to keep track of in Planet-Lab
+as machines at a rate of about 5 to 20 a day are restarted and software is not
+automatically restarted on these machines.  Thus we check for extreme cases, where
+node count may have dropped by a significant amount and does not follow a linear
+model.  Planet-Lab also places challenges on memory, as the systems can often be
+I/O starved causing what appears to be memory leaks as Brunet's internal queue
+can grow without bound.  After solving this via a disconnect on overload, that
+occurs when the queues moving average exceeds a threshold of 4,096, the memory
+usage on planetlab has helped us discover that memory leaks exist.  The advantage
+of Planet-Lab as a test ground  is that it presents so many unique situations that
+can bevery difficult to reproduce in a lab controlled test system.  It is our belief
+that any system that uses large scale Planet-Lab deployments as a testing ground
+will be quite reliable.
 
-We found out that calculating ring neighbor information correctness value does not depend on the direction of measuring method. With given neighbor information, neighbor relation arrow is already shaped before measuring the correctness value. Thus, measuring correctness value in clockwise direction or counter clockwise direction does not affect the correctness value.
-
-However, above method needs O(n) cost, when there are n nodes in the overlay network. Because this method does not seem to be scalable, we need to improve scanning method, which would be one of our future works.
+We are still actively seeking better ways to verify the state of our system.
+For example, the cost of doing a crawl can be on the order of $O(N \log(N))$,
+since we have to communicate with every single node with an average routing
+time of $O(\log(N))$.  Furthermore, many of mechanisms employed in our system
+though originally based in mathematical principles have since been heavily
+influenced by experience that is difficult to formally justify.
 
 \subsection{P2PVPN in Other Structured Overlays}
-Besides Brunet, the P2PVPN and its virtual networking substrate can also be implemented on top of other popular P2P overlays such as Chord and Pastry with the same idea. Both Chord and Pastry provide features of structured P2P overlay described in Section IV with some differences in route selection, etc. Both of them have Mono runtime compatible libraries available. NChord is a C\# implementation of Chord and FreePastry is a Java implementation of Pastry, which can be ported to Mono using IKVM.NET. FreePastry comes with a PAST DHT storage implementation while NChord only has a sample version of DHT with no fault tolerance.
+The purpose in this work is to develop a model of a P2PVPN that can easily be
+applied to other structured P2P systems.  In this section, we focus on the
+viability of our platform running on top of other sturctured P2P systems, namely
+Pastry and Chord by analyzing FreePastry~\cite{freepastry} and
+NChord~\cite{nchord} respectively.  FreePastry can easily reuse our C\# implemented
+library through the use of IKVM.NET~\cite{ikvm}, which allows the porting of
+Java code into the CLR.  NChord is a Chord implementation written in C\#.  In
+Table~\ref{tab:structured_p2p_compare}, we compare the features of the structured
+P2P systems as they apply to the use as a VPN.
 
-
-To implement virtual networking, we need to deliver packets to the destination identified by its virtual IP. As there is no recursive routing for application traffic in NChord, we need to first find out its real (physical) IP address. For that, we need to do two lookups.
-
-
-\begin{itemize}
+\begin{table*}[!h!t]
+\label{tab:structured_p2p_compare}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
-\item First, when we capture a packet from the TAP device, we look at the destination IP and then look up the P2P ID of the destination from the DHT;
-\item Then we look up the real (physical) IP of the given P2P ID from the overlay using the “find\_successor” operation provided by Chord.
-\end{itemize}
+\centering
+\begin{tabular}[c]{|m{2cm}||m{2.75cm}|m{2.8cm}|m{2.95cm}|m{1.65cm}|m{1.65cm}|} \hline
+System & Overlay messaging & NAT Traversal & DHT & Secure PtP & Secure EtE\\ \hline
+Brunet & Yes (AHSender) & UDP and overlay relaying & Yes with reliability & Yes & Yes \\ \hline
+FreePastry & Yes (route) & Only with port-forwarding enabled  & Yes, PAST~\cite{past}, reliable & No & No \\ \hline
+NChord & No, only lookup & No & Simple, non-fault tolerant DHT & No & No \\ \hline
+\end{tabular}
+\caption{A comparison of structured P2P systems.  PtP stands for point-to-pont
+communication, such as communication between physical connections in a P2P
+overlay.  EtE stands for end-to-end communication, such as messages routed
+over the overlay between two peers.}
+\end{table*}
 
-Then we send packets to the real destination IP with the destination port unchanged.
+To configure our model to run on NChord, we would first need to find the owner
+of the DHT key containing the mapping of virtual IP address to node address
+through ``find\_successor''.  Then we can query the owner of the key for the
+value, which would be an address of the node owning the virtual IP.  We then
+need to execute ``find\_successor'' on that address so that we determine the
+physical IP address who owns the virtual IP address.  Then we would need to
+``connect'' to the remote node using either a UDP or TCP socket.  Virtual IP
+messages would then be sent and received through this ``connection''.
 
-
-With Pastry, after we look up the P2P ID from the DHT, we can directly route a packet to this ID by calling its “route(message, id)” API. The packet is then delivered to the node with the ID (or the node with a numerically closest ID). Brunet, like Pastry, also support this recursive overlay application packet delivery.
-
-
-Pastry takes locality of nodes into consideration in route selection. When a node has multiple candidates for the next hop selected using the prefix-matching mechanism, it routes the packet to the one that is closest according a scalar proximity metric. However, Pastry expects the application on top of it to provide such a function to get the metric. In FreePastry, there is a simple implementation of proximity provider upon roundtrip time between nodes. Brunet, on the contrary, has Network Coordinates built-in which can be used to determine the distance more efficiently.
-
-
-Also, neither Pastry nor Chord deals with NAT traversal. They both assume that nodes operate on public IPs.  NAT traversal is a feature missed in most existing P2P overlays but addressed in Brunet.
-
-Overall, we think it is possible to implement the virtual networking substrate above other existing P2P overlays but Brunet’s has an edge on them.
+With FreePastry, we, first lookup the mapping of virtual IP to node id from PAST.
+Afterward, we can use the ``route'' call to send packets and ``deliver'' to
+handle incoming packets.  In fact, the model is very similar to Brunet.
+Furthermore,  FreePastry has knowledge of proximity in shortcuts, so it may
+be very easy to apply high-performance autonomic relays to pastry.
 
 \section{Evaluation of VPN Models}
 For the purpose of quantitatively evaluation, we have added the features of
