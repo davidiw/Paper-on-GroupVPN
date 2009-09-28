@@ -52,7 +52,7 @@ In order to deal with these issues, we propose and implement a novel VPN
 architecture using a structured P2P system for peer discovery, session
 management, NAT traversal, and autonomic relay selection.  We relegate the use
 of a central server for certificate management.  Additionally, we provide
-a design and implementation of the first P2P VPN to support full-tunneling,
+a design and implementation of the first P2P VPN to support full tunneling,
 whereby all non-P2P based Internet traffic routes through a trusted third party.
 
 In the paper, we describe the components of our model as well as present
@@ -76,7 +76,7 @@ in scope from approaches which define VPNs `` as the 'emulation of a private
 Wide Area Network (WAN) facility using IP facilities' (including the public
 Internet or private IP backbones).''~\cite{ip_vpns}.  These tend to be
 clustered:  endpoints are connected to the VPN through one of more routers
-connecting large sets of machines to the virtual network.
+connecting large sets of machines to the virtual network (VN).
 
 A centralized VPN server can be a single point of failure, cause create
 performance bottlenecks, and can compromise end-to-end traffic.  Several
@@ -85,7 +85,7 @@ support for multiple VPN servers for a single VPN~\cite{openvpn}, 2)
 the use of P2P connections enabling direct communication amongst peers bypass
 the server while relying on the server for authentication and session
 management~\cite{hamachi, wippien}, and 3) the use of unstructured P2P networks
-to form decentralized VPNs~\cite{p2pvpn, n2n, tinc, cloudvpn}.
+to form decentralized VPNs~\cite{p2pvpn, n2n, tinc}.
 
 Existing centralized VPN approaches suffer from one or more of the
 following issues: reliance on a single session or relay server, non-negligible
@@ -95,8 +95,8 @@ systems in lieu of NAT traversal.  While P2P VPN approaches handle these
 they each introduce one or more of the following issues: discovering a peer
 requires broadcasting over the entire overlay, limited options for security and
 authorization, lack of information regarding scalability with environments
-that include traversable and non-traversable NATs, lack of support for
-full-tunnel VPN mode.
+that include traversable and non-traversable NATs, lack of support for full
+tunnel VPN mode.
 
 The problems we seek to address with our P2PVPN model include:
 %\small {
@@ -105,7 +105,7 @@ The problems we seek to address with our P2PVPN model include:
 \setlength{\parskip}{0pt}
 \item reducing the role of centralization for user authentication in a VPN
 \item managing members in the VPN
-\item supporting full-tunneling of Internet traffic in a P2P system
+\item supporting full tunneling of Internet traffic in a P2P system
 \item handling relay selection in lieu of unsuccessful NAT traversal
 \end{itemize}
 %}
@@ -114,10 +114,10 @@ A brief overview of our solutions to the above problems follows and will
 be covered in depth in the rest of this paper.  To provide fully decentralized
 run-time connectivity and public-key based management of VPN endpoint
 membership, we use an automated certificate authority based upon the use of
-user groups.  In the case of full-tunneling, P2PVPNs introduce significantly
+user groups.  In the case of full tunneling, P2PVPNs introduce significantly
 more complexity since a simple routing table swap as done in central VPNs no
 longer work. Thus, we investigate three different mechanisms for tunneling all
-non-P2P-based Internet traffic to our full-tunnel gateway(s).  When nodes
+non-P2P-based Internet traffic to our full tunnel gateway(s).  When nodes
 cannot directly communicate, they seek to connect to peers that are
 physically close to each other and use them to relay communication.  For
 handling trust issues in P2P, we use the bootstrapping a private P2P system for
@@ -134,7 +134,8 @@ that is unique in supporting:
 \setlength{\parskip}{0pt}
 \item automated group-based certificate authority
 \item support for full-tunneling through multiple gateways
-\item decentralized NAT traversal with autonomous selection of relays for non-traversable nodes
+\item decentralized NAT traversal with autonomous selection of relays for
+non-traversable nodes
 \item use of a private P2P VPN system bootstrapped as a subset of the P2P system
 %\item discussion of our techniques used for discovering bugs in our system
 \end{itemize}
@@ -155,9 +156,9 @@ examples of such technologies include Cisco's Systems VPN and AnyConnect VPN
 Client~\cite{ciscovpn} as well as OpenVPN~\cite{openvpn}.  In this section, we
 begin by going in depth on client configuration of VPNs followed by sections
 describing different VPN server configurations as highlighted in
-Table~\ref{tab:vpn_types}.  Finally we conclude the section by presenting a
-Table~\ref{tab:vpns}, which presents actual VPN products stating the VPN server
-type and presenting some qualitative overview.
+Table~\ref{tab:vpn_types}.  Finally we conclude the section by presenting
+Table~\ref{tab:vpns}, which presents a qualitative overview of actual VPN
+products.
 
 
 \begin{table}[ht]
@@ -184,44 +185,41 @@ within $O(\log N)$ hops of each other via a greedy routing algorithm \\ \hline
 \label{clientvpn}
 In Figure~\ref{fig:vpn}, we abstract the common features of all VPNs with focus
 on the client.  The key components of the client are 1) client software that
-communicates with the VPN overlay directly and 2) a virtual network device.
-During initialization VPN software begins by authenticating with some overlay
-agent, optionally it then queries the agent for information about the network
-such as the network address space, and then starts the virtual network device.
+communicates with the VPN overlay directly and 2) a VN device.  During
+initialization VPN software begins by authenticating with some overlay / VPN
+agent, then, optionally, it queries the agent for information about the network
+such as the network address space, and finally the VN device is started.
 
 \begin{figure}[ht]
 \centering
 \epsfig{file=figs/vpn.png.eps, width=3in}
-\caption{A typical VPN client.  The VPN uses a virtual network device to make
-interaction with the virtual network transparent.  Packets that are destined
-for virtual network destinations are sent via routing rules to the virtual
-network device, which acts as like a file descriptor read and written to by the
-VPN client.  The VPN client in turn sends and receives packets over the hosts
-physical (real) network device.}
+\caption{A typical VPN client.  The VPN uses a VN device to make interaction
+over the VPN transparent.  Packets that are destined for VPN destinations are
+sent via routing rules to the VN device, which acts as like a file descriptor
+read and written to by the VPN client.  The VPN client in turn sends and
+receives packets over the hosts physical (real) network device.}
 \label{fig:vpn}
 \end{figure}
 
 There are many different mechanisms for communicating with the overlay agent.
-For quick setup, a system may provide a shared secret password or key that is
-common for the entire network.  A more user-friendly and manageable approach
-re-uses the shared secret mechanism and then adds user accounts and passwords,
-thus blocking unauthorized users from the VPN, while still making it somewhat
-difficult for brute force attacks to work, so long as the key remains private.
-For the strongest level of security, each client can be configured to have a
-signed-certificate that makes brute force attacks all but impossible.  The
-tradeoffs come in terms of usability.  While the use of uniquely
+For quick setup, a system may require no authentication or use a shared secret
+password or key that.  Individual authentication can be provided through the
+use of accounts with passwords in addition to a shared secret, this allows
+blocking out users if the shared secret becomes compromised or users act
+maliciously.  For the strongest level of security, each client can be
+configured to have a signed-certificate that makes brute force attacks very
+difficult.  The tradeoffs come in terms of usability.  While the use of uniquely
 sign-certificates may be the most secure, it can be quite difficult for novice
 computer users.  A good balance found in many environments is the mixture of
-a shared secret and user account, where the shared secret is included with
-the installation of the VPN application where the application is distributed
-from a secured site.
+a shared secret and individual user accounts, where the shared secret is
+included with the installation of the VPN application where the application is
+distributed from a secured site.
 
 Once the user has connected with the overlay, the virtual networking device
 needs to be configured enabling the user's machine to communicate with other
 participants in the VPN.  This configuration varies by VPN, commonly though,
-this information contains the network address space, an allocation of an
-address for the user's machine, and potentially a remote peer for
-full-tunneling.
+this information contains the network address space and an allocation of an
+address for the user's machine.
 
 In order to communicate over the VPN transparently, there must exist a network
 device driver that allows common network APIs such as Berkeley Sockets and
@@ -230,75 +228,74 @@ different types of virtual networking devices, though due to our focus
 on an open platform, we focus on TAP~\cite{tap}. TAP allows the creation of one
 or more Virtual Ethernet and / or IP devices and is available for almost all
 modern operating systems including Windows, Linux, Mac OS/X, BSD, and Solaris.
-A TAP device exists as a file descriptor providing read and write operations. 
-Incoming packets from the virtual network are written to the TAP device and the
-networking stack in the OS delivers the packet to the appropriate socket. 
-Packets that are read from a TAP device are those that are sent by sockets to
-the virtual network.
+A TAP device exists as a block device providing read and write operations. 
+Incoming packets from the VN are written to the TAP device and the networking
+stack in the OS delivers the packet to the appropriate socket.  Outgoing
+packets from local sockets are read from the TAP device.
 
-The virtual network device is either configured using static addressing or
-dynamically through dynamic host configuration process (DHCP)
-\cite{dhcp0, dhcp1}.  This causes a new routing rule that causes all packets
-sent to the virtual network address space to be sent to the virtual network
-device.  When a packet is read from the TAP device, it can then be sent to
-the overlay via the client application.  The overlay will deliver the packet
-to another end point, which can be a client or a server enabled with virtual
-networking stack.  When receiving a packet, it will be written to the TAP
-device.  In most cases, the IP layer header will remain unchanged while
-configuration will determine how the Ethernet header will be handled.
+The VN device can be configured either by using static addressing or
+dynamically through dynamic host configuration process (DHCP)~\cite{dhcp0,
+dhcp1}.  This causes a new routing rule that causes all packets sent to the
+VPN address space to be sent to the VN device.  When a packet is read from the
+TAP device, it will be encrypted and sent to the overlay via the client
+application.  The overlay will deliver the packet to another end point, which
+can be a client or a server enabled with virtual networking stack.  The
+received packet will be decrypted, verified for authenticity, and then
+written to the TAP device.  In most cases, the IP layer header will remain
+unchanged while configuration will determine how the Ethernet header will be
+handled.
 
 The described configuration so far, creates what is known as a split tunnel,
-or virtual network connection that only has passes traffic directly related
-to the virtual network and not Internet traffic.  Another form of tunneling
-exists called full tunneling.  Full tunneling allows a VPN client to securely
-forward all their Internet traffic through a VPN router.  This enables a user
-to ensure all their Internet communication originates from a secure and trusted
-location and provides some level of security when a user is an insecure and
-potentially hostile environment, such as an open wireless network at coffee shop.
+or VPN connection that only has passes traffic directly related to the VPN and
+not Internet traffic.  Another form of tunneling exists called full tunneling.
+Full tunneling allows a VPN client to securely forward all their Internet
+traffic through a VPN router.  This enables a user to ensure all their Internet
+communication originates from a secure and trusted location and provides some
+level of security when a user is an insecure and potentially hostile
+environment, such as an open wireless network at coffee shop.
 
 Most centralized VPNs implement full-tunneling by doing a routing rule swap,
 where the default gateway becomes an end-point in the VPNs subnet and traffic
 for the VPN server is routed to the local network gateway.  For example, on a
-typical home network, all traffic for the VPN server is sent via to the networks
-router and then via the Internet to the VPN server.  All other traffic is sent
-to the virtual network device, then sent securely to the VPN server.  In a P2P
+typical home network, all traffic for the VPN server is sent via
+the local network's router to the VPN gateway via the Internet.  All other
+traffic is sent to the VN device, then sent securely to the VPN server.  In a P2P
 system, there becomes two new considerations 1) P2P traffic must not be routed
-to the VPN gateway and 2) there may be more than one VPN gateway.  Allowing
-more than one VPN gateway per VPN allows distribution of the cost of maintaining
-a full-tunnel who will have 3 additional messages for each incoming packet.
-We discuss and provide solutions to this problem in Section~\ref{fulltunnel}.
+to the VPN gateway and 2) there may be more than one VPN gateway.  We further
+discuss this issue and provide solutions to this problem in
+Section~\ref{fulltunnel}.
 
 \subsection{Centralized VPN Servers}
 OpenVPN presents, as its name implies, an open and clear way of implementing a
 centralized VPN system.  While there may be minor differences amongst the
 different centralized VPN implementations, it is our opinion that OpenVPN
-provides a reasonable representation of features found in centralized VPN.  The
-key aspects of a centralized VPN server are:
+provides a reasonable representation of features found in most centralized VPN.
+The key aspects of a centralized VPN server are:
 
 %\small {
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
-\item accepting connections from clients
+\item authentication of clients
 \item routing packets between clients
-\item providing a NAT to the servers local resources and Internet
+\item providing a NAT to the servers local resources and Internet (full tunnel)
 \item inter-server communication
 \end{itemize}
 %}
 
 How do I login?  Central VPNs server operate at well-known end-points as in
 a universal resource identifier (URI) consisting of a hostname or IP address and
-a port.  Clients will randomly attempt to connect with one of the servers until
+a port.  Clients will randomly attempt to connect to one of the servers until
 successful, implementing a meek load balance.  Once connected, clients obtain an
-address that is routable in the virtual network address space.  Depending on
-configuration this will allow a client to communicate with other clients,
-resources on the same network as the server, or Internet hosts via the VPN.
-There are many, many different ways a client and server can authenticate with
-each other.  For a server to authenicate with a client, the safest way is for the
-client to have some secure knowledge, such as the server's certificate, retrieved
-from a secure source, this can then be used to verify the server's identity.
-The three most common mechanisms for a client to authenticate with a server are
-via shared secrets, password, or a CA-signed certificate.
+address in the VPN address space.  Depending on configuration this will allow a
+client to communicate with other clients, resources on the same network as the
+server, or Internet hosts via the VPN.  There are many, many different ways a
+client and server can authenticate with each other.  For a server to authenicate
+with a client, the safest way is for the client to have some secure knowledge,
+such as the server's certificate, retrieved from a secure source, this can then
+be used to verify the server's identity.  The three most common mechanisms for
+a client to authenticate with a server are via shared secrets, password, or a
+CA-signed certificate.
 
 Not all OpenVPN servers allow inter-client communication, though the
 configuration to enable is quite simple.  When two clients communicate, the
@@ -339,34 +336,43 @@ Load balancing exists only in the process of the client randomly connecting to
 different servers and potentially with a server refusing connection due to load.
 There is no distributed load balancing.
 
+Two examples of systems that assist in distributing load in VPN systems are
+tinc~\cite{tinc} and CloudVPN~\cite{cloudvpn}.  Unlike the decentralized P2P
+systems, these decentralized systems lack the ability to automatically form
+and maintain VPN systems, in otherwords, they lack self-organization.  This
+means that like OpenVPN, systems can suffer VPN outages when nodes go offline.
+The difference being that OpenVPN makes it explicit who is a server and who
+is not, whereas these systems anyone can be a server or a client.  While the
+terminology used on the website may seem like it is a P2P system, the mesh and
+rings described are setup and managed directly by human interaction.
+
 \subsection{Centralized P2P VPN Systems}
-With the advent of Hamachi~\cite{hamachi} began the advant of centralized VPNs
-that went with the ambiguous monicker ``P2P VPN''.  In reality, these systems
-would be best classified as centralized VPNs servers with P2P clients.
-Specifically, the nature of P2P in these~\cite{wippien, gbridge} types of systems
-provides direct connectivity between clients once authenticated by a central
-server.  While direct connection is desirable, it does not
-always happen due to firewalls or inpenetrable NATs, when this happens the
-central server either acts as a relay or the two machines are unable to
-communicate.  One security consideration is that each of these implementations
-use their own security protocols that involves using the server to verify the
-authenticity of each other.  Most of these projects are closed source, meaning
-that a user must trust that the server will not act as a man in the middle and
-eavesdrop.  Finally, there has been no work on full-tunneling nor accessing
-resources on the same network as the other client in any of these cases.
+Hamachi~\cite{hamachi} began the advent of centralized VPNs that went with the
+ambiguous monicker ``P2P VPN''.  In reality, these systems would be best
+classified as centralized VPNs servers with P2P clients.  Specifically, the
+nature of P2P in these~\cite{wippien, gbridge} types of systems provides direct
+connectivity between clients once authenticated by a central server.  While
+direct connection is desirable, it does not always happen due to firewalls or
+inpenetrable NATs, when this happens the central server either acts as a relay
+or the two machines are unable to communicate.  One security consideration is
+that each of these implementations use their own security protocols that
+involve using the server to verify the authenticity of each other.  Most of
+these projects are closed source, meaning that a user must trust that the
+server will not act as a man in the middle and eavesdrop.  Finally, there
+has been no work on full tunneling nor accessing resources on the same network
+as the other client in any of these cases.
 
 \subsection{P2PVPN Client / Server Roles}
 \label{introp2p}
 Unlike centralized systems, pure (or decentralized) P2P systems have no concept
 of dedicated servers, though it is entirely possible to add reliability to the
-system by starting an instance of the P2P VPN software purely for enhancing or
-enabling connectivity.  In these systems, all
+system by starting dedicated instances of the P2P VPN.  In these systems, all
 participants are members of a collective known as an overlay.  Current generation
 P2P, decentralized VPNs use a P2P unstructured network, where there are no
 guarantees about distance and routability between peers.  As a result
 participants tend to be connected to a random distribution of peers in the
 overlay.  Finding a peer requires either global knowledge of the pool or at
-worst case broadcasting a lookup message to the entire overlay.  While
+worst case broadcasting a look up message to the entire overlay.  While
 unstructured P2P systems have some scalability concerns, P2P systems in general
 allow for server-less systems.  In the realm of VPNs, all client VPNs are also
 servers with varying different responsibilities depending on the VPN
@@ -378,7 +384,7 @@ easily maintained by occassionally querying the overlay for active participants
 on public IP addresses and distributed with the application or some other
 out-of-band mechanism.  In the case of P2PVPN, this involves communication with
 one or more BitTorrent trackers to find other members of the P2PVPN group.  N2N
-requires knowledge of any existing peer in the system.  It uses this endpoint to
+requires knowledge of an existing peer in the system.  It uses this endpoint to
 bootstrap more connections to other peers in the system, allowing the
 application to be an active participant in the overlay and potentially be a
 bootstrap connection for other peers attempting to connect.
@@ -396,6 +402,12 @@ bootstrap connection for other peers attempting to connect.
 OpenVPN & Centralized & Certificates or passwords with a central server &
 Stored at central server(s) & Relay through server(s) & Open Source\\ \hline
 
+tinc & Centralized & CA Certificates / Private key & Everyone has global
+knowledge & No NAT traversal, support of relay through overlay & Open Source\\ \hline
+
+CloudVPN & Centralized & CA Certificates & Broadcast &
+Relay through server(s) & Open Source\\ \hline
+
 Hamachi & Centralized P2P & Password at central server & Stored at central server &
 NAT traversal and centralized relay & limited free-use, limited Non-Windows
 clients, no private relays \\ \hline
@@ -412,14 +424,8 @@ decentralized relay & Open Source \\ \hline
 P2PVPN & Unstructured P2P & Shared secret & Everyone has global knowledge &
 No NAT traversal, decentralized relay & Open Source \\ \hline
 
-tinc & Unstructured P2P & CA Certificates / Private key & Everyone has global
-knowledge & No NAT traversal, support of relay through overlay & Open Source\\ \hline
-
-CloudVPN & Unstructured P2P & CA Certificates & Broadcast &
-Relay through server(s) & Open Source\\ \hline
-
 IPOP & Structured P2P & CA Certificates or pre-exchanged keys &
-DHT lookup & NAT traversal and relay through physically close peers &
+DHT look up & NAT traversal and relay through physically close peers &
 Open Source\\ \hline
 
 \end{tabular}
@@ -430,8 +436,8 @@ Open Source\\ \hline
 \section{Structured Peer-to-Peer Systems}
 \label{structured_p2p}
 Structured P2P systems provide distributed look up services with guaranteed
-search time in $O(\log N)$ to $O(\log_2 N)$ time unlike unstructured systems that
-most either know all the state in the system or make random walks
+search time in $O(\log N)$ to $O(\log_2 N)$ time unlike unstructured systems
+that must either know all the state in the system or make random walks
 \cite{unstructured_v_structured}.  Some examples of structured systems can be found
 in~\cite{pastry, chord, symphony, kademlia, can}.  In general structured
 systems, are able to make these guarantees by self-organization, whereby a node
@@ -458,17 +464,17 @@ as many algorithms for selection shortcuts depends on having node ids uniformly
 distributed across the entire node id space.  A simple mechanism to ensure this
 is to have each node use a good, cryptographically strong random number
 generator.    Applying the birthday problem in this context would require
-between $2^64$ to $2^80$ peers in a system before there is a 50\% chance of there
+between $2^(64)$ to $2^(80)$ peers in a system before there is a 50\% chance of there
 being a collision.  Another mechanism involves having a third party generate the
 node ids and cryptographically signing them~\cite{secure_routing}.
 
-Similarly to the case of unstructured P2P systems, the incoming node must know
+Similar to the case of unstructured P2P systems, the incoming node must know
 of at least one participant in the system in order to connect to the system.  To
 summarize what was stated in Section~\ref{introp2p}, a list of nodes that are
 running on public addresses should be maintained and distributed with the
 application or be available through some out-of-band mechanism.  Other proposals
-suggest using multicast to find pools~\cite{pastry}, this works well except
-multicast range can be quite limited.
+suggest using multicast to find pools~\cite{pastry}, this can work well in
+certain environments but multicast range can be quite limited.
 
 Depending on the protocol, a node must be connected to either his closest
 neighbor smaller, larger, or both.  Optimizations for fault tolerance suggest
@@ -476,16 +482,16 @@ that it should be upwards of 4 on both sides.  If a peer does not know of an
 address who is his immediate predecessor or successor and a message is routed to
 him destined for them, depending on the message type, he will assume it was meant
 for him or throw the packet away.  Thus having multiple peers on both sides
-assist stability when there exists churn in the system where peers freely come
-and go with out warning.
+assist stability when the system is experiencing churn, that is when peers
+leave without warning.
 
-There are many implementations and proposals for determining shortcuts, each has
-differing costs associated.  A few of these include: maintaining large tables
-without using connections and only verifying usability when routing messages
-\cite{pastry, kademlia}, maintaining a connection with a peer every set distance
-from you in the P2P address space~\cite{chord}, or using a handful mathematically
-chosen locations in the node id space~\cite{symphony}.  Shortcuts make quickly
-traversing a P2P structure possible.
+Shortcuts make quickly traversing a P2P structure possible.  There are many
+implementations and proposals for determining shortcuts, each has differing
+costs associated.  A few of these include:  maintaining large tables without
+using connections and only verifying usability when routing
+messages~\cite{pastry, kademlia}, maintaining a connection with a peer every
+set distance from you in the P2P address space~\cite{chord}, or using a handful
+mathematically chosen locations in the node id space~\cite{symphony}.
 
 \section{Components of a P2PVPN}
 \label{p2pvpn}
@@ -943,7 +949,7 @@ P2P systems as they apply to the use as a VPN.
 System & Overlay messaging & NAT Traversal & DHT & Secure PtP & Secure EtE\\ \hline
 Brunet & Yes (AHSender) & UDP and overlay relaying & Yes with reliability & Yes & Yes \\ \hline
 FreePastry & Yes (route) & Only with port-forwarding enabled  & Yes, PAST~\cite{past}, reliable & No & No \\ \hline
-NChord & No, only lookup & No & Simple, non-fault tolerant DHT & No & No \\ \hline
+NChord & No, only look up & No & Simple, non-fault tolerant DHT & No & No \\ \hline
 \end{tabular}
 \caption{A comparison of structured P2P systems.  PtP stands for point-to-pont
 communication, such as communication between physical connections in a P2P
@@ -960,7 +966,7 @@ physical IP address who owns the virtual IP address.  Then we would need to
 ``connect'' to the remote node using either a UDP or TCP socket.  Virtual IP
 messages would then be sent and received through this ``connection''.
 
-With FreePastry, we, first lookup the mapping of virtual IP to node id from PAST.
+With FreePastry, we, first look up the mapping of virtual IP to node id from PAST.
 Afterward, we can use the ``route'' call to send packets and ``deliver'' to
 handle incoming packets.  In fact, the model is very similar to Brunet.
 Furthermore,  FreePastry has knowledge of proximity in shortcuts, so it may
