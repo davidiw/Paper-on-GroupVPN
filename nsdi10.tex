@@ -51,9 +51,10 @@ unsuccessful, but the scalability in current approaches has not been validated.
 In order to deal with these issues, we propose and implement a novel VPN
 architecture using a structured P2P system for peer discovery, session
 management, NAT traversal, and autonomic relay selection.  We relegate the use
-of a central server for certificate management.  Additionally, we provide
-a design and implementation of the first P2P VPN to support full tunneling,
-whereby all non-P2P based Internet traffic routes through a trusted third party.
+of a central server for certificate management via a partially automated web
+interface.  Additionally, we provide a design and implementation of the first
+P2P VPN to support full tunneling, whereby all non-P2P based Internet traffic
+routes through a trusted third party.
 
 In the paper, we describe the components of our model as well as present
 evaluate our reference implementation quantitatively to compare system and
@@ -464,9 +465,10 @@ as many algorithms for selection shortcuts depends on having node ids uniformly
 distributed across the entire node id space.  A simple mechanism to ensure this
 is to have each node use a good, cryptographically strong random number
 generator.    Applying the birthday problem in this context would require
-between $2^(64)$ to $2^(80)$ peers in a system before there is a 50\% chance of there
-being a collision.  Another mechanism involves having a third party generate the
-node ids and cryptographically signing them~\cite{secure_routing}.
+between $2^{64}$ to $2^{80}$ peers in a system for there to be a 50\% chance of
+address collision.  Another mechanism for distributing node ids involves the use
+of a trusted third party to generate node ids and cryptographically sign
+them~\cite{secure_routing}.
 
 Similar to the case of unstructured P2P systems, the incoming node must know
 of at least one participant in the system in order to connect to the system.  To
@@ -478,12 +480,12 @@ certain environments but multicast range can be quite limited.
 
 Depending on the protocol, a node must be connected to either his closest
 neighbor smaller, larger, or both.  Optimizations for fault tolerance suggest
-that it should be upwards of 4 on both sides.  If a peer does not know of an
-address who is his immediate predecessor or successor and a message is routed to
-him destined for them, depending on the message type, he will assume it was meant
-for him or throw the packet away.  Thus having multiple peers on both sides
-assist stability when the system is experiencing churn, that is when peers
-leave without warning.
+that it should be between 2 to $\log(N)$ on both sides.  If a peer does not
+know of an address who is his immediate predecessor or successor and a message
+is routed to him destined for them, depending on the message type, he will
+assume it was meant for him or throw the packet away.  Thus having multiple
+peers on both sides assist stability when the system is experiencing churn,
+that is when peers leave without warning.
 
 Shortcuts make quickly traversing a P2P structure possible.  There are many
 implementations and proposals for determining shortcuts, each has differing
@@ -495,15 +497,16 @@ mathematically chosen locations in the node id space~\cite{symphony}.
 
 \section{Components of a P2PVPN}
 \label{p2pvpn}
-Prior to the discussion of this papers contributions, we will present our
-previous works as they are the baseline for our P2P VPN.  Our previous research
-involves implementing a P2P system similar to Symphony~\cite{symphony}, named
+Before presenting our contributions made in this paper, we first review our
+current work as it provides the basis for our P2P VPN.  At the heart of our
+system lies a P2P system similar to Symphony~\cite{symphony}, named
 Brunet~\cite{brunet}.  The specific components of the system that make it
 interesting for use in a P2P VPN system include:
 %\small {
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
+\item NAT traversal~\cite{brunet}
 \item system stability when two nodes next to each other in address space cannot
 directly connect~\cite{hpdc08_0}
 \item selection of shortcuts using information based upon proximity~\cite{hpdc08_0}
@@ -511,8 +514,8 @@ directly connect~\cite{hpdc08_0}
 \end{itemize}
 %}
 
-Furthermore, in previous works, we have discussed and implemented a virtual
-networking technique with the following features:
+Furthermore, in previous works, we have discussed and implemented a VN with the
+following features:
 %\small {
 \begin{itemize}
 \setlength{\itemsep}{0pt}
@@ -533,11 +536,19 @@ Though this framework provides the basis for our design and implementation, we
 will attempt to abstract the components as much as possible.
 
 \subsection{Security through Groups}
-A group infrastructruce with one or more group administrators, who verify the
-incoming members and ensuring proper behavior of current methods removing those
-that misbehave, can easily be adapted into a certificate authority model.  We
-take this model and use it to support intuitive management of VPN members.  
-The process for follows:
+Setting up, deploying, and then maintaining security can easily become a
+non-negligible task.  Most VPN systems that support the use of certificates
+require the use of command-line utilities, setting up your own methods of
+securely deploying certificates and policing users.  In this section, we
+present partially automated certificate management through groups use of a
+redistributable web interface.  The key to the group infrastructure is that
+users should have a mechanism to verify the authenticity of the server, properly
+authenticate themselves with the server, and thereafter acquire signed
+certificates as needed.  From an administrators point of view, user information
+should be easily availble for verification and the ability to ban and remove
+users from the pool should be as easy as click a mouse button.
+
+Client usage in our model uses the following process:
 %\small {
 \begin{enumerate}
 \setlength{\itemsep}{0pt}
@@ -556,32 +567,42 @@ key
 the service
 \item on first boot, the VPN connects with the group web server providing a
 certificate request containing his node id and his secret key, the server
-verifies the authenticity of the user through the secret and signs the
-certificate
-\item the VPN client connects to the overlay and can now communicate with other members
-in the group
+verifies the authenticity of the user through the secret and ...
+\begin{enumerate}
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\item automatically signs the certificate
+\item or waits for an administrator to verify the certificate request
+\end{enumerate}
+\item upon receiving a signed certificate, the VPN client connects to the
+overlay and can now communicate with other members in the group
 \end{enumerate}
 %}
 
 The two key ambitions to using groups stem from providing a decentralized
 authentication mechanism and to reduce entry barriers into using VPNs.
-Through the use of certificate authority signed certificates, users can verify
+A group acts as a trusted set of peers where the administrator acts as the
+certificate authority signing certificates as he authenticates members into
+the system.  Signed certificates can be used in decentralized systems as they
+do not require communication with the certificate authority, users can verify
 that they are members of the group by verifying the signature on the exchanged
 certificate.  This removes the need for users to authenticate through a
 centralized server and removes the security weakness created by using only user
-name and passwords.  Providing the user a secret key in a binary blob used to
-obtain a signed certificate significantly reduces the entry barrier into using
-a VPN.  The key to this system is ensuring that the binary blob is only
-exchanged over secure mediums, such as HTTPS, which can  be done with no user
+name and passwords.  An insecure solution for configuration generation would be
+to have the server generate a private key and certificate for a peer.  The use
+ofa  binary blob generated by the server allows the user to keep his private key
+private, but he can also use the blob to generate multiple VPN clients without
+direct user interaction from the website.  Securing this system becomes very
+important as the blob can easily become a weak spot in the system.  While it may
+be cryptographically stronger than a key and password, it must still be
+exchanged over secure mediums, such as HTTPS, which can be done with no user
 intervention.
 
-The other key aspect of such an environment is efficiently dealing with
-misbehaving users.  Centralized and Centralized P2P VPNs can do this by
-terminating the link between two users.  Such an approach is impossible in
-a decentralized system where the group administrator as well as the group
-site would never be anything more than another member in the P2P overlay.
-To deal with this problem, we use the following mechanisms:
-
+Administrators need mechanisms for dealing with malicious users.  In systems
+that only use shared secrets, the systems creator has no ability without
+collusion to remove malicious participants from the VPN.  Our group model, like
+other certificate based schemes, provides the ability to administrate a system
+and police such users through the following methods:
 %\small {
 \begin{enumerate}
 \setlength{\itemsep}{0pt}
@@ -593,29 +614,33 @@ communicating with trusted peers as often as they like
 \end{enumerate}
 %}
 
-The strength of the CRL is that it can be done out of band and thus users of
-the overlay may not necessarily be able to prevent a user from updating to the
-most recent CRL.  Furthermore, if a client is unable to retrieve the latest
-CRL, it will be clear that there is a connectivity issue with the CRL server
-and it can act appropriately, depending on the security requirements.  The
-downside is that the CRL is centralized and it can be prohibitively expensive
-for peers to verify certificates on a regular, short periods.
+A CRL offers an out of band mechanism for distributing user revocations, unlike
+information exchanged in a P2P overlay, primarily because malicious users can
+use common P2P attacks to prevent notification of certificate revocations
+transmitted via the overlay, but it is signficantly more difficult to prevent
+the retrieval of a CRL.  Furthermore, if a client is unable to retrieve the
+latest CRL, it will be clear that there is a connectivity issue with the CRL
+server and it can act appropriately, depending on the security requirements.
+The downside is that the CRL is centralized and it can be prohibitively
+expensive for peers to verify certificates on regular intervals with short
+periods.
 
-The use of a DHT provides a mechanism that allows peers to regularly verify
-peers prior to and during connections.  DHTs can also be used to implement
+The DHT approach allows peers to regularly verify the remote peer prior to
+and during connections.  Additionally, DHTs can also be used to implement
 event notification, so that the CA can retrieve a list of peers who would like
 to be notified if a peer has had his ceritficate revoked.  The problem with a
 DHT is that they can be easily compromised if they have not been implemented
 with significant measures to protect against maliciousness.
 
 Finally, the most rudimentary mechanism is broadcasting the certificate
-revocation  over the entire P2P
-overlay.  In small networks, the cost of such a broadcast may be negligible,
-but as a network grows, such a broadcast may become prohibitively expensive.
-A broadcast can be harder to block through malicious behavior as a malicious
-node would need to have significant collusion in order to completely interrupt
-the broadcast.  Furthermore, the broadcast acts similarly to the DHT event
-notification, as such, peers find out on a push like mechanism.  
+revocation over the entire P2P overlay.  In small networks, the cost of such a
+broadcast may be negligible, but as a network grows, such a broadcast may
+become prohibitively expensive.  A broadcast can be harder to block through
+malicious behavior as a malicious node would need to have significant collusion
+in order to completely interrupt the broadcast, though this is feasable in our
+model if groups use automated certificate signing.  Furthermore, the broadcast
+acts similarly to the DHT event notification, as such, peers find out on a push
+like mechanism.  
 
 \subsection{Full-Tunneling over P2P}
 \label{fulltunnel}
