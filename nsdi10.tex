@@ -45,8 +45,9 @@ participants to communicate directly, relegating the server to handling session
 management and acting as a relay when NAT traversal fails.  Approaches to remove
 all centralization have turned towards unstructured P2P systems, such as a
 mesh.  These approaches, currently lack the depth in security options provided
-by traditional VPNs.  Additionally, they provide relays when NAT traversal is
-unsuccessful, but the scalability in current approaches has not been validated.
+by traditional VPNs.  Additionally, the unstructured systems provide relays
+when NAT traversal is unsuccessful, but the scalability in current approaches
+has not been validated.
 
 In order to deal with these issues, we propose and implement a novel VPN
 architecture using a structured P2P system for peer discovery, session
@@ -56,11 +57,10 @@ interface.  Additionally, we provide a design and implementation of the first
 P2P VPN to support full tunneling, whereby all non-P2P based Internet traffic
 routes through a trusted third party.
 
-In the paper, we describe the components of our model as well as present
-evaluate our reference implementation quantitatively to compare system and
-networking overheads of the different VPN technologies focusing on latency,
-bandwidth, and memory.  We also discuss our usage of the system over the past
-3 years.
+In this paper, we describe the components of our model and evaluate our
+reference implementation quantitatively to compare system and networking
+overheads of the different VPN technologies focusing on latency, bandwidth,
+and memory.  We also discuss our usage of the system over the past three years.
 %\end{sloppypar}
 
 \section{Introduction}
@@ -111,13 +111,13 @@ The problems we seek to address with our P2PVPN model include:
 \end{itemize}
 %}
 
-A brief overview of our solutions to the above problems follows and will
+A brief overview of our solutions to these problems follows and will
 be covered in depth in the rest of this paper.  To provide fully decentralized
 run-time connectivity and public-key based management of VPN endpoint
-membership, we use an automated certificate authority based upon the use of
-user groups.  In the case of full tunneling, P2PVPNs introduce significantly
-more complexity since a simple routing table swap as done in central VPNs no
-longer work. Thus, we investigate three different mechanisms for tunneling all
+membership, we use an automated certificate authority using a web based interface 
+employing groups.  P2PVPNs introduce significantly more complexity when
+attempting to do full tunneling since a simple routing table swap as done
+in central VPNs will no longer work. Thus, we investigate three different mechanisms for tunneling all
 non-P2P-based Internet traffic to our full tunnel gateway(s).  When nodes
 cannot directly communicate, they seek to connect to peers that are
 physically close to each other and use them to relay communication.  For
@@ -137,7 +137,7 @@ that is unique in supporting:
 \item support for full-tunneling through multiple gateways
 \item decentralized NAT traversal with autonomous selection of relays for
 non-traversable nodes
-\item use of a private P2P VPN system bootstrapped as a subset of the P2P system
+\item bootstrapping a private P2P VPN system off an existing public P2P system
 %\item discussion of our techniques used for discovering bugs in our system
 \end{itemize}
 %}
@@ -163,7 +163,6 @@ products.
 
 
 \begin{table}[ht]
-\label{tab:vpn_types}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
@@ -180,6 +179,7 @@ Structured P2P & No distinction between clients and servers, members are usually
 within $O(\log N)$ hops of each other via a greedy routing algorithm \\ \hline
 \end{tabular}
 \caption{VPN Classifications}
+\label{tab:vpn_types}
 \end{table}
 
 \subsection{Client VPN Configuration}
@@ -255,11 +255,12 @@ communication originates from a secure and trusted location and provides some
 level of security when a user is an insecure and potentially hostile
 environment, such as an open wireless network at coffee shop.
 
-Most centralized VPNs implement full-tunneling by doing a routing rule swap,
+Most centralized VPNs implement full tunneling by doing a routing rule swap,
 where the default gateway becomes an end-point in the VPNs subnet and traffic
-for the VPN server is routed to the local network gateway.  For example, on a
-typical home network, all traffic for the VPN server is sent via
-the local network's router to the VPN gateway via the Internet.  All other
+for the VPN server is routed to the LAN gateway.  For example, on a
+typical home network, an Internet bound packet will be retrieved at the VN
+device, encrypted, and sent to the VPN gateway via the LAN's gateway.  At the
+VPN gateway, the packet is decrypted and delivered to the Internet.  All other
 traffic is sent to the VN device, then sent securely to the VPN server.  In a P2P
 system, there becomes two new considerations 1) P2P traffic must not be routed
 to the VPN gateway and 2) there may be more than one VPN gateway.  We further
@@ -298,9 +299,8 @@ be used to verify the server's identity.  The three most common mechanisms for
 a client to authenticate with a server are via shared secrets, password, or a
 CA-signed certificate.
 
-Not all OpenVPN servers allow inter-client communication, though the
-configuration to enable is quite simple.  When two clients communicate, the
-process involves:
+When two clients communicate over an OpenVPN server, the process involves the
+following steps:
 %\small {
 \begin{enumerate}
 \setlength{\itemsep}{0pt}
@@ -384,45 +384,44 @@ end-points running the P2P overlay software, a list of such end points can be
 easily maintained by occassionally querying the overlay for active participants
 on public IP addresses and distributed with the application or some other
 out-of-band mechanism.  In the case of P2PVPN, this involves communication with
-one or more BitTorrent trackers to find other members of the P2PVPN group.  N2N
-requires knowledge of an existing peer in the system.  It uses this endpoint to
-bootstrap more connections to other peers in the system, allowing the
-application to be an active participant in the overlay and potentially be a
-bootstrap connection for other peers attempting to connect.
+one or more BitTorrent trackers to find other members of the P2PVPN group. 
+N2N~\cite{n2n} requires knowledge of an existing peer in the system.  It uses
+this endpoint to bootstrap more connections to other peers in the system,
+allowing the application to be an active participant in the overlay and
+ potentially be a bootstrap connection for other peers attempting to connect.
 
 %\small{
 \begin{table*}[ht]
-\label{tab:vpns}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
 %\begin{tabular}[c]{|p{1.1cm}||p{3.475cm}|p{3.475cm}|p{3.475cm}|p{3.475cm}|} \hline
-\begin{tabular}[c]{|m{1.5cm}||m{2.1cm}|m{2.4cm}|m{2.1cm}|m{2.9cm}|m{3.2cm}|} \hline
+\begin{tabular}[c]{|m{2cm}||m{1.8cm}|m{2.4cm}|m{2cm}|m{2.9cm}|m{3.2cm}|} \hline
 & VPN Type & Authentication Method & Peer Discovery & NAT Traversal & Availability \\ \hline \hline
 
-OpenVPN & Centralized & Certificates or passwords with a central server &
+OpenVPN~\cite{openvpn} & Centralized & Certificates or passwords with a central server &
 Stored at central server(s) & Relay through server(s) & Open Source\\ \hline
 
-tinc & Centralized & CA Certificates & Global knowledge &
+tinc~\cite{tinc} & Decentralized & CA Certificates & Global knowledge &
 Relay through mesh & Open Source\\ \hline
 
-CloudVPN & Centralized & CA Certificates & Global knowledge &
+CloudVPN~\cite{cloudvpn} & Centralized & CA Certificates & Global knowledge &
 Relay through mesh & Open Source\\ \hline
 
-Hamachi & Centralized P2P & Password at central server & Stored at central server &
+Hamachi~\cite{hamachi} & Centralized P2P & Password at central server & Stored at central server &
 NAT traversal and centralized relay & limited free-use, limited Non-Windows
 clients, no private relays \\ \hline
 
-GBridge & Centralized P2P & Password at central server & Stored locally &
+GBridge~\cite{gbridge} & Centralized P2P & Password at central server & Stored locally &
 NAT traversal, centralized relay & Windows only, freeware, no private relays \\ \hline
 
-Wippien & Centralized P2P & Password at central server & Stored locally & NAT traversal,
+Wippien~\cite{wippien} & Centralized P2P & Password at central server & Stored locally & NAT traversal,
 no relay support & Mixed Open / Closed source\\ \hline
 
-N2N & Unstructured P2P & Shared secret & Broadcast look up & NAT traversal,
+N2N~\cite{n2n} & Unstructured P2P & Shared secret & Broadcast look up & NAT traversal,
 decentralized relay & Open Source \\ \hline
 
-P2PVPN & Unstructured P2P & Shared secret & Everyone has global knowledge &
+P2PVPN~\cite{p2pvpn} & Unstructured P2P & Shared secret & Global knowledge &
 No NAT traversal, decentralized relay & Open Source \\ \hline
 
 IPOP & Structured P2P & CA Certificates or pre-exchanged keys &
@@ -431,6 +430,7 @@ Open Source\\ \hline
 
 \end{tabular}
 \caption{VPN Comparison}
+\label{tab:vpns}
 \end{table*}
 %}
 
