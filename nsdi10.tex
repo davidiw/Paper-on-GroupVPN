@@ -403,11 +403,11 @@ bootstrap connection for other peers attempting to connect.
 OpenVPN & Centralized & Certificates or passwords with a central server &
 Stored at central server(s) & Relay through server(s) & Open Source\\ \hline
 
-tinc & Centralized & CA Certificates / Private key & Everyone has global
-knowledge & No NAT traversal, support of relay through overlay & Open Source\\ \hline
+tinc & Centralized & CA Certificates & Global knowledge &
+Relay through mesh & Open Source\\ \hline
 
-CloudVPN & Centralized & CA Certificates & Broadcast &
-Relay through server(s) & Open Source\\ \hline
+CloudVPN & Centralized & CA Certificates & Global knowledge &
+Relay through mesh & Open Source\\ \hline
 
 Hamachi & Centralized P2P & Password at central server & Stored at central server &
 NAT traversal and centralized relay & limited free-use, limited Non-Windows
@@ -644,35 +644,32 @@ like mechanism.
 
 \subsection{Full-Tunneling over P2P}
 \label{fulltunnel}
-As discussed in Section~\ref{clientvpn}, VPN tunneling is usually divided into
-two categories:  split tunneling and full tunneling.  With split tunneling, the
-clients only route VPN destined messages over the VPN; whereas in full
-tunneling, all traffic both VPN and Internet traffic with the exception of
-overlay messages route over the VPN.  Using full-tunneling ensures that a peer
-cannot easily eavesdrop into what would otherwise be public communication by
-forwarding all traffic securely to a third party who resides in a more trusted
-environment.
+As discussed in Section~\ref{clientvpn}, VPN tunneling is divided into two
+categories:  split tunneling and full tunneling.  In split tunneling mode, the
+the VPN client routes messages destined only for other VPN clients; whereas in
+full tunneling mode, all traffic both VPN destined and Internet traffic with the
+exception of VPN ``control'' messages route over the VPN.  In a centralized VPN
+these ``control'' messages would be the communications directly with the VPN
+server and full tunnel gateway, which most likely is the same machine
+destination IP address from the perspective of the client.  In a P2P VPN,
+``control'' messages would be communications directly between P2P peers.  Using
+full-tunneling ensures that a malicious user cannot easily eavesdrop into what
+would otherwise be public communication by forwarding all non-VPN related
+traffic securely to a third party who resides in a more trusted environment.
+There are two key components to this scheme, a gateway / server or traffic
+relayer and a client or a traffic forwarder.  In the following sections, we
+present a simple scheme for providing gateways and a few solutions to
+configuring clients in a structured P2P overlay.
 
-There are two key components to this scheme, a server or traffic relayer and
-a client or a traffic forwarder.  In the following sections, we present a
-simple scheme for providing servers and a few solutions to configuring clients
-in a structured P2P overlay.
-
-%The full tunneling scheme is based on the IPOP infrastructure, which is introduced in section III. An entity such as a work group, organization, or institute who wants to construct a VPN network must construct the group ID and certificate, which are used by the gateway servers and clients to identify and authenticate each other. At least one VPN gateway server is needed for one group. All packets between the client-running applications and the Internet web servers will be forwarded securely through the VPN network, and routed by the VPN gateway server.
-%The packet forwarding in VPN network is based on Brunet, which means the packets may be forwarded via the peers not belonging to the group. But since the packets are encrypted, malicious peers are not able to eavesdrop them or modify them while the receiver not knowing it.
-
-%On the gateway client, all Internet packets coming from the general applications (that means, except the VPN process) are directed to a local TAP interface. The IP of the TAP interface is a virtual one that is unique within the VPN network. The VPN client captures all packets sending through the TAP interface, encapsulates them into the VPN packets and encrypts them with the group certificate. Finally these packets are sent through the physical interface. When the VPN client receives a VPN packet, the packet is decrypted, and if a Internet packet is encapsulated within it, the Internet packet will be extracted and injected directly to the TAP device for the applications to receive.
-
-%In deployment, we need to enable a TAP device for the applications to communicate with their Internet servers, while still having a physical network interface running for the VPN communication. So one problem the gateway client has to solve is how to configure the Routing Table to direct all the general application packets to the TAP device while directing all VPN packets to the physical device (and routed to the local gateway). We have three different approaches to implement the gateway client routing.
-
-%In this paper, our evaluation is based on the client implementation according to approach 1.
-\subsubsection{The Server}
-Prior to becoming a server, a machine must properly be configured, this can
-easily be done with a Linux machine using IPTables~\cite{iptables} component
-called masquerade, which will a machine to receive Internet bound packets on
-one network interface and forward them on another taking care of the
-responsibilities of changing source and destination Ethernet and IP addresses.
-The command we use is:
+\subsubsection{The Gateway}
+Configuring a machine as a gateway can easily be done in Linux using an
+IPTables~\cite{iptables} component called masquerade, which automatically
+handles forwarding packets received on one interface and forwarding them to the
+next hop automatically taking care of NAT as well as receiving packets
+from the Internet and forwarding them back to the appropriate client.  The
+specific features nice about the NAT handling is that it handles IP and Ethernet
+manipulation in addition to some packets that contain IP information, such as
+FTP and SIP.  The command we use is:
 \begin{center}
 iptables -t nat -A POSTROUTING -s 5.0.0.0/8 -o eth0 -j MASQUERADE
 \end{center}
@@ -683,38 +680,42 @@ packets this is enabled by tweaking procfs state via:
 \begin{center}
 echo 1 $>$ /proc/sys/net/ipv4.ip\_forward
 \end{center}
-There are many ways to implement a NAT box, our goal was to get a easily
-reproducible model, which was well served through this setup.
+Please note, that there are many ways to implement NAT in Linux, our goal was
+to present an easily reproducible model, which was well served through this
+setup.
 
-Once the user has setup NAT capabilities, the VPN server software must be
-configured to let VPN clients that desire full tunneling where there is a
-provider.  For that purpose, we added an enable flag into the VPN configuration
-that specifies if the machine is a VPN full tunnel server.  If it is, it
-appends a value to the list of known full tunnel servers for a VPN group.
-At which point, the system acts identical to any other VPN system, no additional
-configuration is necessary.
+With a gateway entact, the VPN software can now announce that it provides
+full tunneling.  For that purpose, we added an enable flag into the VPN
+configuration to specify that a machine is a full tunnel gateway.  When the
+VPN software starts, it will automatically append itself to the list of known
+gateways for the VPN group in the DHT.
+
+The only remaining difference in VPN gateway is the state machine used in
+processing packets coming from the VPN.  Previously, we rejected packets if
+the destination was not part of our network, now we check first to see if we
+have enabled gateway mode.  If it is enabled, all packets are written to the
+TAP device with the destination Ethernet address being that of the TAP device.
+The remaining configuration is identical to other members of the system.
 
 \subsubsection{The Client}
 VPN Clients wishing to use full tunnel must redirect their default traffic to
 their virtual network device.  Using the above example, the routing rule would
-look like:
-\begin{center}
-0.0.0.0         5.0.0.1     0.0.0.0         UG    0      0        0 tap0
-\end{center}
-There does not necessarily have to be an active node online at 5.0.0.1, this
-can be a ``virtual'' virtual address, where the result can than be forwarded
-to any machine in the network for relaying to the Internet.  This works
-because the structure of a message sent to the Internet via a gateway as shown
-in Figure~\ref{fig:tunnel_packet} contains only the Ethernet address of the
-relayer.  In our system, as described in~\cite{sc09}, each site uses a single
-Ethernet address to represent all remote hosts which differ by IP address, this
-is called a transparent subnet gateway~\cite{subnet_gateway}.  Furthermore, the
-smallest address in the subnet is used as a special address for running virtual
-network services, such as DHCP and DNS.  If a node uses that address in the
-overlay, it will not be routable.  With this in mind, the client software
-need only pay heed to the destination IP address, which points to the Internet.
-The process of handling virtual network traffic from the point of view of an
-Internet packet becomes:
+be default traffic (0.0.0.0/0 -- ip/netmask) is directed to 5.0.0.1 (the
+gateway).  There does not necessarily have to be an active node online at
+5.0.0.1, as shown in Figure~\ref{fig:tunnel_packet} the only sign of that this
+packet is destined for the gateway appears at the Ethernet header as the
+destination address.  This is relevant to two of our previous works as
+described in~\cite{sc09}: 1) each VPN software stack uses a single Ethernet
+address to represent all remote hosts which differ only by their IP address,
+this approach is called a transparent subnet gateway~\cite{subnet_gateway} and
+2) the lowest address in a network is reserved for virtual network services
+such as DHCP and DNS.  Thus 5.0.0.1 becomes a ``virtual'' virtual address, and
+packets sent for gateway purposes to this address can be forwarded to any
+machine in the VPN for relaying to the Internet without any IP or higher
+layer changes.  With this in mind, the client software need only pay heed to
+the destination IP address, which points to the Internet.  The VPNs state
+machine has to be slightly modified to handle outgoing packets not destined
+for a remote VPN end point:
 
 \begin{enumerate}
 \setlength{\itemsep}{0pt}
@@ -726,80 +727,78 @@ space
 \item if I find one, send the message to the remote peer
 \end{enumerate}
 
-Once we've sent the packet to the server, we simply wait for the packet to return.
-Once the packet returns, we will notice that the source IP address doesn't match
-the nodes virtual IP address and so we should confirm that we trust this entity
-to be a full-tunnel relayer.  If the packet is sent from an authenticated source,
-we can write the packet to the virtual network device completing the sending and
-receiving of an Internet request.
+The pathway for packets coming back from the Internet will also require some
+tweaking, that is, the source IP address will not match the VPN gateways IP.
+Thus the VPN client must confirm that the source is a VPN gateway or throw
+away the packet.  If the source is authenticated, it can be written to the
+VN device and the user application will receive a packet from the Internet.
 
-The two issues in the client configuration are selecting the server to use as
-our relaying partner and how to route P2P packets directly so that they are not
-relayed through the server.  The problem of selecting the server is not well
-evaluated in our model, our model was to query the DHT for a list of potential
-servers and selecting one randomly from that list.  Furthermore, we check the
-liveness of the server through a ping like mechanism every 15 seconds, though
-that could be configured to provide more fault tolerance when servers are
-actively churning.  We apply a pessimistic approach to handling loss of a server,
-where we will only update the selected server upon the next outgoing Internet
-packet.
+The two issues in the client configuration are selecting the machine to use as
+a gateway and how to ensure P2P packets are sent directly to the remote peer
+and not through the gateway.  Our model uses a simple mechanism for determining
+which gateway to choose:  query the DHT for a list of potential gateways, select
+a random one from the list, and verify liveness via periodic (15 second interval)
+ping messages.  For handling faults, we take a pessimistic approach, that is,
+if a server is lost, we take note of it and only query the DHT again upon the
+next outgoing Internet packet.
 
-The second issue, handling P2P routed packets, is the focus of our work.  In the
-centralized VPN case, namely when a client only ever communicates to a single
-point in the VPN overlay, this can be handled by having a single rule in the
-routing table that routes all packets to this end point via the networks default
-gateway, like so:
-\begin{center}
-128.227.56.121 192.168.1.1     255.255.255.255 UG    304    0        0 eth0
-\end{center}
-In this line, the VPN server is located at IP address 128.227.56.121.  Our local
-gateway is located at IP address 192.168.1.1.  The use of the netmask 255.255.255.255
-ensures that only packets destined for 128.227.56.121 are sent to the machine located
-at address 192.168.1.1.  In a P2P system, ensuring that all P2P overlay messages
-are routed directly becomes non-trivial because we will have many such routes most
-of which will not be known ahead of time.  If we maintained the model used by the
-centralized format, we would end up routing both Internet and P2P traffic over the
-relay machine and if he were disconnected, we would have to reinitialize all state
+For this paper, the second issue, handling P2P routed packets, was the focus of
+our work.  In the centralized VPN case, a client only needs to communicate
+directly with a single point in the VPN.  This can be handled by having a single
+rule added to the routing table that would route all packets to this end point
+via the LAN's default gateway.  The rule would look similar to 128.227.56.121/32
+directed to 192.168.1.1, where 128.227.56.121 is the remote machine and 192.168.1.1
+is the local gateway.
+
+In a P2P system, ensuring that all P2P overlay messages are routed directly
+becomes non-trivial because we will have many such routes most of which will
+not be known ahead of time.  If we maintained the model used by the centralized
+format, we would end up routing both Internet and P2P traffic over the gateway
+machine and if he were disconnected, we would have to reinitialize all state
 and more importantly we would lose the advantage provided by P2P, namely
-scalability.  To solve this we look at many different possibilities but were only
-able to come up with one successful model for easily setting up a client.  We
+scalability.  To solve this we present many different possibilities but in our
+efforts were only successful with one model for easily setting up a client.  We
 present all our work, including our failed attempts, such that it may be the
 ground work for further research.
 
 \subsubsection{The Client -- Approach 1 -- Adding Routes}
-The first approach taken was to follow a model similar to the centralized version,
-that is, for each P2P machine we communicated, we had an explicit rule in the
-routing table.  In order to ensure this, we added a feature to the socket handling
-code in our system that would indirectly add the remote nodes public address to
-our routing table.  This action would occur prior to the first outgoing communication
-attempt and would remain in effect until the VPN closed down.  In order to ensure
-there were not excessive rules, we check the currently active connections and
-remove those that are no longer active.
+The first approach taken uses a model similar to the centralized version,
+that is, for each P2P machine we communicate with, we add an explicit rule in the
+routing table so that packets destined for them are routed directly to them via
+the LAN's default gateway.  In order to ensure this, we added a feature to the
+socket handling code in our system that would indirectly add the remote nodes
+public address to our routing table prior to the first outgoign communication
+attempt and would remain in effect until the VPN closed down or the link was no
+longer active.  This model does not need to worry about incoming packets, as they
+will be unaffected by the routing table and will be delivered as they were in
+the normal system.
 
 This model works well but has two major flaws.  Common to all VPNs that employ
 the standard route switch technique, all communication, not just VPN, is routed
-directly to the server insecurely.  So while the VPN traffic is most likely 
+directly to the server insecurely.  So while the VPN traffic is most likely
 encrypted, if the server also hosts a website, that traffic will be in its natural
-state, potentially unencrypted, and visible to any eavesdroppers.  Secondly, a
-malicious user could send spoof packets to have the VPN add extra routes to the
-routing table, resulting in a similar situation as the first problem.  The next
-two solutions attempted to solve these problems.
+state, potentially unencrypted, and visible to any eavesdroppers.  An issue,
+unique to our P2P solution, allows a malicious user to send spoofed packets
+to have the VPN add extra routes to the routing table, resulting in a similar
+situation as the first, unencrypted communication visible to eavesdroppers.
+The next two solutions attempted to solve these problems.
 
 \subsubsection{The Client -- Approach 2 -- Writing Ethernet Packets}
 This approach recognizes that when using UDP, we know the source port from which
 all traffic originates, also even in the case of TCP, we can easily determine
-our source ports for outgoing connections.  While the routing rule directing all
-traffic to the VPN remains, there are no additional routing rules.  Thus all
-packets are directly sent to the virtual network device and the VPN client software
-must handle routing the packets appropriately.
+our source ports for outgoing connections using a technique similar to the one
+used in the first solution.  While the routing rule directing all traffic to
+the VPN remains, there are no additional routing rules.  Thus all packets are
+directly sent to the VN device and the VPN client software must handle routing
+the packets appropriately.
 
 To distinguish P2P packets from non-P2P packets, the VPN client needs to look
-at the source port for the communication, if it matches the VPN client's source
+at the source port of outgoing IP packets, if it matches the VPN client's source
 port, it must route the packet through the local gateway.  In order to do this,
 we need a component that can write to the hosts physical network device an
 Ethernet packet to encapsulate the P2P IP packet.  Furthermore, we need to
 modify the IP packet to change the source address to match the physical
-ethernet devices IP address.  We focused on two approaches that would be
+Ethernet devices IP address.  We focused on two approaches that would be
 cross-platform capable: 1) using a bridged tap device whose sole purpose is to
 send and receive Internet packets to and from the gateway and 2) using
 PCap~\cite{pcap} to send packets.  Additionally, Linux also supports a packet
@@ -809,19 +808,23 @@ approaches that were reasonably portable to other OSes.
 
 The problem with this approach is that when an incoming packet arrived at the
 clients networking stack, the client would not recognize the packet because the
-destination IP address was the physical ethernet's and not the virtual ethernet's,
-the one where it originated.  This would trigger the OS sending a TCP reset message.
-Thus the only solution would be to implement some form of NAT, a task we have not
-started yet.
+destination IP address was the physical Ethernet's and not the VN Ethernet's,
+the one where it originated.  This would trigger the OS either ignoring the
+packet in the case of UDP or sending a TCP reset message.  Thus the only
+solution would be to implement some form of NAT, that would receive incoming
+packets and rewrite them prior to the network stacking thus avoiding a TCP
+reset message, a task we have not started yet.
 
 \subsubsection{The Client -- Approach 3 -- Using Linux Tools}
 The problem with having the VPN client redirect packets directly is that it can
-be potentially costly, so we also investigated the potential of using existing
-Linux tools to solve this problem.  IPTables~\cite{iptables} provides the ability
+be potentially costly, as all VPN traffic will traverse the TAP device twice,
+once as VPN traffic and the second as P2P traffic, so we also investigated the
+potential of using existing Linux tools to solve this problem.
+Our focus was on the use of IPTables~\cite{iptables} as it provides the ability
 to manipulate IP packets to implement firewalls and NATs, we had hoped that we
 could do redirect our packets to the gateway, somehow.
 
-Using only IPTables, this approach is not possible as we cannot manipulate the
+IPTables alone was not able to do the job as it cannot manipulate the
 Ethernet addresses directly using IPTables.  The only way to manipulate the
 Ethernet addresses is by changing the destination or source IP address.  There
 was no change that could be made that would accomplish what we were looking for.
@@ -832,9 +835,8 @@ special routing table.  The routing table can be managed using iproute2
 routing table take a different default route, one that routes it to the local
 gateway.  The problem with this approach is that it does not deal with the
 source address of the packet.  In other words, the packet will have a source
-IP address of the virtual network device and not of the physical Ethernet
+IP address of the VN device and not of the physical Ethernet
 device.
-
 \subsection{Autonomic Relays}
 In a handful of P2PVPNs~\cite{hamachi, gbridge}, there is support for relaying
 of communication when direct communication is not possible though in a majority
