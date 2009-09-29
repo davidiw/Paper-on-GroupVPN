@@ -67,7 +67,7 @@ and memory.  We also discuss our usage of the system over the past three years.
 A Virtual Private Network (VPN) provides the illusion of a Local Area Network
 (LAN) spanning over a public wide area network infrastructure, guaranteeing
 secure and authenticated communication amongst participants.  Common uses of
-VPNs include secure access to enterprise network resources from remote/unsecure
+VPNs include secure access to enterprise network resources from remote/insecure
 locations, connecting distributed resources from multiple sites, and
 establishing virtual LANs for multi-player video games over the Internet.  In
 the context of this paper, we focus on VPNs that provide connectivity amongst
@@ -209,7 +209,7 @@ use of accounts with passwords in addition to a shared secret, this allows
 blocking out users if the shared secret becomes compromised or users act
 maliciously.  For the strongest level of security, each client can be
 configured to have a signed-certificate that makes brute force attacks very
-difficult.  The tradeoffs come in terms of usability.  While the use of uniquely
+difficult.  The trade offs come in terms of usability.  While the use of uniquely
 sign-certificates may be the most secure, it can be quite difficult for novice
 computer users.  A good balance found in many environments is the mixture of
 a shared secret and individual user accounts, where the shared secret is
@@ -285,14 +285,14 @@ The key aspects of a centralized VPN server are:
 \end{itemize}
 %}
 
-How do I login?  Central VPNs server operate at well-known end-points as in
+How do I log in?  Central VPNs server operate at well-known end-points as in
 a universal resource identifier (URI) consisting of a hostname or IP address and
 a port.  Clients will randomly attempt to connect to one of the servers until
 successful, implementing a meek load balance.  Once connected, clients obtain an
 address in the VPN address space.  Depending on configuration this will allow a
 client to communicate with other clients, resources on the same network as the
 server, or Internet hosts via the VPN.  There are many, many different ways a
-client and server can authenticate with each other.  For a server to authenicate
+client and server can authenticate with each other.  For a server to authenticate
 with a client, the safest way is for the client to have some secure knowledge,
 such as the server's certificate, retrieved from a secure source, this can then
 be used to verify the server's identity.  The three most common mechanisms for
@@ -340,7 +340,7 @@ There is no distributed load balancing.
 Two examples of systems that assist in distributing load in VPN systems are
 tinc~\cite{tinc} and CloudVPN~\cite{cloudvpn}.  Unlike the decentralized P2P
 systems, these decentralized systems lack the ability to automatically form
-and maintain VPN systems, in otherwords, they lack self-organization.  This
+and maintain VPN systems, in other words, they lack self-organization.  This
 means that like OpenVPN, systems can suffer VPN outages when nodes go offline.
 The difference being that OpenVPN makes it explicit who is a server and who
 is not, whereas these systems anyone can be a server or a client.  While the
@@ -349,12 +349,12 @@ rings described are setup and managed directly by human interaction.
 
 \subsection{Centralized P2P VPN Systems}
 Hamachi~\cite{hamachi} began the advent of centralized VPNs that went with the
-ambiguous monicker ``P2P VPN''.  In reality, these systems would be best
+ambiguous moniker ``P2P VPN''.  In reality, these systems would be best
 classified as centralized VPNs servers with P2P clients.  Specifically, the
 nature of P2P in these~\cite{wippien, gbridge} types of systems provides direct
 connectivity between clients once authenticated by a central server.  While
 direct connection is desirable, it does not always happen due to firewalls or
-inpenetrable NATs, when this happens the central server either acts as a relay
+impenetrable NATs, when this happens the central server either acts as a relay
 or the two machines are unable to communicate.  One security consideration is
 that each of these implementations use their own security protocols that
 involve using the server to verify the authenticity of each other.  Most of
@@ -381,7 +381,7 @@ application, as we present in Table~\ref{tab:vpns}.
 
 Typically, decentralized, P2P VPNs begin by attempting to connect to well-known
 end-points running the P2P overlay software, a list of such end points can be
-easily maintained by occassionally querying the overlay for active participants
+easily maintained by occasionally querying the overlay for active participants
 on public IP addresses and distributed with the application or some other
 out-of-band mechanism.  In the case of P2PVPN, this involves communication with
 one or more BitTorrent trackers to find other members of the P2PVPN group. 
@@ -526,7 +526,7 @@ DHT~\cite{sc09, pcgrid07}
 \item scalability in the count of hundreds of peers in a single VN~\cite{sc09}
 \item portability to any system that supports Tap and Mono\footnote{
 Mono is an open source implementation of .Net also known as the Common Language
-Runtime (CLR), which provides managed run-time environment similar to Java.}~\cite{mono}
+Run-time (CLR), which provides managed run-time environment similar to Java.}~\cite{mono}
 \item ability to behave as a VN interface or router~\cite{sc09}
 \item used in grid computing for over 3 years~\cite{archer,vtdc,pcgrid08,gridappliance}
 \end{itemize}
@@ -545,7 +545,7 @@ redistributable web interface.  The key to the group infrastructure is that
 users should have a mechanism to verify the authenticity of the server, properly
 authenticate themselves with the server, and thereafter acquire signed
 certificates as needed.  From an administrators point of view, user information
-should be easily availble for verification and the ability to ban and remove
+should be easily available for verification and the ability to ban and remove
 users from the pool should be as easy as click a mouse button.
 
 Client usage in our model uses the following process:
@@ -590,7 +590,7 @@ certificate.  This removes the need for users to authenticate through a
 centralized server and removes the security weakness created by using only user
 name and passwords.  An insecure solution for configuration generation would be
 to have the server generate a private key and certificate for a peer.  The use
-ofa  binary blob generated by the server allows the user to keep his private key
+of a  binary blob generated by the server allows the user to keep his private key
 private, but he can also use the blob to generate multiple VPN clients without
 direct user interaction from the website.  Securing this system becomes very
 important as the blob can easily become a weak spot in the system.  While it may
@@ -608,7 +608,7 @@ and police such users through the following methods:
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \item use a certificate revocation list (CRL) hosted on the web group website
-\item sign a revocation and place it into the dht, peers can verify they are
+\item sign a revocation and place it into the DHT, peers can verify they are
 communicating with trusted peers as often as they like
 \item broadcast to the entire P2P system the revocation of the peer
 \end{enumerate}
@@ -617,7 +617,7 @@ communicating with trusted peers as often as they like
 A CRL offers an out of band mechanism for distributing user revocations, unlike
 information exchanged in a P2P overlay, primarily because malicious users can
 use common P2P attacks to prevent notification of certificate revocations
-transmitted via the overlay, but it is signficantly more difficult to prevent
+transmitted via the overlay, but it is significantly more difficult to prevent
 the retrieval of a CRL.  Furthermore, if a client is unable to retrieve the
 latest CRL, it will be clear that there is a connectivity issue with the CRL
 server and it can act appropriately, depending on the security requirements.
@@ -628,7 +628,7 @@ periods.
 The DHT approach allows peers to regularly verify the remote peer prior to
 and during connections.  Additionally, DHTs can also be used to implement
 event notification, so that the CA can retrieve a list of peers who would like
-to be notified if a peer has had his ceritficate revoked.  The problem with a
+to be notified if a peer has had his certificate revoked.  The problem with a
 DHT is that they can be easily compromised if they have not been implemented
 with significant measures to protect against maliciousness.
 
@@ -637,7 +637,7 @@ revocation over the entire P2P overlay.  In small networks, the cost of such a
 broadcast may be negligible, but as a network grows, such a broadcast may
 become prohibitively expensive.  A broadcast can be harder to block through
 malicious behavior as a malicious node would need to have significant collusion
-in order to completely interrupt the broadcast, though this is feasable in our
+in order to completely interrupt the broadcast, though this is feasible in our
 model if groups use automated certificate signing.  Furthermore, the broadcast
 acts similarly to the DHT event notification, as such, peers find out on a push
 like mechanism.  
@@ -684,7 +684,7 @@ Please note, that there are many ways to implement NAT in Linux, our goal was
 to present an easily reproducible model, which was well served through this
 setup.
 
-With a gateway entact, the VPN software can now announce that it provides
+With a gateway intact, the VPN software can now announce that it provides
 full tunneling.  For that purpose, we added an enable flag into the VPN
 configuration to specify that a machine is a full tunnel gateway.  When the
 VPN software starts, it will automatically append itself to the list of known
@@ -700,7 +700,7 @@ The remaining configuration is identical to other members of the system.
 \subsubsection{The Client}
 VPN Clients wishing to use full tunnel must redirect their default traffic to
 their virtual network device.  Using the above example, the routing rule would
-be default traffic (0.0.0.0/0 -- ip/netmask) is directed to 5.0.0.1 (the
+be default traffic (0.0.0.0/0 -- IP/netmask) is directed to 5.0.0.1 (the
 gateway).  There does not necessarily have to be an active node online at
 5.0.0.1, as shown in Figure~\ref{fig:tunnel_packet} the only sign of that this
 packet is destined for the gateway appears at the Ethernet header as the
@@ -767,7 +767,7 @@ that is, for each P2P machine we communicate with, we add an explicit rule in th
 routing table so that packets destined for them are routed directly to them via
 the LAN's default gateway.  In order to ensure this, we added a feature to the
 socket handling code in our system that would indirectly add the remote nodes
-public address to our routing table prior to the first outgoign communication
+public address to our routing table prior to the first outgoing communication
 attempt and would remain in effect until the VPN closed down or the link was no
 longer active.  This model does not need to worry about incoming packets, as they
 will be unaffected by the routing table and will be delivered as they were in
@@ -845,16 +845,15 @@ do not have to worry about direct connectivity as all traffic always routed
 through a centralized relaying system.  Because centralized relaying systems
 have scalability concerns, we propose a distributed, autonomic relaying system
 based upon previous work~\cite{hpdc08_0}.  In this work, we described a
-mechanism using triangular
-routing that allowed peers next to each other in the node id space communicate
-inspite of them being able to communicate directly with each other, whether the
-cause be firewall, NAT, or Internet disconnectivity issues.  To support this
-behavior, two nodes would discovery each other by indirect communication via the
-overlay.  This would trigger a best effort to exchange peer lists via the current
-set of near neighbors.  In most cases, the peers would have at least one
-overlapping neighbor and the messages would be exchanged.  From thereafter, the
-peers would use the overlapping neighbors to communicate with each other
-``directly''.
+mechanism using triangular routing that allows peers next to each other in the
+node id space communicate despite them being unable to communicate directly
+with each other, whether the cause be firewall, NAT, or Internet
+disconnectivity issues.  To support this behavior, two nodes would discovery
+each other by indirect communication via the overlay.  This would trigger a
+best effort to exchange peer lists via the current set of near neighbors.  In
+most cases, the peers would have at least one overlapping neighbor and the
+messages would be exchanged.  From thereafter, the peers would use the
+overlapping neighbors to communicate with each other ``directly''.
 
 This model worked well in the case that the nodes were neighbors, but when two
 peers are far away from each other the algorithm will fail.  Most high bandwidth
@@ -867,7 +866,7 @@ creating an overlap and our ability to reuse previous work.  There is one
 difference though, in the previous work, there was no consideration for the
 viability of the intermediate, the goal was simply to have connectivity
 regardless of performance.  Thus in addition to exchanging neighbor lists, we
-made it possible to exchange abitrary information to assist in making decisions.
+made it possible to exchange arbitrary information to assist in making decisions.
 So far we have focused on the use of the stability as measured by the age of the
 connection between the far node and his neighbor, the latency between the far
 node and his neighbor, and the optimal overlap based upon network coordinates.
@@ -877,7 +876,7 @@ We present our test environment, experiment, and results in~\ref{relay_eval}.
 There have been many papers that discuss handling of distributed security via
 purely decentralized mechanism.  While the work is quite useful, we have also
 heard many users state they do not trust sending their data over an insecure,
-untrusted overlay system.  Decentralized security provides only probablistic
+untrusted overlay system.  Decentralized security provides only probabilistic
 security and has no hard guarantees that only trusted individuals will be
 involved and aware of your communication behaviors.  For that purpose, we
 suggest bootstrapping a private overlay off of a public overlay.  The private
@@ -893,14 +892,14 @@ Beyond security, the attractive features of a private ring for VN include:
 \item simplified multicast, broadcast routing
 \item another mechanism for selecting relays
 \item smaller overlays for faster overlay routing
-\item a sybil-resistant P2P system
+\item a Sybil-resistant P2P system
 \end{itemize}
 %}
 
 A key feature, which is unexplored in this paper, is that multicast and
 broadcast routing becomes much easier as all peers in the system would want
 to receive such packets.  Where as in a general P2P overlay, mechanisms such as
-scribe~\cite{scribe} are necessary to provide multiicast and broadcast
+scribe~\cite{scribe} are necessary to provide multicast and broadcast
 capabilities.
 
 Members of the VPN are the only members of the overlay, providing a powerful
@@ -922,7 +921,7 @@ well over 1,000 peers for days of virtual time in a matter of hours.  The model
 allows for easy integration testing, so that as new features are incorporated
 they can easily be tested prior to doing wide-area tests.
 
-The next step is to run a week long test on planetlab that ensures reliability,
+The next step is to run a week long test on Planet-Lab that ensures reliability,
 stability, and consistency, or that a node is congruent with both its first and second
 left and right neighbors.  We call this a crawl.  We store this information in a
 database, and then query the database to find cases where a node may have been
@@ -943,9 +942,9 @@ model.  Planet-Lab also places challenges on memory, as the systems can often be
 I/O starved causing what appears to be memory leaks as Brunet's internal queue
 can grow without bound.  After solving this via a disconnect on overload, that
 occurs when the queues moving average exceeds a threshold of 4,096, the memory
-usage on planetlab has helped us discover that memory leaks exist.  The advantage
+usage on Planet-Lab has helped us discover that memory leaks exist.  The advantage
 of Planet-Lab as a test ground  is that it presents so many unique situations that
-can bevery difficult to reproduce in a lab controlled test system.  It is our belief
+can be very difficult to reproduce in a lab controlled test system.  It is our belief
 that any system that uses large scale Planet-Lab deployments as a testing ground
 will be quite reliable.
 
@@ -959,7 +958,7 @@ influenced by experience that is difficult to formally justify.
 \subsection{P2PVPN in Other Structured Overlays}
 The purpose in this work is to develop a model of a P2PVPN that can easily be
 applied to other structured P2P systems.  In this section, we focus on the
-viability of our platform running on top of other sturctured P2P systems, namely
+viability of our platform running on top of other structured P2P systems, namely
 Pastry and Chord by analyzing FreePastry~\cite{freepastry} and
 NChord~\cite{nchord} respectively.  FreePastry can easily reuse our C\# implemented
 library through the use of IKVM.NET~\cite{ikvm}, which allows the porting of
@@ -978,7 +977,7 @@ Brunet & Yes (AHSender) & UDP and overlay relaying & Yes with reliability & Yes 
 FreePastry & Yes (route) & Only with port-forwarding enabled  & Yes, PAST~\cite{past}, reliable & No & No \\ \hline
 NChord & No, only look up & No & Simple, non-fault tolerant DHT & No & No \\ \hline
 \end{tabular}
-\caption{A comparison of structured P2P systems.  PtP stands for point-to-pont
+\caption{A comparison of structured P2P systems.  PtP stands for point-to-point
 communication, such as communication between physical connections in a P2P
 overlay.  EtE stands for end-to-end communication, such as messages routed
 over the overlay between two peers.}
@@ -1002,8 +1001,8 @@ be very easy to apply high-performance autonomic relays to pastry.
 \section{Evaluation of VPN Models}
 For the purpose of quantitatively evaluation, we have added the features of
 the proposed design parameters described in Section~\ref{p2pvpn} to IPOP
-\cite{sc09} and Brunet~\cite{brunet}.  We begin by examing the effects of
-different relay selection mechanisms.  Afterwards, we evaluate the system
+\cite{sc09} and Brunet~\cite{brunet}.  We begin by examining the effects of
+different relay selection mechanisms.  Afterwords, we evaluate the system
 overheads of OpenVPN, Hamachi, and our P2P VPN determine the OS resource costs
 and the cost of each in a distributed environment.
 
