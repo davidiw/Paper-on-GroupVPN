@@ -338,7 +338,7 @@ To support full-tunneling or allowing the client to access the server's resource
 he too must behave somewhat like a client by enabling a VPN end-point via a VN
 device.  The VN device is configured to support NAT from the VN to the local
 network and/or the Internet.  In Linux, this is achieved with minimal
-configuration via IPtables\~cite{iptables}, a layer 3 network stack manipulator.
+configuration via IPtables, a layer 3 network stack manipulator.
 
 OpenVPN allows a distribution of servers, so as to provide fault tolerance and
 to a lesser degree load balancing.  Servers must be configured to know about
@@ -673,7 +673,7 @@ configuring clients in a structured P2P overlay.
 
 \subsubsection{The Gateway}
 Configuring a machine as a gateway can easily be done in Linux using an
-IPTables~\cite{iptables} component called masquerade, which automatically
+iptables component called masquerade, which automatically
 handles forwarding packets received on one interface and forwarding them to the
 next hop automatically taking care of NAT as well as receiving packets
 from the Internet and forwarding them back to the appropriate client.  The
@@ -717,7 +717,7 @@ packet is destined for the gateway appears at the Ethernet header as the
 destination address.  This is relevant to two of our previous works as
 described in~\cite{sc09}: 1) each VPN software stack uses a single Ethernet
 address to represent all remote hosts which differ only by their IP address,
-this approach is called a transparent subnet gateway~\cite{subnet_gateway} and
+this approach is called a transparent subnet gateway~\cite{RFC1027} and
 2) the lowest address in a network is reserved for virtual network services
 such as DHCP and DNS.  Thus 5.0.0.1 becomes a ``virtual'' virtual address, and
 packets sent for gateway purposes to this address can be forwarded to any
@@ -811,10 +811,10 @@ modify the IP packet to change the source address to match the physical
 Ethernet devices IP address.  We focused on two approaches that would be
 cross-platform capable: 1) using a bridged tap device whose sole purpose is to
 send and receive Internet packets to and from the gateway and 2) using
-PCap~\cite{pcap} to send packets.  Additionally, Linux also supports a packet
-type called packet~\cite{packet}, which allows writing complete Ethernet
-packets, a feature not enabled in Windows.  For this model, we only focused on
-approaches that were reasonably portable to other OSes.
+PCap, a packet capture and injection library, to send packets.  Additionally,
+Linux also supports a packet type called packet, which allows writing complete
+ Ethernet packets, a feature not enabled in Windows.  For this model, we only
+focused on approaches that were reasonably portable to other OSes.
 
 The problem with this approach is that when an incoming packet arrived at the
 clients networking stack, the client would not recognize the packet because the
@@ -830,18 +830,18 @@ The problem with having the VPN client redirect packets directly is that it can
 be potentially costly, as all VPN traffic will traverse the TAP device twice,
 once as VPN traffic and the second as P2P traffic, so we also investigated the
 potential of using existing Linux tools to solve this problem.
-Our focus was on the use of IPTables~\cite{iptables} as it provides the ability
+Our focus was on the use of iptables as it provides the ability
 to manipulate IP packets to implement firewalls and NATs, we had hoped that we
 could do redirect our packets to the gateway, somehow.
 
-IPTables alone was not able to do the job as it cannot manipulate the
-Ethernet addresses directly using IPTables.  The only way to manipulate the
+Iptables alone was not able to do the job as it cannot manipulate the
+Ethernet addresses directly using iptables.  The only way to manipulate the
 Ethernet addresses is by changing the destination or source IP address.  There
 was no change that could be made that would accomplish what we were looking for.
 
-IPTables had another feature, which was to mark a packet so that it could use a
-special routing table.  The routing table can be managed using iproute2
-~\cite{iproute2}.  We then can make all packets that arrive at the special
+Iptables had another feature, which was to mark a packet so that it could use a
+special routing table.  The routing table can be managed using iproute2.
+We then can make all packets that arrive at the special
 routing table take a different default route, one that routes it to the local
 gateway.  The problem with this approach is that it does not deal with the
 source address of the packet.  In other words, the packet will have a source
@@ -869,7 +869,7 @@ Direct connectivity in most cases provides significant performance gains over
 routing through the overlay.  When direct connections is not available, which
 is more efficient relaying or overlay routing?  In practical experience, we
 have seen overlay transit time in the order of seconds and further establish
-the use of relays in our evaluation in Section~\ref{evaluate_relays}.  When
+the use of relays in our evaluation in Section~\ref{relay_eval}.  When
 peers are not near each other in address space, there is a high chance that
 they will not have any overlapping peers, thus our current technique would
 not work.  Our solution, as represented in Figure~\ref{fig:relay}, is to
@@ -977,9 +977,9 @@ influenced by experience that is difficult to formally justify.
 The purpose of this work is to develop a P2PVPN model that can easily be
 applied to other structured P2P systems.  In this section, we focus on the
 portability of our platform to other structured P2P systems, namely
-Pastry and Chord by analyzing FreePastry~\cite{freepastry} and
-NChord~\cite{nchord} respectively.  FreePastry can easily reuse our C\# implemented
-library through the use of IKVM.NET~\cite{ikvm}, which allows the porting of
+Pastry and Chord by analyzing FreePastry and
+NChord respectively.  FreePastry can easily reuse our C\# implemented
+library through the use of IKVM.NET, which allows the porting of
 Java code into the CLR.  NChord is a Chord implementation written in C\#.  In
 Table~\ref{tab:structured_p2p_compare}, we compare the features of the structured
 P2P systems as they apply to the use as a VPN.
