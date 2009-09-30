@@ -2,6 +2,8 @@
 \usepackage{usenix}
 \usepackage{endnotes}
 \usepackage[tight]{subfigure}
+\usepackage{natbib}
+\setlength{\bibsep}{0.0pt}
 
 \usepackage{url}
 \usepackage{multirow}
@@ -11,6 +13,14 @@
 \usepackage{amsmath}
 \widowpenalty=10000
 \clubpenalty=10000
+\setlength{\parskip}{0pt}
+\setlength{\dbltextfloatsep}{.2cm}
+\setlength{\dblfloatsep}{.2cm}
+\setlength{\textfloatsep}{.2cm}
+\setlength{\floatsep}{.2cm}
+\setlength{\topsep}{.2cm}
+\setlength{\intextsep}{.2cm}
+\setlength{\belowcaptionskip}{.2cm}
 
 \begin{document}
 
@@ -838,51 +848,59 @@ source address of the packet.  In other words, the packet will have a source
 IP address of the VN device and not of the physical Ethernet
 device.
 \subsection{Autonomic Relays}
-In a handful of P2PVPNs~\cite{hamachi, gbridge}, there is support for relaying
-of communication when direct communication is not possible though in a majority
-of them this is not the case.  All centralized VPNs
-do not have to worry about direct connectivity as all traffic always routed
-through a centralized relaying system.  Because centralized relaying systems
-have scalability concerns, we propose a distributed, autonomic relaying system
-based upon previous work~\cite{hpdc08_0}.  In this work, we described a
-mechanism using triangular routing that allows peers next to each other in the
+A handful of P2PVPNs~\cite{hamachi, gbridge} support relaying when direct
+communication is not possible though a majority of them do not.
+Centralized and decentralized VPNs do not suffer from this problem
+as all traffic passes through the central server or managed links.  Because
+of the management and overhead concerns presented by these systems, we propose
+the use of distributed, autonomic relaying system based upon previous
+work known as ``tunnels''~\cite{hpdc08_0}.  In this work, we describe a
+mechanism using triangle routing that allows peers next to each other in the
 node id space communicate despite them being unable to communicate directly
 with each other, whether the cause be firewall, NAT, or Internet
-disconnectivity issues.  To support this behavior, two nodes would discovery
-each other by indirect communication via the overlay.  This would trigger a
-best effort to exchange peer lists via the current set of near neighbors.  In
-most cases, the peers would have at least one overlapping neighbor and the
-messages would be exchanged.  From thereafter, the peers would use the
+disconnectivity issues.  To support this behavior, two nodes would discover
+each other by indirect communication through the overlay.  This would trigger a
+best effort to exchange peer lists through the current set of near neighbors.
+In most cases, the peers would have at least one overlapping neighbor and the
+messages would be exchanged.  Thereafter, peers would use the
 overlapping neighbors to communicate with each other ``directly''.
 
-This model worked well in the case that the nodes were neighbors, but when two
-peers are far away from each other the algorithm will fail.  Most high bandwidth
-and low latency applications can be improved via direct connectivity and
-in~\cite{ipop}, we make a case for its use in VNs.  The problem becomes how to
-make intelligent relaying possible for distant nodes.  Our solution, as represented
-in Figure~\ref{fig:relay} is to
-have nodes connect to one one or more of the remote node's neighbors thus
-creating an overlap and our ability to reuse previous work.  There is one
-difference though, in the previous work, there was no consideration for the
-viability of the intermediate, the goal was simply to have connectivity
-regardless of performance.  Thus in addition to exchanging neighbor lists, we
-made it possible to exchange arbitrary information to assist in making decisions.
-So far we have focused on the use of the stability as measured by the age of the
-connection between the far node and his neighbor, the latency between the far
-node and his neighbor, and the optimal overlap based upon network coordinates.
-We present our test environment, experiment, and results in~\ref{relay_eval}.
+Direct connectivity in most cases provides significant performance gains over
+routing through the overlay.  When direct connections is not available, which
+is more efficient relaying or overlay routing?  In practical experience, we
+have seen overlay transit time in the order of seconds and further establish
+the use of relays in our evaluation in Section~\ref{evaluate_relays}.  When
+peers are not near each other in address space, there is a high chance that
+they will not have any overlapping peers, thus our current technique would
+not work.  Our solution, as represented in Figure~\ref{fig:relay}, is to
+have nodes connect to one or more of the remote node's neighbors thus
+creating an overlap and our ability to reuse previous work.
+
+The original approach had one more issue, the lack of consideration
+on the viability of relays, the goal was to have connectivity with no
+reflection on stability or performance.  To improve this, when exchanging
+neighbor lists, we added the ability to exchange arbitrary information
+to assist in decision making.  So far we have focused on exchanging connection
+stability as measured by the age of the connection between the far node and
+his neighbor and the latency between the far node and his neighbor.
+Additionally, when overlap changes, we make it optional to select to use
+only a subset of the overlap, thus only the fastest or most stable overlap
+be used with many more in reserve.  We present our test environment, experiment,
+and results.
+in~\ref{relay_eval}.
 
 \subsection{Bootstrapping Private Overlays}
-There have been many papers that discuss handling of distributed security via
-purely decentralized mechanism.  While the work is quite useful, we have also
-heard many users state they do not trust sending their data over an insecure,
-untrusted overlay system.  Decentralized security provides only probabilistic
-security and has no hard guarantees that only trusted individuals will be
-involved and aware of your communication behaviors.  For that purpose, we
-suggest bootstrapping a private overlay off of a public overlay.  The private
+In P2P systems, distributed security cannot provide the same level of security
+as centralized or managed security.  Hopefully securing an overlay using
+well-known security concepts such as certificates and SSL will encourage
+wider adoption of P2P systems.  One problem with this approach though is that
+users who want a private overlay may not have the resources, i.e. public
+addresses, to host there own overlays.  To address this, we suggest
+bootstrapping a private overlay from an existing public overlay.  The private
 overlay will be completely encrypted and authenticated with only members of the
-VPN allowed access.  The use of a public overlay to bootstrap application specific
-overlay has been discussed in~\cite{one_ring}.
+VPN allowed access.  This work is similar to previous in suggesting the use of
+a public overlay to bootstrap application specific overlay has been discussed
+in~\cite{one_ring}.
 
 Beyond security, the attractive features of a private ring for VN include:
 %\small {
@@ -897,7 +915,7 @@ Beyond security, the attractive features of a private ring for VN include:
 %}
 
 A key feature, which is unexplored in this paper, is that multicast and
-broadcast routing becomes much easier as all peers in the system would want
+broadcast routing become much easier as all peers in the system would want
 to receive such packets.  Where as in a general P2P overlay, mechanisms such as
 scribe~\cite{scribe} are necessary to provide multicast and broadcast
 capabilities.
@@ -916,34 +934,34 @@ techniques for finding faults in the overlay.
 
 Before we even deploy our code, we heavily use unit testing.  If unit testing
 is successful, we have a virtual time simulator that allows us to test our
-software in large scale on a single machine rather quickly, where we can simulate
+software on a single machine rather quickly, where we can simulate
 well over 1,000 peers for days of virtual time in a matter of hours.  The model
 allows for easy integration testing, so that as new features are incorporated
 they can easily be tested prior to doing wide-area tests.
 
-The next step is to run a week long test on Planet-Lab that ensures reliability,
-stability, and consistency, or that a node is congruent with both its first and second
-left and right neighbors.  We call this a crawl.  We store this information in a
-database, and then query the database to find cases where a node may have been
-inconsistent for consecutive times.  If a node is able to fix inconsistencies in
-future crawls, the inconsistency was probably due to churn in the system.
-Otherwise, it will probably still be in an inconsistent state and we are able to
-query the node and other nodes nearby for state information.  This would at least
-help us determine if there exists a problem.  To assist in finding bugs, we have
-added liveness messages to threads to assist in finding deadlocks.  Additionally,
-Mono can print out trace logs by sending a ``USR2'' signal to the running process.
+The next step is to run a week long test on Planet-Lab~\cite{planetlab} that
+ensures reliability, stability, and consistency, or that a node is congruent
+with both its first and second left and right neighbors.  We call this a crawl.
+We store this information in a database, and then query the database to find
+cases where a node may have been inconsistent for consecutive times.  If a node
+is able to fix inconsistencies in future crawls, the inconsistency was probably
+due to churn in the system.  Otherwise, it will probably still be in an
+inconsistent state and we are able to query the node and other nodes nearby for
+state information.  At a minimum, this would be help us determine if there
+exists a problem.  To assist in finding bugs, we have added liveness messages
+to threads to assist in finding deadlocks.  Additionally, Mono can print out
+trace logs by sending a ``USR2'' signal to the running process.
 
-Other information covered under stability include peer count as well as memory
-and CPU usage.  Node count can be quite difficult to keep track of in Planet-Lab
-as machines at a rate of about 5 to 20 a day are restarted and software is not
-automatically restarted on these machines.  Thus we check for extreme cases, where
-node count may have dropped by a significant amount and does not follow a linear
-model.  Planet-Lab also places challenges on memory, as the systems can often be
+Other information covered we watch include peer count, memory, and CPU usage.
+Node count can be quite difficult to keep track of in Planet-Lab as machines at
+a rate of 5 to 20 per day are restarted and our software is not automatically
+restarted on these machines, thus the case to watch for is non-linear loss of
+nodes.  Planet-Lab also places challenges on memory, as the systems can often be
 I/O starved causing what appears to be memory leaks as Brunet's internal queue
 can grow without bound.  After solving this via a disconnect on overload, that
 occurs when the queues moving average exceeds a threshold of 4,096, the memory
 usage on Planet-Lab has helped us discover that memory leaks exist.  The advantage
-of Planet-Lab as a test ground  is that it presents so many unique situations that
+of Planet-Lab as a test ground is that it presents so many unique situations that
 can be very difficult to reproduce in a lab controlled test system.  It is our belief
 that any system that uses large scale Planet-Lab deployments as a testing ground
 will be quite reliable.
@@ -956,9 +974,9 @@ though originally based in mathematical principles have since been heavily
 influenced by experience that is difficult to formally justify.
 
 \subsection{P2PVPN in Other Structured Overlays}
-The purpose in this work is to develop a model of a P2PVPN that can easily be
+The purpose of this work is to develop a P2PVPN model that can easily be
 applied to other structured P2P systems.  In this section, we focus on the
-viability of our platform running on top of other structured P2P systems, namely
+portability of our platform to other structured P2P systems, namely
 Pastry and Chord by analyzing FreePastry~\cite{freepastry} and
 NChord~\cite{nchord} respectively.  FreePastry can easily reuse our C\# implemented
 library through the use of IKVM.NET~\cite{ikvm}, which allows the porting of
