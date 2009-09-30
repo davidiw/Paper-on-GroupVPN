@@ -354,10 +354,11 @@ communication.  While it is possible, through a shared secret key, that requires
 out-of-band communication and is less secure than relying on a CA-signed certificate.
 
 To support full tunneling or allow the client to access the server's resources,
-the server too must behave somewhat like a client by enabling a VPN endpoint
-via a VN device.  The VN device is configured to support NAT from the VN to
-the local network and/or the Internet.  In Linux, this is achieved with minimal
-configuration via IPtables, a layer 3 network stack manipulator.
+the server too must enable client-like features by becoming a VPN endpoint with
+a VN device.  Depending on the configuration, the server can than configure
+traffic from the VPN to go through a NAT prior to routing it to the LAN and/or
+Internet.  In Section~\ref{fulltunnel}, we present our configuration using
+Linux and iptables, a layer 3 network stack manipulator.
 
 OpenVPN allows a distribution of servers, so as to provide fault tolerance and
 to a lesser degree load balancing.  Servers must be configured to know about
@@ -521,10 +522,11 @@ Depending on the protocol, a node must be connected to either the closest
 neighbor smaller, larger, or both.  Optimizations for fault tolerance suggest
 that it should be between 2 to $\log(N)$ on both sides.  If a peer does not
 know of the address of its immediate predecessor or successor and a message
-is routed to it destined for them, depending on the message type, it will
-assume the packet was meant for itm or throw the packet away.  Thus having multiple
+is routed through it destined for them, depending on the message type, it may
+either be locally consumed or thrown away, never arriving at its appropriate
+destination.  Thus having multiple
 peers on both sides assist stability when the system is experiencing churn,
-that is when peers leave without warning.
+especially when peers leave without warning.
 
 Shortcuts make quickly traversing a P2P structure possible.  There are many
 implementations and proposals for determining shortcuts, each has differing
@@ -550,6 +552,8 @@ interesting for use in a P2P VPN system include:
 directly connect~\cite{hpdc08_0}
 \item selection of shortcuts using information based upon proximity~\cite{hpdc08_0}
 \item a distributed data store based upon a distributed hash table~\cite{pcgrid07}
+\item self-optimizing shortcuts to support single-hop connectivity between peers
+in the overlay~\cite{wow}
 \end{itemize}
 %}
 
@@ -888,6 +892,7 @@ gateway.  The problem with this approach is that it does not deal with the
 source address of the packet.  In other words, the packet will have a source
 IP address of the VN device and not of the physical Ethernet
 device.
+
 \subsection{Autonomic Relays}
 A handful of P2P VPNs~\cite{hamachi, gbridge} support relaying when direct
 communication is not possible though a majority of them do not.
