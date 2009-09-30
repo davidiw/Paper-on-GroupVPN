@@ -185,6 +185,9 @@ configured \\ \hline
 Centralized Servers / P2P Clients & Servers provide authentication, session management, and
 optionally relay support while peers attempt to communicate directly with each
 other, i.e., P2P links \\ \hline
+Decentralized Servers and Clients & Nothing distinguishes a client from a server,
+each member in the system authenticates directly with each other, links between
+members must be explicitly defined \\ \hline
 Unstructured P2P & No distinction between clients and servers, members either know
 the entire network or use broadcast to discover routes between each other \\ \hline
 Structured P2P & No distinction between clients and servers, members are usually
@@ -265,7 +268,19 @@ Full tunneling allows a VPN client to securely forward \emph{all their Internet
 traffic} through a VPN router.  This enables a user to ensure all their Internet
 communication originates from a secure and trusted location and provides some
 level of security when a user is an insecure and potentially hostile
-environment, such as an open wireless network at coffee shop.
+environment, such as an open wireless network at coffee shop.  Both are visually
+expressed in Figure~\ref{fig:tunnel}.
+
+\begin{figure}[ht]
+\centering
+\epsfig{file=figs/tunnel.png.eps, width=3in}
+\caption{A VPN setup in both full and split tunnel mode.  In both modes,
+packets for the server are sent directly to the server.  In split
+tunnel mode, Internet packets are routed directly to the Internet.  In full
+tunnel mode, Internet packets are first routed to the server / gateway and then
+to their Internet destination.}
+\label{fig:tunnel}
+\end{figure}
 
 Most centralized VPNs implement full tunneling by doing a routing rule swap,
 where the default gateway becomes an end-point in the VPNs subnet and traffic
@@ -671,7 +686,7 @@ categories:  split tunneling and full tunneling.  In split tunnel mode, the
 the VPN client receives and sends messages related only to the VPN, i.e., both
 end points are in the VPN; whereas in full tunnel mode, all traffic both VPN
 and Internet traffic with the exception of VPN ``control'' messages route over
-the VPN.  This relationship is further established in Figure~\ref{fig:tunnel}.
+the VPN, as shown in Figure~\ref{fig:tunnel}.
 In a centralized VPN these ``control'' messages would be the
 communications directly with the VPN server and full tunnel gateway, which most
 likely is the same machine destination IP address from the perspective of the
@@ -748,6 +763,18 @@ for a remote VPN end point:
 \item if so, discover a remote peer to act as a full tunnel gateway
 \item after finding one, send the message to the remote peer
 \end{enumerate}
+
+\begin{figure}[ht]
+\centering
+\epsfig{file=figs/tunnel_packet.png.eps, width=3in}
+\caption{The contents of a full tunnel Ethernet packet.  PN and VN are defined
+as physical and virtual network, respectively.  Interesting components of this
+packet are 1) the destination Ethernet address is the LAN gateway, 2) the
+destination IP address is the VPN gateway, and 3) the IP payload contains
+another IP packet whose source IP is the VN device and destination is the
+Internet.}
+\label{fig:tunnel_packet}
+\end{figure}
 
 The pathway for packets coming back from the Internet will also require some
 tweaking, that is, the source IP address will not match the VPN gateways IP.
@@ -887,6 +914,19 @@ they will not have any overlapping peers, thus our current technique would
 not work.  Our solution, as represented in Figure~\ref{fig:relay}, is to
 have nodes connect to one or more of the remote node's neighbors thus
 creating an overlap and our ability to reuse previous work.
+
+\begin{figure}[ht]
+\centering
+\epsfig{file=figs/relay.png.eps, width=3in}
+\caption{Creating relays from across the node address space, when direct
+connectivity is not possible.  Two members, 0000 and ABCD,  desire a direct
+connection but are unable to directly connect, perhaps due to NATs or firewalls.
+They exchange neighbor information through the overlay and connect to one of
+each other's neighbors, creating overlap.  The overlap then becomes a a dedicated
+relay path (represented by dashed lines), improving performance over relaying
+across the entire overlay.}
+\label{fig:relay}
+\end{figure}
 
 The original approach had one more issue, the lack of consideration
 on the viability of relays, the goal was to have connectivity with no
