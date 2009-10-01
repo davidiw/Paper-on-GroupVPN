@@ -1052,8 +1052,9 @@ software stack that runs inside Grid Appliance but also allows services the Grid
 Appliance to connect with external NFS and external grid resources.
 
 Other work of ours' that relates to IPOP is the SocialVPN~\cite{cops08}.  The
-SocialVPN places each client in their own VPN with only their friends on the
-social network being members.  Unlike GroupVPN, this makes each user the master
+SocialVPN places each client in their own private network, where they are only
+addressable by their friends as defined by third party social network.
+Unlike GroupVPN, this makes each user the master
 of who does and does not have access to their resources.  Though this comes at
 the cost of polling a central server, such as Facebook, to determine if a VPN
 connection is legitamate, whereas the GroupVPN uses decentralized certificates
@@ -1064,48 +1065,44 @@ small to medium businesses, for these purposes, we advocate GroupVPN.
 \subsection{Discovering Faults}
 In literature, the argument typically directed against structured P2P systems
 is the ability to handle fault tolerance.  In this section, we share our
-techniques for finding faults in the overlay.
+tactics for finding faults in a deployed overlay.
 
-Before we even deploy our code, we heavily use unit testing.  If unit testing
-is successful, we have a virtual time simulator that allows us to test our
-software on a single machine rather quickly, where we can simulate
-well over 1,000 peers for days of virtual time in a matter of hours.  The model
-allows for easy integration testing, so that as new features are incorporated
-they can easily be tested prior to doing wide-area tests.
+Our bootstrap system runs on Planet-Lab~\cite{planetlab}, placing it in that
+harsh environment ensures that the system is reliability, stability, and
+consistent.  Consistency compares peers knowledge of the pool and tests
+each peer for congruence with both its first and second left and right neighbors.
+We call this a crawl.  This information is stored in a database, which we can
+later use to find nodes that have been inconsistent many consecutive times.
+If a node is able to fix inconsistencies in future crawls, experience suggests
+the inconsistency was probably due to churn in the system.  Otherwise, it will
+probably still be in an inconsistent state and we are able to query the node
+and other nodes nearby for state information.  At a minimum, this would be help
+us determine if there exists a problem and potentially what state is stale
+and causing the connectivity issue.  If this reveals little information, we
+either retrieve a log or request it from the user who owns node, the log
+typically provides some useful information.  Additionally, as with all
+multithreaded applications, deadlocks can happen, we found it useful to add
+liveness states to threads to assist in finding deadlocks.
 
-The next step is to run a week long test on Planet-Lab~\cite{planetlab} that
-ensures reliability, stability, and consistency, or that a node is congruent
-with both its first and second left and right neighbors.  We call this a crawl.
-We store this information in a database, and then query the database to find
-cases where a node may have been inconsistent for consecutive times.  If a node
-is able to fix inconsistencies in future crawls, the inconsistency was probably
-due to churn in the system.  Otherwise, it will probably still be in an
-inconsistent state and we are able to query the node and other nodes nearby for
-state information.  At a minimum, this would be help us determine if there
-exists a problem.  To assist in finding bugs, we have added liveness messages
-to threads to assist in finding deadlocks.  Additionally, Mono can print out
-trace logs by sending a ``USR2'' signal to the running process.
-
-Other information covered we watch include peer count, memory, and CPU usage.
+Other information, we watch, includes peer count, memory, and CPU usage.
 Node count can be quite difficult to keep track of in Planet-Lab as machines at
 a rate of 5 to 20 per day are restarted and our software is not automatically
 restarted on these machines, thus the case to watch for is non-linear loss of
 nodes.  Planet-Lab also places challenges on memory, as the systems can often be
 I/O starved causing what appears to be memory leaks as Brunet's internal queue
-can grow without bound.  After solving this via a disconnect on overload, that
-occurs when the queues moving average exceeds a threshold of 4,096, the memory
-usage on Planet-Lab has helped us discover that memory leaks exist.  The advantage
-of Planet-Lab as a test ground is that it presents so many unique situations that
-can be very difficult to reproduce in a lab controlled test system.  It is our belief
+can grow without bound.  In these cases, we have the node disconnect from the
+overlay and sleep before returning.  The advantage of Planet-Lab as a test ground
+is that it presents so many unique situations that can be very difficult to
+reproduce in a lab controlled test system.  It is our belief
 that any system that uses large scale Planet-Lab deployments as a testing ground
 will be quite reliable.
 
 We are still actively seeking better ways to verify the state of our system.
-For example, the cost of doing a crawl can be on the order of $O(N \log(N))$,
+For example, the cost of doing a crawl can take $O(N \log(N))$ time,
 since we have to communicate with every single node with an average routing
-time of $O(\log(N))$.  Furthermore, many of mechanisms employed in our system
-though originally based in mathematical principles have since been heavily
-influenced by experience that is difficult to formally justify.
+time of $O(\log(N))$.  For example, current research on Brunet has been focused
+on providing a P2P MapReduce~\cite{map_reduce} framework, which can be used to
+provide system wide searches and status checks in $O(\log(N))$ time.
 
 \section{Related Works}
 \label{related_work}
