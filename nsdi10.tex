@@ -888,7 +888,7 @@ in~\ref{relay_eval}.
 \subsection{Bootstrapping Private Overlays}
 In P2P systems, distributed security cannot provide the same level of security
 as centralized or managed security.  Hopefully securing an overlay using
-well-known security concepts such as certificates and SSL will encourage
+well-known security concepts such as PKI and SSL will encourage
 wider adoption of P2P systems.  One problem with this approach though is that
 users who want a private overlay may not have the resources, i.e. public
 addresses, to host there own overlays.  To address this, we suggest
@@ -898,30 +898,30 @@ VPN allowed access.  This work is similar to previous in suggesting the use of
 a public overlay to bootstrap application specific overlay has been discussed
 in~\cite{one_ring}.
 
-Beyond security, the attractive features of a private ring for VN include:
-%\small {
-\begin{itemize}
-\setlength{\itemsep}{0pt}
-\setlength{\parskip}{0pt}
-\item simplified multicast, broadcast routing
-\item another mechanism for selecting relays
-\item smaller overlays for faster overlay routing
-\item a Sybil-resistant P2P system
-\end{itemize}
-%}
-
-A key feature, which is unexplored in this paper, is that multicast and
-broadcast routing become much easier as all peers in the system would want
-to receive such packets.  Where as in a general P2P overlay, mechanisms such as
-scribe~\cite{scribe} are necessary to provide multicast and broadcast
-capabilities.
-
 Members of the VPN are the only members of the overlay, providing a powerful
 feature that the entire P2P overlay can be secured through groups.  This
 prevents malicious users outside of the VPN from attacking it and more easily
 enabled the removal of misbehaving peers, primarily rooted in the fact that
 the use of a broadcast to signal a certificate revocation is now important to
 the entire overlay.
+
+The process for bootstrapping a private overlay follows.  Once the VPN software
+begins, it starts by connecting with the public overlay.  It queries the public
+overlay's DHT at the key ``private:groupname'', where groupname is the
+GroupVPN's name.  The values stored at the key are the public overlay node IDs
+of members actively in the private overlay.  The joining VPN software will
+attempt to form private overlay leaf (bootstrap) connections with members of this
+list over the public overlay.  During this process, both peers verify each
+other's authenticity and form a secure connection.  This connection is then used
+to bootstrap direct connections with members of the private overlay.  The reason
+why the public overlay node IDs are stored at the public overlay's DHT key and
+for using private overlay bootstrap connections over the public overlay is to
+support NAT traversal.  This model allows reusing Brunets underlying NAT
+traversaltechniques to easily bootstrap private overlays.  As a member of a
+private overlay, the VPN can somewhat more safely store information in the
+private overlay's DHT, relegating the public overlay for private overlay
+discovery.  Additionally, the public overlay could be used for relaying, when
+direct connectivity is not possible, though this has not been looked into yet.
 
 \section{Evaluation of VPN Models}
 \label{evaluation}
