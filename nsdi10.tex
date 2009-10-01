@@ -156,14 +156,18 @@ non-traversable nodes
 \end{itemize}
 %}
 
-The rest of this paper is organized as follows.  Section II gives an overview
+The rest of this paper is organized as follows.  Section~\ref{vpns} gives an overview
 of current VPN technologies with emphasis on decentralization and scalability.
-Section III introduces P2P structures and our previous work IPOP (IP over P2P).
-Section IV describes the contributions of this paper, namely a feature-full
-P2P VPN.  In Section V, we discuss our implementation and present evaluation
-comparing a VPN models.  Finally, we give some concluding remarks in Section VI.
+Section~\ref{structured_p2p} introduces P2P structures and our previous work IPOP (IP over P2P).
+Section~\ref{p2pvpn} describes the contributions of this paper, namely a feature-full
+P2P VPN.  In Section~\ref{evaluation}, we discuss our implementation and present evaluation
+comparing a VPN models.  Our experience developing, using, and debugging the
+system is presented in Section~\ref{experiences}.  In Section~\ref{related_work}, we
+compare and contrast our work with related works.  Finally, we give some
+concluding remarks in Section~\ref{conclusions}.
 
 \section{Virtual Private Networks}
+\label{vpns}
 There exist many different flavors of virtual networking.  This paper focuses on
 those that are used to create or extend a virtual layer 3 network.  A few
 examples of such technologies include Cisco's Systems VPN and AnyConnect VPN
@@ -173,11 +177,11 @@ different VPN server configurations as highlighted in
 Table~\ref{tab:vpn_types}, finally concluding the section by presenting
 Table~\ref{tab:vpns}, which presents a qualitative overview of production VPNs.
 
-\begin{table}[ht]
+\begin{table}[h]
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
-\begin{tabular}[c]{|m{2cm}|m{4.5cm}|} \hline
+\begin{tabular}[c]{|m{2cm}|m{5cm}|} \hline
 Type & Description \\ \hline
 Centralized & Clients communicate through one or more servers which are statically
 configured \\ \hline
@@ -207,7 +211,7 @@ overlay or VPN agent, then, optionally, it queries the agent for information
 about the network such as the network address space, and finally the VN device
 is started.
 
-\begin{figure}[ht]
+\begin{figure}[h]
 \centering
 \epsfig{file=figs/vpn.png.eps, width=3in}
 \caption{A typical VPN client.  The VPN uses a VN device to make interaction
@@ -273,7 +277,7 @@ level of security when a user is an insecure and potentially hostile
 environment, such as an open wireless network at coffee shop.  Both are visually
 expressed in Figure~\ref{fig:tunnel}.
 
-\begin{figure}[ht]
+\begin{figure}[h]
 \centering
 \epsfig{file=figs/tunnel.png.eps, width=3in}
 \caption{A VPN setup expressing both full and split tunnel modes.  In both modes,
@@ -367,6 +371,50 @@ Load balancing exists only in the process of the client randomly connecting to
 different servers and potentially with a server refusing connection due to load.
 There is no distributed load balancing.
 
+%\small{
+\begin{table*}[!h!t!]
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\centering
+%\begin{tabular}[c]{|p{1.1cm}||p{3.475cm}|p{3.475cm}|p{3.475cm}|p{3.475cm}|} \hline
+\begin{tabular}[c]{|m{2cm}||m{1.8cm}|m{2.4cm}|m{2cm}|m{2.9cm}|m{3.2cm}|} \hline
+& VPN Type & Authentication Method & Peer Discovery & NAT Traversal & Availability \\ \hline \hline
+
+OpenVPN~\cite{openvpn} & Centralized & Certificates or passwords with a central server &
+Stored at central server(s) & Relay through server(s) & Open Source\\ \hline
+
+tinc~\cite{tinc} & Decentralized & CA Certificates & Global knowledge &
+Relay through mesh & Open Source\\ \hline
+
+CloudVPN~\cite{cloudvpn} & Centralized & CA Certificates & Global knowledge &
+Relay through mesh & Open Source\\ \hline
+
+Hamachi~\cite{hamachi} & Centralized P2P & Password at central server & Stored at central server &
+NAT traversal and centralized relay & limited free-use, limited Non-Windows
+clients, no private relays \\ \hline
+
+GBridge~\cite{gbridge} & Centralized P2P & Password at central server & Stored locally &
+NAT traversal, centralized relay & Windows only, freeware, no private relays \\ \hline
+
+Wippien~\cite{wippien} & Centralized P2P & Password at central server & Stored locally & NAT traversal,
+no relay support & Mixed Open / Closed source\\ \hline
+
+N2N~\cite{n2n} & Unstructured P2P & Shared secret & Broadcast look up & NAT traversal,
+decentralized relay & Open Source \\ \hline
+
+P2PVPN~\cite{p2pvpn} & Unstructured P2P & Shared secret & Global knowledge &
+No NAT traversal, decentralized relay & Open Source \\ \hline
+
+IPOP & Structured P2P & CA Certificates or pre-exchanged keys &
+DHT look up & NAT traversal and relay through physically close peers &
+Open Source\\ \hline
+
+\end{tabular}
+\caption{VPN Comparison}
+\label{tab:vpns}
+\end{table*}
+%}
+
 Two examples of systems that assist in distributing load in VPN systems are
 tinc~\cite{tinc} and CloudVPN~\cite{cloudvpn}.  Unlike the decentralized P2P
 systems, these decentralized systems lack the ability to automatically form
@@ -428,50 +476,6 @@ N2N~\cite{n2n} requires knowledge of an existing peer in the system.  It uses
 this endpoint to bootstrap more connections to other peers in the system,
 allowing the application to be an active participant in the overlay and
  potentially be a bootstrap connection for other peers attempting to connect.
-
-%\small{
-\begin{table*}[ht]
-\setlength{\itemsep}{0pt}
-\setlength{\parskip}{0pt}
-\centering
-%\begin{tabular}[c]{|p{1.1cm}||p{3.475cm}|p{3.475cm}|p{3.475cm}|p{3.475cm}|} \hline
-\begin{tabular}[c]{|m{2cm}||m{1.8cm}|m{2.4cm}|m{2cm}|m{2.9cm}|m{3.2cm}|} \hline
-& VPN Type & Authentication Method & Peer Discovery & NAT Traversal & Availability \\ \hline \hline
-
-OpenVPN~\cite{openvpn} & Centralized & Certificates or passwords with a central server &
-Stored at central server(s) & Relay through server(s) & Open Source\\ \hline
-
-tinc~\cite{tinc} & Decentralized & CA Certificates & Global knowledge &
-Relay through mesh & Open Source\\ \hline
-
-CloudVPN~\cite{cloudvpn} & Centralized & CA Certificates & Global knowledge &
-Relay through mesh & Open Source\\ \hline
-
-Hamachi~\cite{hamachi} & Centralized P2P & Password at central server & Stored at central server &
-NAT traversal and centralized relay & limited free-use, limited Non-Windows
-clients, no private relays \\ \hline
-
-GBridge~\cite{gbridge} & Centralized P2P & Password at central server & Stored locally &
-NAT traversal, centralized relay & Windows only, freeware, no private relays \\ \hline
-
-Wippien~\cite{wippien} & Centralized P2P & Password at central server & Stored locally & NAT traversal,
-no relay support & Mixed Open / Closed source\\ \hline
-
-N2N~\cite{n2n} & Unstructured P2P & Shared secret & Broadcast look up & NAT traversal,
-decentralized relay & Open Source \\ \hline
-
-P2PVPN~\cite{p2pvpn} & Unstructured P2P & Shared secret & Global knowledge &
-No NAT traversal, decentralized relay & Open Source \\ \hline
-
-IPOP & Structured P2P & CA Certificates or pre-exchanged keys &
-DHT look up & NAT traversal and relay through physically close peers &
-Open Source\\ \hline
-
-\end{tabular}
-\caption{VPN Comparison}
-\label{tab:vpns}
-\end{table*}
-%}
 
 \section{Structured Peer-to-Peer Systems}
 \label{structured_p2p}
@@ -770,7 +774,7 @@ for a remote VPN end point:
 \item after finding one, send the message to the remote peer
 \end{enumerate}
 
-\begin{figure}[ht]
+\begin{figure}[h]
 \centering
 \epsfig{file=figs/tunnel_packet.png.eps, width=3in}
 \caption{The contents of a full tunnel Ethernet packet.  PN and VN are defined
@@ -900,7 +904,8 @@ Centralized and decentralized VPNs do not suffer from this problem
 as all traffic passes through the central server or managed links.  Because
 of the management and overhead concerns presented by these systems, we propose
 the use of distributed, autonomic relaying system based upon previous
-work known as ``tunnels''~\cite{hpdc08_0}.  In this work, we describe a
+work known as ``tunnels''~\cite{hpdc08_0} founded upon principles found in
+related work~\cite{epost}.  In this work, we describe a
 mechanism using triangle routing that allows peers next to each other in the
 node ID space communicate despite them being unable to communicate directly
 with each other, whether the cause be firewall, NAT, or Internet
@@ -922,7 +927,7 @@ not work.  Our solution, as represented in Figure~\ref{fig:relay}, is to
 have nodes connect to one or more of the remote node's neighbors thus
 creating an overlap and our ability to reuse previous work.
 
-\begin{figure}[ht]
+\begin{figure}[h]
 \centering
 \epsfig{file=figs/relay.png.eps, width=3in}
 \caption{Creating relays from across the node address space, when direct
@@ -986,6 +991,144 @@ enabled the removal of misbehaving peers, primarily rooted in the fact that
 the use of a broadcast to signal a certificate revocation is now important to
 the entire overlay.
 
+\section{Evaluation of VPN Models}
+\label{evaluation}
+For the purpose of quantitatively evaluation, we have added the features of
+the proposed design parameters described in Section~\ref{p2pvpn} to IPOP
+\cite{sc09} and Brunet~\cite{brunet}.  We present the advantage of using
+relays over overlay routing when NAT traversal does not work.  Then we examine
+the effects of using different relay selection mechanisms.  Afterwords, we
+evaluate the system overheads of OpenVPN, Hamachi, and our P2P VPN to determine
+the OS resource costs and the cost of each in a distributed environment.
+
+\subsection{Motivation for Relays in the Overlay}
+The purpose of this experiment is to give weight to the argument that relays
+are very useful for overlay networks that rely on low latency.  For this
+experiment we applied the MIT King data set~\cite{king_data}, a data set
+containing all-to-all latencies between 1,740 well-distributed Internet hosts.
+We reviewed many different sizes of networks up to 1,740 nodes, evaluating each
+network size 100 times.  Our experiments were executed in a simulator, where we
+brought the system to steady state.  Once at steady state, we then calculate the average
+all-to-all latency for all messages that would have taken two overlay hops
+or more, the average of our low latency relay model, and the average of single
+hop communication.  In the low latency relay model,
+each destination node formia connection to the source nodes physically
+closest peer as determined via latency (in a live system by application level
+ping).  Then this pathway is used as a two-hop relay between source and node.
+We only look at two overlay hops and more as a single hop would not necessarily
+benefit from the work and would be the cause of a triangular inequality.
+
+\begin{figure}[h]
+\centering
+\epsfig{file=figs/vpn.png.eps, width=3in}
+\caption{A comparison of the average all-to-all overlay routing, two-hop relay, and
+direct connection latency in a Structured P2P environment, Brunet, using the King
+data set.}
+\label{fig:simulated_relays}
+\end{figure}
+
+Our results are presented in Figure~\ref{fig:simulated_relays}.  We performed
+the tests for varying network sizes.  In the case of the network size of 10
+all peers have direct connections, afterwards, it becomes obvious that the
+latency-bound applications using an overlay would significantly benefit from
+the use of two-hop relays.  Of course, it goes without saying that a two-hop
+relay is not as fast as a direct connection.
+
+\subsection{Comparing Relay Selection}
+\label{relay_eval}
+In this experiment, we evaluate time to establish a relays and measure bandwidth
+and latency provided by the relays.  We perform the experiment on the Hamachi
+relay selection as well as our two different models, latency and stability based.  The
+setup for the experiment was two VPNs running on the same site but with
+firewall, iptables, preventing direct communication.  We then start the VPN and
+begin transmitting packets between the peers via Netperf~\cite{netperf}.  We time
+how long it takes for a relay to form and then test for latency and bandwidth.
+We repeated this test 100 times and present our results in Table~\ref{tab:relay_eval}.
+To test latency, we used Netperf in TCP\_RR mode, where it performs a request-reply
+between a client and a server.  Bandwidth is determined used Netperf in TCP\_STREAM
+mode, which performs a bulk transfer between the client and server.
+
+\begin{table}[h]
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\centering
+\begin{tabular}[c]{|m{2.2cm}||m{1.3cm}|m{1.3cm}|m{1.4cm}|} \hline
+& Setup time (ms) & Latency (ms) & Bandwidth Mbit/s \\ \hline \hline
+Hamachi & & & \\ \hline
+Latency-aware & & & \\ \hline
+Stability-aware & & & \\ \hline
+\end{tabular}
+\label{tab:relay_eval}
+\caption{Results of the Relay evaluation comparing time to establish a relay,
+bandwidht, and latency amongst Hamachi's relay service, a latency-focused relay
+model, and an stability-focused relay model.}
+\end{table}
+
+The results look perculiar, but I can't figure out why.
+\subsection{Comparing System Overheads}
+In this experiment, we attempt to understand the bounds imposed by OpenVPN,
+Hamachi, and IPOP.  We used Amazon EC2~\cite{ec2} to create various sized
+networks with various amounts of activity.  The measurements are accumulated
+at a single control node as well as the server in the case of OpenVPN.  The
+tests begin by doing some initial communication with peers he will communicate
+for measurement purposes to warm the system.  Once the system is warmed up,
+we continue period pings every 15 seconds for the next 10 minutes.  We
+capture the network traffic during this time in bytes and packets transmitted
+in to and out of the control and server.  At the end of each test, we
+capture total memory currently used by the VPN software.  Tests for the same
+network size, begin by communicating with 0 peers and incremently increase
+the amount until the control is communicating with all members of the VPN.
+
+\begin{figure}[h]
+\centering
+\epsfig{file=figs/vpn.png.eps, width=3in}
+\caption{A comparison of the average all-to-all overlay routing, two-hop relay, and
+direct connection latency in a Structured P2P environment, Brunet, using the King
+data set.}
+\label{fig:overheads}
+\end{figure}
+
+The results of our test are presented in Figure~\ref{fig:overheads}.
+
+\section{Experiences}
+\label{experiences}
+Our work on the P2P VPN model presented in this paper is based on four
+years of work spent developing, deploying, and maintaining VN software for
+grid computing~\cite{wow,vtdc09,archer}.  In this section, we first present
+our different deployments involving P2P VPN, then we present our experiences
+in debugging a structured P2P system.
+
+\subsection{Deployments}
+Initially IPOP was designed to assist in self-configuring adhoc grid deployments
+using virtualization.  This can be seen in our project named ``Grid Appliance''
+\cite{gridappliance}.  Over the year, the Grid Appliance has matured and so
+has our usage of IPOP.  Currently, the Grid Appliance is used as the basis
+for a free-to-join computer architecture consisting of over 400 compute resources
+spanning 5 seed Universities with users across the United States and the World.
+The Grid Appliances allows easy creation of adhoc, distributed grids through
+the use of the IPOP and the structured P2P DHT.  Experienced users can use the
+system to create large grids in less than an hour with most of the time spent
+waiting for virtual machines to boot.  Non-expert users can quickly access the
+distributed grid in a matter of minutes by downloading a virtual machine
+manager and the Grid Appliance.  The comment we receive most often in our
+polls is ``I was surprised at how it just works.''
+
+Motivation for a significant portion of our work lies in our desire to have non-Grid
+Appliance connect to Grid Appliances resources in the same ``just works'' manner.
+Thus bore our new incarnation of IPOP called GroupVPN, which now is the same
+software stack that runs inside Grid Appliance but also allows services the Grid
+Appliance to connect with external NFS and external grid resources.
+
+Other work of ours' that relates to IPOP is the SocialVPN~\cite{cops08}.  The
+SocialVPN places each client in their own VPN with only their friends on the
+social network being members.  Unlike GroupVPN, this makes each user the master
+of who does and does not have access to their resources.  Though this comes at
+the cost of polling a central server, such as Facebook, to determine if a VPN
+connection is legitamate, whereas the GroupVPN uses decentralized certificates
+signed by a common CA.  SocialVPN does not lend itself well to environments
+that require some form of central management such as a computing grid or a
+small to medium businesses, for these purposes, we advocate GroupVPN.
+
 \subsection{Discovering Faults}
 In literature, the argument typically directed against structured P2P systems
 is the ability to handle fault tolerance.  In this section, we share our
@@ -1032,6 +1175,8 @@ time of $O(\log(N))$.  Furthermore, many of mechanisms employed in our system
 though originally based in mathematical principles have since been heavily
 influenced by experience that is difficult to formally justify.
 
+\section{Related Works}
+\label{related_work}
 \subsection{P2P VPN in Other Structured Overlays}
 The purpose of this work is to develop a P2P VPN model that can easily be
 applied to other structured P2P systems.  In this section, we focus on the
@@ -1044,7 +1189,6 @@ Table~\ref{tab:structured_p2p_compare}, we compare the features of the structure
 P2P systems as they apply to the use as a VPN.
 
 \begin{table*}[!h!t]
-\label{tab:structured_p2p_compare}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
@@ -1058,6 +1202,7 @@ NChord & No, only look up & No & Simple, non-fault tolerant DHT & No & No \\ \hl
 communication, such as communication between physical connections in a P2P
 overlay.  EtE stands for end-to-end communication, such as messages routed
 over the overlay between two peers.}
+\label{tab:structured_p2p_compare}
 \end{table*}
 
 The bootstrapping of a connection in NChord, begins by finding the owner of the
@@ -1086,19 +1231,8 @@ not support NAT traversal, all nodes will already be public and thus an
 application, as in the NChord example, could form a direct connection bypassing
 the overlay.
 
-\section{Evaluation of VPN Models}
-For the purpose of quantitatively evaluation, we have added the features of
-the proposed design parameters described in Section~\ref{p2pvpn} to IPOP
-\cite{sc09} and Brunet~\cite{brunet}.  We begin by examining the effects of
-different relay selection mechanisms.  Afterwords, we evaluate the system
-overheads of OpenVPN, Hamachi, and our P2P VPN determine the OS resource costs
-and the cost of each in a distributed environment.
-
-\subsection{Comparing Relay Selection}
-\label{relay_eval}
-\subsection{Comparing System Overheads}
-
 \section{Conclusions}
+\label{conclusions}
 
 \bibliographystyle{abbrv}
 \small {
