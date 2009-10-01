@@ -63,10 +63,10 @@ In order to deal with these issues in a method that would even be intuitive
 to non-expert users , we propose and implement a novel VPN
 architecture using a structured P2P system for peer discovery, session
 management, NAT traversal, and autonomic relay selection.  We relegate the use
-of a central server for certificate management via a partially automated web
-interface.  Additionally, we provide a design and implementation of the first
-P2P VPN to support full tunneling, whereby all non-P2P based Internet traffic
-routes through a trusted third party.
+of a central server as a public key infrastructure (PKI) via a partially
+automated web interface.  Additionally, we provide a design and implementation
+of the first P2P VPN to support full tunneling, whereby all non-P2P based
+Internet traffic routes through a trusted third party.
 
 In this paper, we describe the components of our model and evaluate our
 reference implementation quantitatively to compare system and networking
@@ -128,7 +128,7 @@ The problems we seek to address with our P2P VPN model include:
 A brief overview of our solutions to these problems follows and will
 be covered in depth in the rest of this paper.  To provide fully decentralized
 run-time connectivity and public-key based management of VPN endpoint
-membership, we use an automated certificate authority using an intuitive
+membership, we use an automated public key infrastructure (PKI) using an intuitive
 web based interface using user managed groups.  For handling general trust
 concerns in P2P systems, we use the bootstrapping of a private P2P system 
 dedicated only for VPN use.  P2P VPNs introduce significantly more complexity when
@@ -147,7 +147,7 @@ that is unique in supporting:
 \begin{itemize}
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
-\item automated group-based certificate authority
+\item automated group-based PKI
 \item easy to use interfaces for managing VPN members and securing VPN tunnels
 \item support for full-tunneling through multiple gateways
 \item decentralized NAT traversal with autonomous selection of relays for
@@ -228,9 +228,9 @@ such as a key or password.  Individual authentication can be provided through th
 use of accounts with passwords in addition to a shared secret.  This allows
 blocking out users if the shared secret becomes compromised or users act
 maliciously.  For the strongest level of security, each client can be
-configured to have a signed-certificate that makes brute force attacks very
+configured to have a signed certificate that makes brute force attacks very
 difficult.  The trade-offs come in terms of usability.  While the use of uniquely
-signed-certificates provides better security than shared secrets, it can be more
+signed certificates provides better security than shared secrets, it can be more
 difficult to set up and use, in particular for a target user base of non-expert.
 A good balance found in many environments is the mixture of
 a shared secret and individual user accounts, where the shared secret is
@@ -338,7 +338,7 @@ The server receives the packet, decrypts it, determines where to relay it, and t
 encrypts and sends the packet to the its destination.  This model does not
 prevent a server from eavesdropping on client-to-client
 communication.  While it is possible, through a shared secret key, that requires
-out-of-band communication and is less secure than relying on a CA-signed certificate.
+out-of-band communication and is less secure than relying on a PKI.
 
 To support full tunneling or allow the client to access the server's resources,
 the server too must enable client-like features by becoming a VPN endpoint with
@@ -366,10 +366,10 @@ There is no distributed load balancing.
 OpenVPN~\cite{openvpn} & Centralized & Certificates or passwords with a central server &
 Stored at central server(s) & Relay through server(s) & Open Source\\ \hline
 
-tinc~\cite{tinc} & Decentralized & CA Certificates & Global knowledge &
+tinc~\cite{tinc} & Decentralized & PKI & Global knowledge &
 Relay through mesh & Open Source\\ \hline
 
-CloudVPN~\cite{cloudvpn} & Centralized & CA Certificates & Global knowledge &
+CloudVPN~\cite{cloudvpn} & Centralized & PKI & Global knowledge &
 Relay through mesh & Open Source\\ \hline
 
 Hamachi~\cite{hamachi} & Centralized P2P & Password at central server & Stored at central server &
@@ -388,7 +388,7 @@ decentralized relay & Open Source \\ \hline
 P2PVPN~\cite{p2pvpn} & Unstructured P2P & Shared secret & Global knowledge &
 No NAT traversal, decentralized relay & Open Source \\ \hline
 
-IPOP & Structured P2P & CA Certificates or pre-exchanged keys &
+IPOP & Structured P2P & PKI or pre-exchanged keys &
 DHT look up & NAT traversal and relay through physically close peers &
 Open Source\\ \hline
 
@@ -566,16 +566,23 @@ Though this framework provides the basis for our design and implementation, we
 will attempt to abstract the components as much as possible.
 
 \subsection{Security through Groups}
-Setting up, deploying, and then maintaining security can easily become a
-non-negligible task.  Most VPN systems that support the use of certificates
-require the use of command-line utilities, setting up your own methods of
-securely deploying certificates and policing users.  In this section, we
-present partially automated certificate management through groups use of a
-redistributable web interface.  The key to the group infrastructure is that
+Our VPN supports the PKI model, where a centralized CA signs all client
+certificates and clients can verify each other by using the CA's public
+certificate.  Setting up, deploying, and then maintaining security can easily
+become a non-negligible task.  Most VPN systems that use a PKI
+require the use of command-line utilities and setting up your own methods of
+securely deploying certificates and policing users.  Our experience with users
+indicate that usability is very important, which is why we sought a model with
+easy to user interfaces.  In this section, we
+present partially automated PKI reliant on a self-hosting group based web
+interface.  Although this does not preclude other methods of CA interaction,
+we believe it provides a model that will be satisfactory for many uses cases.
+
+The key to the group infrastructure is that
 users should have a mechanism to verify the authenticity of the server, properly
 authenticate themselves with the server, and thereafter acquire signed
 certificates as needed.  From an administrators point of view, user information
-should be easily available for verification and the ability to ban and remove
+should be easily available for verification and the ability to police
 users from the pool should be as easy as click a mouse button.
 
 Client usage in our model uses the following process:
@@ -612,10 +619,10 @@ overlay and can now communicate with other members in the group
 Groups provide a decentralized
 authentication mechanism and reduce entry barriers into using VPNs.
 A group is a trusted set of peers, where the administrator is the
-certificate authority signing certificates as he verifies new members and
+CA signing certificates as he verifies new members and
 polices current members.  Signed certificates can be used in decentralized systems as they
-do not require communication with the certificate authority, users can verify
-that they are members of the group by verifying the signature on the exchanged
+do not require communication with the CA, users can verify
+that they are members of the group by verifying the CA's signature on the exchanged
 certificate.  This removes the need for users to authenticate through a
 centralized server and removes the security weakness created by using only user
 name and passwords.  An insecure solution for configuration generation would be
