@@ -160,11 +160,11 @@ full tunneling of Internet traffic,
 decentralized relay selection, and
 the ability to handle large and distributed, active VPN pools.
 
-In our system, we use a freely available an automated public key infrastructure
+Our system uses a freely available, automated public key infrastructure
 (PKI).  The PKI is managed through a group-based web interface
 that allows managers to review group join requests and remove malicious
-users.  Furthermore, we use the bootstrapping of a private P2P system off
-an existing public P2P system to avoid common trust concerns in P2P systems.
+users.  Furthermore, we bootstrap secure private P2P systems using existing
+insecure public P2P system to avoid common trust concerns in P2P systems.
 We explore the problem of providing full tunneling to P2P VPNs and provide
 a working solution that supports multiple gateways in a single VPN.  We
 provide mechanisms that allow two peers to establish two-hop links, relays, based upon
@@ -193,7 +193,7 @@ VPN showing the diverse categories are displayed in Table~\ref{tab:vpns}.
 This section begins by going in depth on client configuration of VPNs, followed
 by an overview of the different VPN server types.
 
-\begin{table}[h]
+\begin{table}[ht]
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
@@ -227,7 +227,7 @@ overlay or VPN agent, then, optionally, it queries the agent for information
 about the network such as the network address space, and finally the VN device
 is started.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \epsfig{file=figs/vpn.png.eps, width=3in}
 \caption{A typical VPN client.  The VPN uses a VN device to make interaction
@@ -288,7 +288,7 @@ level of security when a user is an insecure and potentially hostile
 environment, such as an open wireless network at coffee shop.  Both are visually
 expressed in Figure~\ref{fig:tunnel}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \epsfig{file=figs/tunnel.png.eps, width=3in}
 \caption{A VPN setup expressing both full and split tunnel modes.  In both modes,
@@ -316,32 +316,32 @@ discuss this issue and provide solutions to this problem in Section~\ref{fulltun
 \setlength{\parskip}{0pt}
 \centering
 %\begin{tabular}[c]{|p{1.1cm}||p{3.475cm}|p{3.475cm}|p{3.475cm}|p{3.475cm}|} \hline
-\begin{tabular}[c]{|m{2cm}||m{1.8cm}|m{2.4cm}|m{2cm}|m{2.9cm}|m{3.2cm}|} \hline
+\begin{tabular}[c]{|m{2cm}||m{1.8cm}|m{2.4cm}|m{1.8cm}|m{2.9cm}|m{3.4cm}|} \hline
 & VPN Type & Authentication Method & Peer Discovery & NAT Traversal & Availability \\ \hline \hline
 
 OpenVPN~\cite{openvpn} & Centralized & Certificates or passwords with a central server &
-Stored at central server(s) & Relay through server(s) & Open Source\\ \hline
+Central server(s) & Relay through server(s) & Open Source\\ \hline
 
-tinc~\cite{tinc} & Decentralized & PKI & Global knowledge &
+tinc~\cite{tinc} & Decentralized & PKI & Broadcast &
 Relay through mesh & Open Source\\ \hline
 
-CloudVPN~\cite{cloudvpn} & Centralized & PKI & Global knowledge &
+CloudVPN~\cite{cloudvpn} & Decentralized & PKI & Broadcast &
 Relay through mesh & Open Source\\ \hline
 
-Hamachi~\cite{hamachi} & Centralized P2P & Password at central server & Stored at central server &
+Hamachi~\cite{hamachi} & Centralized P2P & Password at central server & Central server &
 NAT traversal and centralized relay & limited free-use, limited Non-Windows
 clients, no private relays \\ \hline
 
-GBridge~\cite{gbridge} & Centralized P2P & Password at central server & Stored locally &
+GBridge~\cite{gbridge} & Centralized P2P & Password at central server & Central server &
 NAT traversal, centralized relay & Windows only, freeware, no private relays \\ \hline
 
-Wippien~\cite{wippien} & Centralized P2P & Password at central server & Stored locally & NAT traversal,
+Wippien~\cite{wippien} & Centralized P2P & Password at central server & Central server & NAT traversal,
 no relay support & Mixed Open / Closed source\\ \hline
 
-N2N~\cite{n2n} & Unstructured P2P & Shared secret & Broadcast look up & NAT traversal,
+N2N~\cite{n2n} & Unstructured P2P & Shared secret & Broadcast & NAT traversal,
 decentralized relay & Open Source \\ \hline
 
-P2PVPN~\cite{p2pvpn} & Unstructured P2P & Shared secret & Global knowledge &
+P2PVPN~\cite{p2pvpn} & Unstructured P2P & Shared secret & Broadcast &
 No NAT traversal, decentralized relay & Open Source \\ \hline
 
 IPOP & Structured P2P & PKI or pre-exchanged keys &
@@ -665,7 +665,7 @@ outside of the VPN address space will be rejected, unless full tunnel client mod
 is enabled.   If it is enabled, the VPN software finds a remote peer to act as a
 full tunnel gateway and then send the packet to the remote peer.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \epsfig{file=figs/tunnel_packet.png.eps, width=3in}
 \caption{The contents of a full tunnel Ethernet packet.  PN and VN are defined
@@ -781,7 +781,7 @@ work, we further extend this model to support cases when nodes do not
 already have overlap.  This involves having the peers connect to a member
 of each others neighbor set creating overlap, as represented in Figure~\ref{fig:relay}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \epsfig{file=figs/relay.png.eps, width=3in}
 \caption{Creating relays from across the node address space, when direct
@@ -872,7 +872,7 @@ ping).  Then this pathway is used as a two-hop relay between source and node.
 We only look at two overlay hops and more as a single hop would not necessarily
 benefit from the work and would be the cause of a triangular inequality.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \epsfig{file=figs/relay_motivation.png.eps, width=3in}
 \caption{A comparison of the average all-to-all overlay routing, two-hop relay, and
@@ -907,7 +907,7 @@ To test latency, we used Netperf in TCP\_RR mode, where it performs a request-re
 between a client and a server.  Bandwidth is determined used Netperf in TCP\_STREAM
 mode, which performs a bulk transfer between the client and server.
 
-\begin{table}[h]
+\begin{table}[ht]
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
@@ -954,7 +954,7 @@ an IPOP network had negligible effect on memory, unlike Hamachi and OpenVPN.
 The only time IPOP's memory consumption increased was during activity and it
 scaled at a 200 KB per additional node.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \epsfig{file=figs/bandwidth_128.png.eps, width=3in}
 \caption{Comparison of bandwidth costs for member activity versus network size.
@@ -992,7 +992,7 @@ bottleneck.
 \label{experiences}
 Our work on the P2P VPN model presented in this paper is based on four
 years of work spent developing, deploying, and maintaining VN software for
-grid computing~\cite{wow,vtdc09,archer}.  In this section, we first present
+grid computing~\cite{wow,sc09,archer}.  In this section, we first present
 our different deployments involving P2P VPN, then we present our experiences
 in debugging a structured P2P system.
 
@@ -1067,7 +1067,7 @@ We are still actively seeking better ways to verify the state of our system.
 For example, the cost of doing a crawl can take $O(N \log(N))$ time,
 since we have to communicate with every single node with an average routing
 time of $O(\log(N))$.  For example, current research on Brunet has been focused
-on providing a P2P MapReduce~\cite{map_reduce} framework, which can be used to
+on providing a P2P MapReduce~\cite{mapreduce} framework, which can be used to
 provide system wide searches and status checks in $O(\log(N))$ time.
 
 \section{Related Works}
