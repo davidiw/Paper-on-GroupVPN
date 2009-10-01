@@ -459,20 +459,14 @@ that must either know all the state in the system or make random walks
 in~\cite{pastry, chord, symphony, kademlia, can}.  In general, structured
 systems, are able to make these guarantees by self-organization, whereby a node
 entering the system follows some form of these abstracted steps:
-%\small {
-\begin{enumerate}
-\setlength{\itemsep}{0pt}
-\setlength{\parskip}{0pt}
-\item generates or obtains a unique identification number (node ID) on the
-order of 128-bits to 160-bits
-\item connects to random addresses on a pre-shared well-known endpoints list
-\item become connected to at least one peer in the list (leaf connection)
-\item look up the peers closest in number to its node ID connecting
-to the one immediately smaller and larger than itself (neighbors)
-\item connect other nodes in the ring that are further in away in the address
-space (shortcuts)
-\end{enumerate}
-%}
+generates or obtains a unique identification number (node ID) on the
+order of 128-bits to 160-bits,
+connects to random addresses on a pre-shared well-known endpoints list,
+becomes connected to at least one peer in the list (leaf connection),
+finds the peers closest in the address space to its node ID, connects
+to the one immediately smaller and / or larger than itself (neighbors),
+and finally connects to other nodes in the ring that are not local in the address
+space (shortcuts).
 
 The node ID must be unique to each peer, otherwise there will be an address
 collision and the two peers will attempt to connect with the same set of peers.
