@@ -133,7 +133,7 @@ web based interface using user managed groups.  For handling general trust
 concerns in P2P systems, we use the bootstrapping of a private P2P system 
 dedicated only for VPN use.  P2P VPNs introduce significantly more complexity when
 attempting to do full tunneling since a simple routing table swap as done
-in central VPNs will no longer work. Thus, we investigate three different mechanisms for tunneling all
+in central VPNs will no longer work. Thus, we investigate two different mechanisms for tunneling all
 non-P2P-based Internet traffic to our full tunnel gateway(s).  When nodes
 cannot directly communicate, they seek to connect to peers that are
 physically close to each other and use them to relay communication.
@@ -332,28 +332,11 @@ be used to verify the server's identity.  The three most common mechanisms for
 a client to authenticate with a server are via shared secrets, password, or a
 CA-signed certificate.
 
-When two clients communicate over an OpenVPN server, the process involves the
-following steps:
-%\small {
-\begin{enumerate}
-\setlength{\itemsep}{0pt}
-\setlength{\parskip}{0pt}
-\item sender's application sends a packet which writes an outgoing packet to a
-socket descriptor
-\item the packet is written to the Virtual Ethernet device by the OS
-\item the VPN stack reads the packet from the Virtual Ethernet device
-\item the VPN stack encrypts and signs the packet and sends it to the VPN Server
-\item the VPN server decrypts and verifies the packet, encrypts and signs the
-clear-text message, and sends it to the receiver
-\item the receiver's VPN stack receives the packet and decrypts and verifies the
-packet
-\item after positive authentication, the packet is written to the VN device
-\item the OS writes the packet to the packet socket descriptor and the application
-receives a packet
-\end{enumerate}
-%}
-All packets flow through the central server.  As can be seen from the above example,
-OpenVPN does not by default prevent a server from eavesdropping on client-to-client
+All client-to-client packets flow through the central server.  In a default
+configuration of OpenVPN, the clients encrypt the packet and sends to the server.
+The server receives the packet, decrypts it, determines where to relay it, and then
+encrypts and sends the packet to the its destination.  This model does not
+prevent a server from eavesdropping on client-to-client
 communication.  While it is possible, through a shared secret key, that requires
 out-of-band communication and is less secure than relying on a CA-signed certificate.
 
@@ -710,27 +693,14 @@ In the following sections, we present a simple scheme for providing gateways
 and a few solutions to configuring clients in a structured P2P overlay.
 
 \subsubsection{The Gateway}
-Configuring a machine as a gateway can easily be done in Linux using an
-iptables component called masquerade, which automatically
-handles forwarding packets received on one interface and forwarding them to the
-next hop automatically taking care of NAT as well as receiving packets
-from the Internet and forwarding them back to the appropriate client.  The
-specific features nice about the NAT handling is that it handles IP and Ethernet
-manipulation in addition to some packets that contain IP information, such as
-FTP and SIP.  The command we use is:
-\begin{center}
-iptables -t nat -A POSTROUTING -s 5.0.0.0/8 -o eth0 -j MASQUERADE
-\end{center}
-Where 5.0.0.0 is the VPN's lowest address with an 8-bit netmask, thus all
-addresses between 5.0.0.0 and 5.255.255.255 inclusive would be NATed to the
-network interface eth0.  Additionally, by default, Linux will not forward
-packets this is enabled by tweaking procfs state via:
-\begin{center}
-echo 1 $>$ /proc/sys/net/ipv4.ip\_forward
-\end{center}
-Please note, that there are many ways to implement NAT in Linux, our goal was
-to present an easily reproducible model, which was well served through this
-setup.
+Configuring a machine as a gateway can be done with NAT software, in Linux
+this is possible through iptables.  One of the components in iptables that
+provides NATs is called masquerade, which automatically handles forwarding
+packets received on one interface and to the next hop as well as receiving
+packets from the Internet and forwarding them back to the appropriate client,
+transparently taking care of NAT.  Use of existing NAT software is recommended,
+as many applications, including FTP and SIP, embed IP information into the data
+of packet, making IP header manipulation insufficient for NAT support.
 
 With a gateway intact, the VPN software can now announce that it provides
 full tunneling.  For that purpose, we added an enable flag into the VPN
@@ -740,39 +710,28 @@ gateways for the VPN group in the DHT.
 
 The only remaining difference in VPN gateway is the state machine used in
 processing packets coming from the VPN.  Previously, we rejected packets if
-the destination was not part of our network, now we check first to see if we
+the destination was not in the VPN sbunet, now we check first to see if we
 have enabled gateway mode.  If it is enabled, all packets are written to the
 TAP device with the destination Ethernet address being that of the TAP device.
 The remaining configuration is identical to other members of the system.
 
 \subsubsection{The Client}
 VPN Clients wishing to use full tunnel must redirect their default traffic to
-their VN device.  Using the above example, the routing rule would
-be default traffic (0.0.0.0/0 -- IP/netmask) is directed to 5.0.0.1 (the
-gateway).  There does not necessarily have to be an active node online at
-5.0.0.1, as shown in Figure~\ref{fig:tunnel_packet} the only sign of that this
+their VN device.  In our VPN model, we use a ``virtual'' virtual address for
+the purpose of providing distributed VN services DHCP and DNS.  This same
+address can be used as the VPN gateway, which works fine becase as shown in
+Figure~\ref{fig:tunnel_packet}, becase the only sign of that this
 packet is destined for the gateway appears at the Ethernet header as the
-destination address.  This is relevant to two of our previous works as
-described in~\cite{sc09}: 1) each VPN software stack uses a single Ethernet
-address to represent all remote hosts which differ only by their IP address,
-this approach is called a transparent subnet gateway~\cite{RFC1027} and
-2) the lowest address in a network is reserved for VN services
-such as DHCP and DNS.  Thus 5.0.0.1 becomes a ``virtual'' virtual address, and
-packets sent for gateway purposes to this address can be forwarded to any
-machine in the VPN for relaying to the Internet without any IP or higher
-layer changes.  With this in mind, the client software need only pay heed to
-the destination IP address, which points to the Internet.  The VPNs state
-machine has to be slightly modified to handle outgoing packets not destined
-for a remote VPN end point:
+destination address.  Packets retrieved in the VPN software can then
+forward the Internet packet to any machine acting as a gateway without needing
+to IP or higher OSI layer changes.  With this in mind, the client software need
+only pay heed to the destination IP address, which points to the Internet. 
 
-\begin{enumerate}
-\setlength{\itemsep}{0pt}
-\setlength{\parskip}{0pt}
-\item is the packet destined for some area outside of the VPN address space
-\item if so, verify that full tunnel VPN is enabled
-\item if so, discover a remote peer to act as a full tunnel gateway
-\item after finding one, send the message to the remote peer
-\end{enumerate}
+The VPNs state machine has to be slightly modified to handle outgoing packets
+not destined for a remote VPN end point.  If an incoming packet is destined
+for some network outside of the VPN address space, full tunnel mode must be
+enabled.  If it is enabled, the VPN software will find a remote
+peer to act as a full tunnel gateway and then send the packet to the remote peer.
 
 \begin{figure}[h]
 \centering
@@ -802,35 +761,32 @@ if a server is lost, we take note of it and only query the DHT again upon the
 next outgoing Internet packet.
 
 For this paper, the second issue, handling P2P routed packets, was the focus of
-our work.  In the centralized VPN case, a client only needs to communicate
-directly with a single point in the VPN.  This can be handled by having a single
-rule added to the routing table that would route all packets to this end point
-via the LAN's default gateway.  The rule would look similar to 128.227.56.121/32
-directed to 192.168.1.1, where 128.227.56.121 is the remote machine and 192.168.1.1
-is the local gateway.
-
+our work.  Whereas in the centralized VPN case, a client only needs to communicate
+directly with a single point in the VPN, which can be done with a single routing
+rule change prior to starting the VPN, the same cannot be done for a P2P system.
 In a P2P system, ensuring that all P2P overlay messages are routed directly
-becomes non-trivial because we will have many such routes most of which will
-not be known ahead of time.  If we maintained the model used by the centralized
-format, we would end up routing both Internet and P2P traffic over the gateway
-machine and if he were disconnected, we would have to reinitialize all state
-and more importantly we would lose the advantage provided by P2P, namely
-scalability.  To solve this we present many different possibilities but in our
-efforts were only successful with one model for easily setting up a client.  We
-present all our work, including our failed attempts, such that it may be the
+becomes non-trivial because there will be many such routes most of which will
+not be known ahead of time.  If we applied the same model used by centralized VPNs,
+the client would end up routing both Internet and P2P traffic through the gateway
+machine and if there were disconnection, all state would have to be reinitialized
+and more importantly the advantage provided by P2P, scalability, would be lost.
+To solve this we present two approaches though in our efforts, we
+were only successful with one model for easily setting up a client.  We
+present all our work, including our failed attempt, such that it may be the
 ground work for further research.
 
 \subsubsection{The Client -- Approach 1 -- Adding Routes}
 The first approach taken uses a model similar to the centralized version,
-that is, for each P2P machine we communicate with, we add an explicit rule in the
+for each P2P machine we communicate with, we add an explicit rule in the
 routing table so that packets destined for them are routed directly to them via
 the LAN's default gateway.  In order to ensure this, we added a feature to the
 socket handling code in our system that would indirectly add the remote nodes
 public address to our routing table prior to the first outgoing communication
 attempt and would remain in effect until the VPN closed down or the link was no
-longer active.  This model does not need to worry about incoming packets, as they
-will be unaffected by the routing table and will be delivered as they were in
-the normal system.
+longer active.  While this model does require unique code for each OS platform,
+supporting Linux and Windows was quite trivial.
+In this model, Incoming packets will be unaffected by the routing table changes
+and will be delivered as they were in the normal system.
 
 This model works well but has two major flaws.  Common to all VPNs that employ
 the standard route switch technique, all communication, not just VPN, is routed
@@ -842,7 +798,7 @@ to have the VPN add extra routes to the routing table, resulting in a similar
 situation as the first, unencrypted communication visible to eavesdroppers.
 The next two solutions attempted to solve these problems.
 
-\subsubsection{The Client -- Approach 2 -- Writing Ethernet Packets}
+\subsubsection{The Client -- Approach 2 -- Ethernet Packets}
 This approach recognizes that when using UDP, we know the source port from which
 all traffic originates, also even in the case of TCP, we can easily determine
 our source ports for outgoing connections using a technique similar to the one
@@ -860,10 +816,9 @@ modify the IP packet to change the source address to match the physical
 Ethernet devices IP address.  We focused on two approaches that would be
 cross-platform capable: 1) using a bridged tap device whose sole purpose is to
 send and receive Internet packets to and from the gateway and 2) using
-PCap, a packet capture and injection library, to send packets.  Additionally,
-Linux also supports a packet type called packet, which allows writing complete
- Ethernet packets, a feature not enabled in Windows.  For this model, we only
-focused on approaches that were reasonably portable to other OSes.
+PCap, a packet capture and injection library, to send packets.  While there
+may be other approaches, we focus only on ones that are reasonably portable
+to other OSes.
 
 The problem with this approach is that when an incoming packet arrived at the
 clients networking stack, the client would not recognize the packet because the
@@ -872,30 +827,7 @@ the one where it originated.  This would trigger the OS either ignoring the
 packet in the case of UDP or sending a TCP reset message.  Thus the only
 solution would be to implement some form of NAT, that would receive incoming
 packets and rewrite them prior to the network stacking thus avoiding a TCP
-reset message, a task we have not started yet.
-
-\subsubsection{The Client -- Approach 3 -- Using Linux Tools}
-The problem with having the VPN client redirect packets directly is that it can
-be potentially costly, as all VPN traffic will traverse the TAP device twice,
-once as VPN traffic and the second as P2P traffic, so we also investigated the
-potential of using existing Linux tools to solve this problem.
-Our focus was on the use of iptables as it provides the ability
-to manipulate IP packets to implement firewalls and NATs, we had hoped that we
-could do redirect our packets to the gateway, somehow.
-
-Iptables alone was not able to do the job as it cannot manipulate the
-Ethernet addresses directly using iptables.  The only way to manipulate the
-Ethernet addresses is by changing the destination or source IP address.  There
-was no change that could be made that would accomplish what we were looking for.
-
-Iptables had another feature, which was to mark a packet so that it could use a
-special routing table.  The routing table can be managed using iproute2.
-We then can make all packets that arrive at the special
-routing table take a different default route, one that routes it to the local
-gateway.  The problem with this approach is that it does not deal with the
-source address of the packet.  In other words, the packet will have a source
-IP address of the VN device and not of the physical Ethernet
-device.
+reset message, a task we have not yet investigated.
 
 \subsection{Autonomic Relays}
 A handful of P2P VPNs~\cite{hamachi, gbridge} support relaying when direct
