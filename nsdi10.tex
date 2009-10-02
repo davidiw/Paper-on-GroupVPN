@@ -17,8 +17,8 @@
 
 \usepackage[compact]{titlesec}
 \titlespacing{\section}{0pt}{*.4}{*.4}
-\titlespacing{\subsection}{0pt}{*.4}{*.4}
-\titlespacing{\subsubsection}{0pt}{*.4}{*.4}
+\titlespacing{\subsection}{0pt}{*.3}{*.3}
+\titlespacing{\subsubsection}{0pt}{*.3}{*.3}
 \setlength{\parskip}{0pt}
 \setlength{\parsep}{0pt}
 \setlength{\headsep}{0pt}
@@ -26,8 +26,8 @@
 \setlength{\topmargin}{0pt}
 \setlength{\topsep}{0pt}
 \setlength{\partopsep}{0pt}
-%\widowpenalty=10000
-%\clubpenalty=10000
+\widowpenalty=10000
+\clubpenalty=10000
 %\setlength{\parskip}{0pt}
 %\setlength{\dbltextfloatsep}{.2cm}
 %\setlength{\dblfloatsep}{.2cm}
@@ -166,7 +166,7 @@ PKI managed through a group-based web interface.
 The interface allows VPN group managers to review applications into the group and remove malicious
 users.  Furthermore, we use the bootstrapping of a private P2P system off
 an existing public P2P system to create a trusted subset of a P2P ring that spans only the members of a VPN group.
-This enables the use of P2P routing, multicast and DHT storage/lookup within a private subset of the main overlay.
+This enables the use of P2P routing, multicast and DHT storage/look up within a private subset of the main overlay.
 We explore the problem of providing full tunneling to P2P VPNs and provide
 a working solution that supports multiple gateways in a single VPN.  We
 provide mechanisms that allow two peers to establish two-hop relay links based upon
@@ -256,7 +256,7 @@ included with the installation of the VPN application which is
 distributed from a secured site.
 
 To communicate over the VPN transparently, a system must have a VN
-device driver, which provide the mechanisms to inject incoming packets and retrieve outoing
+device driver, which provide the mechanisms to inject incoming packets and retrieve outgoing
 packets and support the use common network APIs such as Berkeley Sockets allowing
 existing application to work over the VPN without modification.
 There are many
@@ -308,11 +308,10 @@ typical home network, an Internet bound packet will be retrieved at the VN
 device, encrypted, and sent to the VPN gateway via the LAN's gateway.  At the
 VPN gateway, the packet is decrypted and delivered to the Internet.  All other
 traffic is sent to the VN device, then sent securely to the VPN gateway.  A P2P
-system encouters two challengen in supporting full tunnels:  1) P2P traffic must not be routed
+system encounters two challenges in supporting full tunnels:  1) P2P traffic must not be routed
 to the VPN gateway and 2) there may be more than one VPN gateway.  We further
 discuss this issue and provide solutions to this problem in Section~\ref{fulltunnel}.
 
-%\small{
 \begin{table*}[!h!t!]
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
@@ -349,12 +348,10 @@ No NAT traversal, decentralized relay & Open Source \\ \hline
 IPOP & Structured P2P & PKI or pre-exchanged keys &
 DHT look up & NAT traversal and relay through physically close peers &
 Open Source\\ \hline
-
 \end{tabular}
 \caption{VPN Comparison}
 \label{tab:vpns}
 \end{table*}
-%}
 
 \subsection{Centralized VPN Servers}
 OpenVPN is an open and well-documented platform for deploying
@@ -511,7 +508,7 @@ especially when peers leave without warning.
 
 Overlay shortcuts are key to efficient routing in ring-structured P2P systems.  There are many
 approaches to select shortcuts, each with different
-tradeoffs.  A few of these include:  maintaining large tables without
+trade-offs.  A few of these include:  maintaining large tables without
 using connections and only verifying usability when routing
 messages~\cite{pastry, kademlia}, maintaining a connection with a peer every
 set distance in the P2P address space~\cite{chord}, or using locations drawn
@@ -536,7 +533,7 @@ address configuration through a virtual DHCP server using DHT~\cite{sc09, pcgrid
 %scalability in the count of hundreds of peers in a single VN~\cite{sc09},
 ability to behave as a VN interface or router~\cite{sc09}, and
 secure end-to-end (EtE) and point-to-point (PtP) links.
-Our implementation is portable to any system that supports Tap and a C\# runtime (e.g. Mono, .Net),
+Our implementation is portable to any system that supports Tap and a C\# run-time (e.g. Mono, .Net),
 and has been used in grid computing for over 3 years~\cite{archer,vtdc,pcgrid08,gridappliance}.
 
 While this framework provides the basis for our design and implementation, we will show
@@ -626,7 +623,7 @@ a public overlay to bootstrap application-specific overlays
 in~\cite{one_ring}.
 
 In this approach, members of the VPN are the only members of the private overlay, providing a
-model that is synnergistic with the group VPN interface described earlier.  This
+model that is synergistic with the group VPN interface described earlier.  This
 prevents malicious users outside of the VPN from attacking it, and facilitates 
 the removal of misbehaving peers, primarily rooted in the fact that
 the use of a broadcast to signal a certificate revocation is within the scope of the private overlay.
@@ -688,7 +685,7 @@ VPN software starts, it will automatically append itself to the list of known
 gateways for the VPN group in the DHT.
 
 The only remaining difference in VPN gateway is the state machine used in
-processing packets coming from the VPN.  Rather than rejecting pakets
+processing packets coming from the VPN.  Rather than rejecting packets
 if the destination is not in the VPN subnet, they are only rejected if
 gateway mode is disabled.  If it is enabled, all packets are written to the
 TAP device with the destination Ethernet address being that of the TAP device.
@@ -1070,7 +1067,7 @@ small to medium businesses.
 \subsection{Discovering Faults}
 In this section, we share our
 experiences in managing and finding faults in a deployed P2P VPN overlay bootstrap 
-service we run on PlanetLab~\cite{planetlab}. PlanetLab serves as a
+service we run on Planet-Lab~\cite{planetlab}. Planet-Lab serves as a
 challenging environment environment that stresses our system and helps us assess its reliability, stability, and
 consistency.  The basic consistency check we use to discover faults is to compare peers knowledge of the pool and test
 each peer for congruence with both its first and second left and right neighbors.
@@ -1162,7 +1159,7 @@ Java code into the CLR.  NChord is a Chord implementation written in C\#.  In
 Table~\ref{tab:structured_p2p_compare}, we compare the features of the structured
 P2P systems as they apply to the use as a VPN.
 The specific focus of this section is to understand how discovery and VPN connections
-would work.  Our discovery model for maping node ID to IP works through the use of a DHT.
+would work.  Our discovery model for mapping node ID to IP works through the use of a DHT.
 During the IP address allocation, the VPN client will place in the
 DHT a key, value pair mapping a virtual IP to a node ID, as described in~\cite{sc09}.
 
@@ -1241,7 +1238,7 @@ of using a private overlay for a VPN.  We believe that this work provides both a
 position and a model on how to design VPNs.
 
 \bibliographystyle{abbrv}
-\small {
+\small{
 \bibliography{nsdi10}
 \suppressfloats
 }
