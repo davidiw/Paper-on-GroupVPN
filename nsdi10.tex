@@ -106,7 +106,8 @@ management, NAT traversal, and autonomic relay selection.  We relegate the use
 of a central server as a partially-automated  public key infrastructure (PKI)
 via a user-friendly web interface.  Our model also provides the first design and
 implementation of a P2P VPN with full tunneling support, whereby all non-P2P based
-Internet traffic routes through a trusted third party.  To verify our model,
+Internet traffic routes through a trusted third party, and does so in a way that
+is more secure than existing implementations.  To verify our model,
 we evaluate reference implementation quantitatively to compare system and networking
 overheads of the different VPN technologies focusing on latency, bandwidth,
 and memory usage.  We also discuss some of our experiences with developing,
@@ -153,17 +154,11 @@ of traffic to Internet hosts.
 Among existing VPN approaches
 \cite{openvpn, hamachi, wippien, p2pvpn, n2n, tinc}, there is not a
 single solution that deals with the following in an integrated manner: 
-%\small {
-\begin{itemize}
-\setlength{\itemsep}{0pt}
-\setlength{\parskip}{0pt}
-\item no dependence on centralized server(s) for creation, maintenance and tear-down of VPN links
-\item full tunneling of Internet traffic
-\item decentralized relay selection, where any peer can potentially be a relay
-\item user-friendly, intuitive membership management in a VPN
-%\item support for large and active VPN pools
-\end{itemize}
-%}
+no dependence on centralized server(s) for creation, maintenance and tear-down of VPN links;
+completely secure full tunneling of Internet traffic;
+decentralized relay selection, where any peer can potentially be a relay;
+and user-friendly, intuitive membership management in a VPN.
+%support for large and active VPN pools
 
 Our system supports the well-known PKI-based security model to secure VPN links; 
 for improved usability, we employ a semi-automated 
@@ -655,7 +650,7 @@ discovery.  Furthermore, VPN peers can elect to use routing paths over the priva
 for VPN traffic, and choose relays within the private overlay only. The public overlay can be used for relaying, when
 direct connectivity is not possible, though this has not been looked into yet.
 
-\subsection{Full-Tunneling over P2P}
+\subsection{Full Tunneling over P2P}
 \label{fulltunnel}
 %VPN tunneling is divided into two
 %categories:  split tunneling and full tunneling.  In split tunnel mode, the
@@ -667,20 +662,21 @@ In a centralized VPN, these ``control'' messages would be the
 communications directly with the VPN server and full tunnel gateway, which most
 likely is the same machine destination IP address from the perspective of the
 client.  In a P2P VPN, ``control'' messages would be communications directly
-between P2P peers.  Using full-tunneling ensures that a malicious user cannot
+between P2P peers.  Using full tunneling ensures that a malicious user cannot
 easily eavesdrop into what would otherwise be public communication by
 forwarding all non-VPN related traffic securely to a third party who resides
 in a more trusted environment.  There are two key components to this scheme,
 a gateway / server or traffic relayer and a client or a traffic forwarder.
-In the following sections, we present a methods for implementing
+In the following sections, we present methods for implementing
 gateways and clients.
 
 \subsubsection{The Gateway}
-Configuring a machine as a gateway can be done with NAT software. For example, in Linux
+Configuring a machine as a gateway can be done with NAT software or using
+IPOP's built-in NAT stack. For example, in Linux
 this is possible through masquerading in iptables, which automatically handles forwarding
 packets received on one interface and to the next hop as well as receiving
 packets from the Internet and forwarding them back to the appropriate client,
-transparently taking care of NAT.  
+transparently taking care of NAT.
 %Use of existing NAT software is recommended,
 %as many applications, including FTP and SIP, embed IP information into the data
 %packet, making IP header manipulation insufficient for NAT support.
@@ -786,32 +782,40 @@ This led us to consider the second approach described below.
 \subsubsection{The Client -- Approach 2 -- Ethernet Packets}
 This solution attempts to solve the problem introduced by the first solution,
 removing any potential for eavesdropping.
-This approach recognizes that when using UDP or TCP an application can determine
+This approach recognizes that when using UDP, an application can determine
 the source ports from which all application traffic would originate.
-This approach requires a routing rule directing all traffic to
-the VPN gateway, but there are no additional routing rules.  This results in
-all packets being directly sent to the VN device, leaving the VPN client software to handle
-Ethernet layer routing of the packets.
+Again, this approach requires a routing rule directing all Internet traffic to
+the VPN gateway though with no additional rules.  This results in
+all packets being directly sent to the VN device.  Meaning that not only will
+general Internet traffic process through the VPN state machine but so will P2P traffic.
 
-When packets come into the VPN application, the client checks the source port.
-If it matches one of the applications' source ports, the VPN client must
-change the source IP address to match the hosts LAN IP address and then embed
-the packet into an Ethernet frame prior to sending it to the local gateway.
-Cross-platform components that allow writing Ethernet frames to physical host
-network devices include using a bridged tap device whose sole purpose is to
-send and receive Internet packets to and from the gateway and using
-PCap, a packet capture and injection library, to send packets.
-
-The problem with this approach is that when an incoming packet arrives at the
-client's networking stack, the client does not recognize the packet because the
-destination IP address does not match the original outgoing address as the
-packet is destined for the physical Ethernet's IP address and not the VN Ethernet's.
-This triggers the OS to either ignore the packet, in case of UDP, or send a TCP reset message.
-Thus the solution needs some form of NAT to handle receiving incoming
-packets and rewriting them prior to the network stack thus avoiding a TCP
-reset message, a task we have not yet investigated.
-
-% this in unlear - approach 1 has eavesdropping, approach 2 also has a problem - so reviewers will ask, do we have a working solution, overall?
+In the VPN application, Incoming IP packets' source ports are compared to
+VPN application's source ports.  Upon a match, the VPN application must
+direct it to the LAN's gateway.  This requires building of an Ethernet frame that will
+be written to the physical Ethernet device.  The first step is to change the
+source IP address to match the physical Ethernet's IP address, so that the gateway
+will route the packet properly.  The next step is to embed the resulting packet
+into an Ethernet frame prior.
+The source address for the Ethernet frame can be generated using the method described
+in~\cite{sc09}, and its destination address should be the LAN's gateway.
+The next step is to write the packet to the physical Ethernet device, but Windows lacks
+support for this operation.
+Our platform independent solution uses a second TAP device bridged to the
+physical Ethernet device, allowing Ethernet frames to be written indirectly to the physical
+Ethernet device via the TAP device.  Interestingly, P2P packets that come back from the Internet are delivered
+directly to the VPN application with no ill effect even though the incoming destination and outgoing source IP addresses
+do not match.  Tunnel packets wrapped in P2P packets enter the VPN client and
+using the existing method of delivering the packet to the application.
+This method has been verified to work on both Linux and Windows using OS dependent TAP devices
+and bridge utilities.
+This solution does have a minor drawback, which is that an outgoing packet will
+traverse the VPN stack twice, once as an application packet and the second as
+a P2P packet.  This cost is probably negligible as most of the round trip time on the
+packet will occur over the wide area which will be orders of magnitude slower than
+the VPNs packet processor.  This solution does have a significant upside beyond
+even P2P use: it fixes a security hole in existing
+full tunnel models, because there is no chance of insecure traffic ever being transmitted
+from the physical Ethernet device when a machine is in full tunnel mode.
 
 \subsection{Autonomic Relays}
 When NAT traversal using STUN~\cite{stun} fails or there are other connectivity
@@ -938,10 +942,10 @@ Hamachi-Free & 60.8 & 2.54 & 40.2 & 0.87 \\ \hline
 Hamachi-Pro & 60.2 & 1.68 & 1000 & 1.29 \\ \hline
 Latency-aware & 58.1 & 35.5 & 2245 & 1080 \\ \hline
 \end{tabular}
-\label{tab:relay_eval}
 \caption{Results of the Relay evaluation comparing time to establish a relay,
 bandwidth, and latency amongst Hamachi's relay service, a latency-focused relay
 model, and an stability-focused relay model.}
+\label{tab:relay_eval}
 \end{table}
 
 As Hamachi was started and figured out that NAT traversal was not possible, it
@@ -1156,6 +1160,10 @@ library through the use of IKVM.NET, which allows the porting of
 Java code into the CLR.  NChord is a Chord implementation written in C\#.  In
 Table~\ref{tab:structured_p2p_compare}, we compare the features of the structured
 P2P systems as they apply to the use as a VPN.
+The specific focus of this section is to understand how discovery and VPN connections
+would work.  Our discovery model for maping node ID to IP works through the use of a DHT.
+During the IP address allocation, the VPN client will place in the
+DHT a key, value pair mapping a virtual IP to a node ID, as described in~\cite{sc09}.
 
 \begin{table*}[!h!t]
 \setlength{\itemsep}{0pt}
@@ -1175,26 +1183,26 @@ over the overlay between two peers.}
 \end{table*}
 
 The bootstrapping of a connection in NChord, begins by finding the owner of the
-DHT key containing the mapping of virtual IP address to node address
-through ``find\_successor''.  After establishing a connection, the owner of the
-key needs to be queried for the key's value, which would be the node ID of the
+DHT key containing the mapping of virtual IP address to node ID
+through ``find\_successor''.  After establishing a connection with the owner of
+that key, the owner needs to query for it's value, which would be the node ID of the
 node owning the virtual IP.  After executing ``find\_successor'' and retrieving
-the destination nodes, the owner of the virtual IPs, physical IP address, the VPN
+the destination nodes physical IP address, the VPN
 can ``connect'' to the remote node using either a UDP or TCP socket.  Virtual IP
 messages would then be sent and received through this ``connection''.  Unlike
-other systems, NChord does not support sending messages through the overlay,
+our system, NChord does not support sending messages through the overlay,
 thus a separate ``connection'' for application purposes will need to be
 created.
 
-The steps involved in FreePastry begin by looking up the mapping of virtual
-IP to node ID in PAST.  The result will be a node ID, which can be called
-using ``route'' to send packets and ``deliver'' to handle incoming packets.
+FreePastry begin by looking up the mapping of virtual
+IP to node ID in PAST.  To form a connection through overlay, the VPN
+client would use ``route'' to send packets and ``deliver'' to receive incoming packets.
 In fact, the model is very similar to Brunet.  Furthermore,  FreePastry has
 knowledge of proximity in shortcuts, so it may be very easy to apply
-high-performance autonomic relays to pastry.  FreePastry does not have
-the ability to form shortcuts based upon demands, so if two peers were
+high-performance autonomic relays in pastry potentially reusing some of their work from ePost~\cite{epost}.
+FreePastry does not have the ability to form shortcuts based upon demands, so if two peers were
 actively communicating, they may always have to route traffic over the
-overlay, which will probably be significantly slower than if they were
+overlay, which in most cases will be significantly slower than if they were
 directly connected.  Though one could argue, that since FreePastry does
 not support NAT traversal, all nodes will already be public and thus an
 application, as in the NChord example, could form a direct connection bypassing
@@ -1205,10 +1213,16 @@ the overlay.
 This paper presents a novel VPN approach that has been designed from the ground up
 to facilitate ease of use while maintaining a reasonable level of security.  At
 the core of the VPN is a structured P2P system that provides decentralized
-peer discovery, NAT traversal, relays, full tunnel gateways, and secure point-to-point
-(PtP) and end-to-end (EtE) links.  The PtP and EtE links are secured via an group system
-using a partially automated PKI with an intuitive web interface.  The web interface can
-be hosted by the group themselves or they may use our public system~\cite{gridappliance}.
+peer discovery, NAT traversal, relays, full tunnel clients and gateways, and secure point-to-point
+(PtP) and end-to-end (EtE) links.  In the paper, we focus primarily on relays,
+full tunnels, and group security.  The relay seekers can use arbitrary information,
+such as connection age or latency, to assist in finding suitable overlap.  With
+overlapped formed, relays will be created automatically using an existing infrastructure.
+We present a novel method for client full tunneling that works in P2P and provides a level
+of security not present in prior works by ensuring that only secure data is transmitted over the LAN.
+The PtP and EtE links are secured via an group system
+using a partially automated PKI with an intuitive web interface, which can be hosted
+by a group or they may use our public system~\cite{gridappliance}.
 
 Through the use of the group interface, users can create their own VPNs with
 private P2P pools while using public pools as a bootstrap.  Users are able to join
@@ -1220,7 +1234,7 @@ offending users are eventually removed from the system through one of the follow
 mechanisms: CRL, DHT events, and broadcast messages.
 
 The paper introduces many new interesting research problems: 1) distributed load 
-balancing full tunnel gateways, 2) understanding the long term effects of different
+balancing of full tunnel gateways, 2) understanding the long term effects of different
 automatic relay selection models, 3) understanding the benefits beyond security
 of using a private overlay for a VPN.  We believe that this work provides both a
 position and a model on how to design VPNs.
