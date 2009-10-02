@@ -955,11 +955,12 @@ at relay nodes.
 \subsection{Comparing System Overheads}
 In this experiment, we attempt to understand the bounds imposed by OpenVPN,
 Hamachi, and IPOP.  We used Amazon EC2~\cite{ec2} to dynamically create various sized
-networks ranging from 0 to 128 with additional client used as the control.
+networks ranging from 1 to 129 with one  client used as the control.
 %After boot, the each client places there IP address into a shared NFS direct,
 %once all client IP address are in the system, the bootstrap phase began.  
 In the bootstrap phase, the control machine initiates communication with a
-subset of clients in the VPN.  Once the system has warmed, we continue pinging
+subset of the remaining clients in the VPN.  Once the system has warmed, 
+the control continues pinging
 this subset every 15 seconds for the next 10 minutes.  We capture bytes
 transmitted into and out of the system, as well as the memory size of the
 VPN application at the end of each stage.  As we test the varying network
@@ -970,11 +971,11 @@ changes in Hamachi, the Linux client will not support networks larger than 16.
 Due to amount of data collected and space limitations, we only present figures
 for results that provide interesting data and summarize the rest in the text.
 
-Memory exhibited, for the most part, an intuitive behavior: for each additional
+Memory, for the most part, exhibited an intuitive behavior: for each additional
 connection there was more memory used.  The OpenVPN control client showed
 negligible additional memory usage for additional nodes, though the server
-showed a linear increment for each additional client in the system, around 1 MB
-each, while activity had negligible effect on the results.  Hamachi had a
+showed a linear increment, around 1 MB, for each additional client in the system,
+while activity had negligible effect on the results.  Hamachi had a
 base line of a less than 1 MB and like OpenVPN, each additional client
 in the system had a linear effect on memory, on the order of 4 KB, there was
 no change based upon activity.  The effect of additional inactive nodes in
@@ -987,25 +988,26 @@ scaled at a 200 KB per additional node.
 \epsfig{file=figs/bandwidth_128.png.eps, width=3in}
 \caption{Comparison of bandwidth costs for member activity versus network size.
 As stated in the text, Hamachi limits the system to network sizes of 16, so to
-estimate the Hamachi bandwidth we used the following formula based upon a linear
-regression model using our data sets: $.049 + .002 KB/s * N + .02 KB/s * A$,
+estimate the Hamachi bandwidth we used the following formula using a linear
+regression model based upon our data sets: $.049 + .002 KB/s * N + .02 KB/s * A$,
 .049 the bandwidth in a network size of 0, i.e., keep-alives with the central
 server, N is the network size, and A is the active links.}
 \label{fig:bandwidth_128}
 \end{figure}
 
-In Figures~\ref{fig:bandwidth_128}, we present our results for bandwidth for
+In Figures~\ref{fig:bandwidth_128}, we present the bandwidth results for
 client network sizes of 128.  Our evaluation scaled from having the control
-communicate with 0 to 128 exponentially, though as mentioned already, Hamachi
+communicate with 0 to 128 clients exponentially, though as mentioned already, Hamachi
 only supports network sizes of 16, so we used a linear regression to extrapolate
 the bandwidth results.  The results are somewhat predictable as Brunet, IPOP's
 P2P infrastructure, primarily uses UDP connections and thus must maintain
-application layer connections and actively ensures connections are open.
-It is not obvious that Hamachi is doing the same. In fact, Hamachi's behavior
-appears to be similar to that of OpenVPN.  OpenVPN does not need to maintain
-bidirectional NAT mappings as the server is definitely on a public address,
+application layer connections and NAT mappings.
+It is not obvious that Hamachi is doing the same, which may be due to the fact
+that the peers all have public IP addresses. In fact, Hamachi's behavior
+appears to be similar to that of OpenVPN.  Additionally, OpenVPN does not need
+to maintain NAT mappings as the servers are location on public addresses,
 thus a client does not need to be as proactive about ensuring the connection
-is still alive as in IPOP and Hamachi.
+like in IPOP and Hamachi.
 
 The important take-aways from this experiment are:  1) each additional member
 in a VPN requires more memory, but the structured P2P approach places this burden
@@ -1021,7 +1023,7 @@ bottleneck.
 Our work on the P2P VPN model presented in this paper is based on four
 years of work spent developing, deploying, and maintaining VN software for
 grid computing~\cite{wow,sc09,archer}.  In this section, we first present
-our different deployments involving P2P VPN, then we present our experiences
+our different deployments of our P2P VPN, then we present our experiences
 in debugging such a structured P2P VPN system.
 
 \subsection{Deployments}
@@ -1039,7 +1041,8 @@ distributed grid in a matter of minutes by downloading a virtual machine
 manager and the Grid Appliance.  The comment we receive most often in our
 polls is ``I was surprised at how it just works.''
 
-Motivation for a significant portion of our work lies in our desire to integrate other resources, not only virtual appliances,
+Motivation for a significant portion of our work lies in a desire to integrate
+other resources, not only virtual appliances,
 in the same ``just works'' manner. The GroupVPN described in this paper is the same
 software stack that runs inside Grid Appliance but also allows services the Grid
 Appliance to connect with external NFS and external grid resources.
@@ -1048,8 +1051,10 @@ Our experience with P2P VPN software also includes SocialVPN~\cite{cops08}.  The
 SocialVPN places each client in their own private network, where they are only
 addressable by their friends as defined by third party social network.
 Unlike GroupVPN, this makes each user the master
-of who does and does not have access to their resources.  While SocialVPN targets the creation of ``personal'' VPNs, which are often asymmetrical, it does not lend itself well to environments
-that require some form of central management and symmetric connectivity such as a computing grid or a
+of who does and does not have access to their resources.  While SocialVPN
+targets the creation of ``personal'' VPNs, which are often asymmetrical,
+it does not lend itself well to environments that require some form of
+central management and symmetric connectivity such as a computing grid or a
 small to medium businesses.
 
 \subsection{Discovering Faults}
@@ -1065,8 +1070,8 @@ If a node is able to fix inconsistencies in future crawls, experience suggests
 the inconsistency was probably due to churn in the system.  Otherwise, it will
 probably still be in an inconsistent state and we are able to query the node
 and other nodes nearby for additional state information.  At a minimum, this
-would be help us determine if there exists a problem and potentially what state
-is stale and causing the connectivity issue.  If this reveals little
+would be help us determine if there exists a problem and potentially the stale
+state causing the connectivity issue.  If this reveals little
 information, we either retrieve a log or request it from the user who owns node,
 the log typically provides some useful information.  Additionally, as with all
 multithreaded applications, deadlocks happen, we found it useful to add
@@ -1085,37 +1090,40 @@ reproduce in a lab controlled test system.  It is our belief
 that any system that uses large scale Planet-Lab deployments as a testing ground
 will be quite reliable.
 
-We are still actively seeking better ways to verify the state of our system.
+We are still actively seeking better ways to check and verify the state of our system.
 For example, the cost of doing a crawl can take $O(N \log(N))$ time,
 since we have to communicate with every single node with an average routing
-time of $O(\log(N))$.  For example, current research on Brunet has been focused
-on providing a P2P MapReduce~\cite{mapreduce} framework, which can be used to
+time of $O(\log(N))$.  Future work in the arena is focused on Brunet's
+MapReduce~\cite{mapreduce} framework, which can be used to
 provide system wide searches and status checks in $O(\log(N))$ time.
 
 \section{Related Works}
 \label{related_work}
 Our work is not the first to propose using a group like mechanism for regulating
-member in a VPN. Hamachi presently offers the ability to create and join a
+members in a VPN. Hamachi presently offers the ability to create and join a
 network from either a VPN client or through their Web site.  To create a group,
 a user can either form a private invite only VPN or a password protected public VPN.
 Users must exchange out of band both the password and the VPNs name and both
 registered and unregistered users (guest) can join Hamachi VPNs.  Also, Hamachi
-uses a key distribution center (KDC) as opposed to a PKI, thus it is quite
+uses a model similar to a key distribution center (KDC) as opposed to a PKI,
+thus it is quite
 easy for Hamachi to do man-in-the-middle attacks.  Hamachi's server is not
 redistributable and all users must use LogMeIn's (Hamachi's owner) KDC and relays.
 Our model ensures that each user is traceable and has to be authenticated by the
 group administrator.  Groups entrance is further secured by giving each user a
 unique key to retrieve signed certificates.  Most importantly our PKI is open
-and redistributable, so users can self-host the group VPN web server, and our relays are built into the
-VPN and require no management.
+and redistributable, so users can self-host the group VPN web server, and our
+relays are built into the VPN and require no management.
 
 Our group system is not the first to provide an automatic PKI. Previous work in
-this field includes RobotCA~\cite{robotca}.  RobotCAs receive requests via e-mail,
-then verify that the e-mail and the embedded PGP key match and sign the request.
+this field includes RobotCA~\cite{robotca}.  A RobotCAs receives request via e-mail,
+verifies that the sender's e-mail address and embedded PGP key match, signs the
+request, and mails it back to the sender.
 RobotCAs are only as secure as the underlying e-mail infrastructure and provide
 no guarantees about the person beyond their ownership of an e-mail address.  In
-certain cases, this model could be used in our use cases, such as a SMB or handful
-of universities that enforce all users to use university e-mails, then the RobotCA 
+certain cases, this model could be used in our use cases, such as a SMB or for
+universities if it enforces that all users use university e-mail addresses,
+then the RobotCA 
 would only only sign e-mails if they come from a specific domain.  Our experience
 suggests that is not rare for an academic to use a non-university e-mail for
 university purposes.  Another concern is that the RobotCA would require management
@@ -1132,7 +1140,7 @@ readily to interesting load balancing schemes.
 
 Our work is not the first to suggest using a P2P infrastructure to enable the
 discovery of physically close TURN-like relays.  Skype~\cite{skype_overview}
-queries super nodes in an attempt to find a physically close relays.
+queries super nodes in an attempt to find physically close relays.
 The primary difference in our work is that our model could easily be configured
 to let users create and select their own relays.
 
