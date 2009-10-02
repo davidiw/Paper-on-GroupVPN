@@ -16,7 +16,7 @@
 \usepackage{amsmath}
 
 \usepackage[compact]{titlesec}
-\titlespacing{\section}{0pt}{*.4}{*.4}
+\titlespacing{\section}{0pt}{*.3}{*.3}
 \titlespacing{\subsection}{0pt}{*.3}{*.3}
 \titlespacing{\subsubsection}{0pt}{*.3}{*.3}
 \setlength{\parskip}{0pt}
@@ -94,8 +94,8 @@ have performance constraints as all traffic must traverse through a central serv
 In recent years, there has been a paradigm shift towards the use of P2P in
 VPNs to alleviate pressure placed upon the central server by allowing participants
 to communicate directly with each other, relegating the server to handling session management and
-supporting NAT traversal using relays when necessary.  Other approaches seek to remove all
-centralization with a focus on unstructured P2P systems.
+supporting NAT traversal using relays when necessary.  Another, less common,
+approach uses unstructured P2P systems to remove all centralization from the VPN.
 These approaches currently lack the depth in security options provided
 by other VPN solutions, and their scalability constraints have not been well studied.
 
@@ -195,6 +195,7 @@ by an analysis of different VPN server configurations as highlighted in
 Table~\ref{tab:vpn_types}.
 
 \begin{table}[ht]
+\small{
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
@@ -214,6 +215,7 @@ Structured P2P & No distinction between clients and servers; members are usually
 within $O(\log N)$ hops of each other via a greedy routing algorithm; use 
 distributed data store for discovery \\ \hline
 \end{tabular}
+}
 \caption{VPN Classifications}
 \label{tab:vpn_types}
 \end{table}
@@ -269,8 +271,8 @@ stack in the OS delivers the packet to the appropriate socket.  Outgoing
 packets from local sockets are read from the TAP device.
 
 The VN device can be configured manually through static addressing or
-dynamically through dynamic host configuration process (DHCP)~\cite{dhcp0,
-dhcp1}.  Setting the IP address of the VN device causes the system to add a new
+dynamically through dynamic host configuration process (DHCP)~\cite{dhcp0}.  
+Setting the IP address of the VN device causes the system to add a new
 rule to the routing table that directs all packets sent to the
 VPN address space to be sent to the VN device.  Packets are read from the
 the TAP device, encrypted and sent to the overlay via the VPN client.
@@ -311,10 +313,10 @@ to the VPN gateway and 2) there may be more than one VPN gateway.  We further
 discuss this issue and provide solutions to this problem in Section~\ref{fulltunnel}.
 
 \begin{table*}[!h!t!]
+\small{
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
-%\begin{tabular}[c]{|p{1.1cm}||p{3.475cm}|p{3.475cm}|p{3.475cm}|p{3.475cm}|} \hline
 \begin{tabular}[c]{|m{2cm}||m{1.8cm}|m{2.4cm}|m{1.8cm}|m{2.9cm}|m{3.4cm}|} \hline
 & VPN Type & Authentication Method & Peer Discovery & NAT Traversal & Availability \\ \hline \hline
 
@@ -347,6 +349,7 @@ IPOP & Structured P2P & PKI or pre-exchanged keys &
 DHT look up & NAT traversal and relay through physically close peers &
 Open Source\\ \hline
 \end{tabular}
+}
 \caption{VPN Comparison}
 \label{tab:vpns}
 \end{table*}
@@ -797,7 +800,8 @@ While this method effectively resolves the lingering problem of ensuring that al
 in a full tunnel will be secure, it raises a couple of issues 1) could the effect of
 having all packets traverse the VPN application be prohibitively expensive and 2) why not
 have the P2P application write LAN destined Ethernet packets directly avoiding the VPN client.
-The cost of passing all packets through the VPN application should be negligible since
+The cost of passing all packets through the VPN application is negligible, as shown in
+Section~\ref{fulltunnel_eval},  since
 they are destined for the wide area, where the time to traverse the network will be
 orders of magnitude larger than passing through the VPN's packet processor.  Adding an
 Ethernet writer to the P2P system creates an unclean abstraction as a VPN portion
@@ -861,6 +865,7 @@ relays over overlay routing when NAT traversal does not work.  Then we examine
 the effects of using different relay selection mechanisms.  Afterwards, we
 evaluate the system overheads of OpenVPN, Hamachi, and our P2P VPN to determine
 the OS resource costs and the cost of each in a distributed environment.
+Finally, we present a quantitative comparison of our two full tunnel models.
 
 \subsection{Motivation for Relays in the Overlay}
 \label{relay_motivation}
@@ -920,6 +925,7 @@ with different members of the overlay.  Our results are presented in
 Table~\ref{tab:relay_eval}.
 
 \begin{table}[ht]
+\small{
 \setlength{\itemsep}{0pt}
 \setlength{\parskip}{0pt}
 \centering
@@ -930,6 +936,7 @@ Hamachi-Free & 60.8 & 2.54 & 40.2 & 0.87 \\ \hline
 Hamachi-Pro & 60.2 & 1.68 & 1000 & 1.29 \\ \hline
 Latency-aware & 58.1 & 35.5 & 2245 & 1080 \\ \hline
 \end{tabular}
+}
 \caption{Results of the evaluation comparing latency and bandwdith of Hamachi 
 relays and IPOP latency-aware autonomic relay selection.}
 \label{tab:relay_eval}
@@ -1018,6 +1025,41 @@ seconds) requires very little bandwidth; and 3) all traffic routes through the
 OpenVPN server and it pays twice for each inter-client packet thus as
 inter-client communication increases OpenVPN server's bandwidth becomes a
 bottleneck.
+
+\subsection{Full Tunnel Overhead}
+\label{fulltunnel_eval}
+This experiment was done to evaluate the overhead introduced using our Ethernet
+packet based full tunnel technique.  The environment for this experiment consists
+of a VPN client and gateway located at a residence and  University, respectively.
+The gateway is configured using Linux with iptables' masquerading.  The client
+is also using Linux.  The test performed consist of calculating the average
+latency, through a minutes worth of ping measurements, between the client and
+Google as well as the gateway's public and private addresses.
+
+\begin{table}[ht]
+\small{
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\centering
+\begin{tabular}[c]{|m{1.5cm}||m{1.25cm}|m{1.25cm}|m{1.25cm}|} \hline
+& Google & GW Pri & GW Pub \\ \hline \hline
+Ethernet & 70.6 & 12.9 & 13.9 \\ \hline
+Routing & 71.4 & 13.2 & 11.0 \\ \hline
+None & 66.1 & N/A & 10.9 \\ \hline
+\end{tabular}
+}
+\caption{Latency results comparing full tunnel approaches measured in ms.
+Gate Priv. is the gateways VPN address, Gate Pub. is the gateways public
+address, Ethernet was the Ethernet packet writing full tunnel method,
+routing was the routing table manipulation method, and none is the baseline
+without any VPN software.}
+\label{tab:fulltunnel_eval}
+\end{table}
+
+As shown in Table~\ref{tab:fulltunnel_eval}, there is not a significant
+latency difference in the full tunnel approaches.  One interesting result
+is the latency to gateways public address in the routing test, which is a
+result of the ping being sent insecurely avoiding the VPN stack completely.
 
 \section{Experiences}
 \label{experiences}
@@ -1146,6 +1188,25 @@ The primary difference in our work is that our model could easily be configured
 to let users create and select their own relays.
 
 \subsection{P2P VPN in Other Structured Overlays}
+\begin{table*}[!h!t]
+\small{
+\setlength{\itemsep}{0pt}
+\setlength{\parskip}{0pt}
+\centering
+\begin{tabular}[c]{|m{2cm}||m{2.75cm}|m{2.8cm}|m{2.95cm}|m{1.65cm}|m{1.65cm}|} \hline
+System & Overlay messaging & NAT Traversal & DHT & Secure PtP & Secure EtE\\ \hline
+Brunet & Yes (AHSender) & UDP and overlay relaying & Yes with reliability & Yes & Yes \\ \hline
+FreePastry & Yes (route) & Only with port-forwarding enabled  & Yes, PAST~\cite{past}, reliable & No & No \\ \hline
+NChord & No, only look up & No & Simple, non-fault tolerant DHT & No & No \\ \hline
+\end{tabular}
+}
+\caption{A comparison of structured P2P systems.  PtP stands for point-to-point
+communication, such as communication between physical connections in a P2P
+overlay.  EtE stands for end-to-end communication, such as messages routed
+over the overlay between two peers.}
+\label{tab:structured_p2p_compare}
+\end{table*}
+
 The purpose of this work is to develop a P2P VPN model that can easily be
 applied to other structured P2P systems.  In this section, we focus on the
 portability of our platform to other structured P2P systems, namely
@@ -1159,23 +1220,6 @@ The specific focus of this section is to understand how discovery and VPN connec
 would work.  Our discovery model for mapping node ID to IP works through the use of a DHT.
 During the IP address allocation, the VPN client will place in the
 DHT a key, value pair mapping a virtual IP to a node ID, as described in~\cite{sc09}.
-
-\begin{table*}[!h!t]
-\setlength{\itemsep}{0pt}
-\setlength{\parskip}{0pt}
-\centering
-\begin{tabular}[c]{|m{2cm}||m{2.75cm}|m{2.8cm}|m{2.95cm}|m{1.65cm}|m{1.65cm}|} \hline
-System & Overlay messaging & NAT Traversal & DHT & Secure PtP & Secure EtE\\ \hline
-Brunet & Yes (AHSender) & UDP and overlay relaying & Yes with reliability & Yes & Yes \\ \hline
-FreePastry & Yes (route) & Only with port-forwarding enabled  & Yes, PAST~\cite{past}, reliable & No & No \\ \hline
-NChord & No, only look up & No & Simple, non-fault tolerant DHT & No & No \\ \hline
-\end{tabular}
-\caption{A comparison of structured P2P systems.  PtP stands for point-to-point
-communication, such as communication between physical connections in a P2P
-overlay.  EtE stands for end-to-end communication, such as messages routed
-over the overlay between two peers.}
-\label{tab:structured_p2p_compare}
-\end{table*}
 
 The bootstrapping of a connection in NChord begins by finding the owner of the
 DHT key containing the mapping of virtual IP address to node ID
@@ -1195,7 +1239,7 @@ client would use ``route'' to send packets and ``deliver'' to receive incoming p
 In fact, the model is very similar to Brunet.  Furthermore,  FreePastry has
 knowledge of proximity in shortcuts, so it may be very easy to apply
 high-performance autonomic relays in pastry potentially reusing some of their work from ePost~\cite{epost}.
-FreePastry does not have the ability to form shortcuts based upon communication demands, so if two peers were
+FreePastry does not form shortcuts based upon communication demands, so if two peers were
 actively communicating, they may always have to route traffic over the
 overlay, which in most cases will be significantly slower than if they were
 directly connected.  Though one could argue that since FreePastry does
