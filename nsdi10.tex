@@ -94,7 +94,7 @@ have performance constraints as all traffic must traverse through a central serv
 In recent years, there has been a paradigm shift towards the use of P2P in
 VPNs to alleviate pressure placed upon the central server by allowing participants
 to communicate directly, relegating the server to handling session management and
-acting as a relay when necessary.  Other approaches seek to remove all
+supporting NAT traversal using relays when necessary.  Other approaches seek to remove all
 centralization with a focus on unstructured P2P systems.
 These approaches, currently lack the depth in security options provided
 by other VPN solutions and have not been studied to understand the scalability of
@@ -421,9 +421,9 @@ or the two machines are unable to communicate.  One security consideration is
 that each of these implementations use their own security protocols that
 involve using a server to verify the authenticity and setup secure connections
 between clients.  Most of
-these projects are closed source not allowing users to host their own session
-servers and relays, forcing the users to trust the third-party
-server will not act as a man in the middle and eavesdrop.  None of these
+these projects are closed, which prevents users from hosting their own
+authentication servers and relays.  This model forces users to trust the third-party
+server to not eavesdrop or perform other man in the middle attacks.  None of these
 provide support for full tunneling.
 
 \subsection{P2P VPN Client / Server Roles}
@@ -604,6 +604,44 @@ model if groups use automated certificate signing.  Furthermore, the broadcast
 acts similarly to the DHT event notification, as such, peers find out on a push
 like mechanism.  
 
+\subsection{Bootstrapping Private Overlays}
+In P2P systems, distributed security cannot provide the same level of security
+as centralized or managed security.  Hopefully securing an overlay using
+well-known security concepts such as PKI and SSL will encourage
+wider adoption of P2P systems.  One problem with this approach though is that
+users who want a private overlay may not have the resources, i.e. public
+addresses, to host there own overlays.  To address this, we suggest
+bootstrapping a private overlay from an existing public overlay.  The private
+overlay will be completely encrypted and authenticated with only members of the
+VPN allowed access.  This work is similar to previous in suggesting the use of
+a public overlay to bootstrap application specific overlay has been discussed
+in~\cite{one_ring}.
+
+Members of the VPN are the only members of the overlay, providing a powerful
+feature that the entire P2P overlay can be secured through groups.  This
+prevents malicious users outside of the VPN from attacking it and more easily
+enabled the removal of misbehaving peers, primarily rooted in the fact that
+the use of a broadcast to signal a certificate revocation is now important to
+the entire overlay.
+
+The process for bootstrapping a private overlay follows.  Once the VPN software
+begins, it starts by connecting with the public overlay.  It queries the public
+overlay's DHT at the key ``private:groupname'', where groupname is the
+GroupVPN's name.  The values stored at the key are the public overlay node IDs
+of members actively in the private overlay.  The joining VPN software will
+attempt to form private overlay leaf (bootstrap) connections with members of this
+list over the public overlay.  During this process, both peers verify each
+other's authenticity and form a secure connection.  This connection is then used
+to bootstrap direct connections with members of the private overlay.  The reason
+why the public overlay node IDs are stored at the public overlay's DHT key and
+for using private overlay bootstrap connections over the public overlay is to
+support NAT traversal.  This model allows reusing Brunets underlying NAT
+traversal techniques to easily bootstrap private overlays.  As a member of a
+private overlay, the VPN can somewhat more safely store information in the
+private overlay's DHT, relegating the public overlay for private overlay
+discovery.  Additionally, the public overlay could be used for relaying, when
+direct connectivity is not possible, though this has not been looked into yet.
+
 \subsection{Full-Tunneling over P2P}
 \label{fulltunnel}
 As discussed in Section~\ref{clientvpn}, VPN tunneling is divided into two
@@ -759,8 +797,10 @@ packets and rewriting them prior to the network stack thus avoiding a TCP
 reset message, a task we have not yet investigated.
 
 \subsection{Autonomic Relays}
-A handful of P2P VPNs~\cite{hamachi, gbridge} support relaying when direct
-communication is not possible though a majority of them do not~\cite{wippien}.
+When NAT traversal using STUN~\cite{stun} fails or there is other connectivity
+issues A handful of P2P VPNs~\cite{hamachi, gbridge} support relaying, similar
+to Traversal Using Relay NAT (TURN)~\cite{turn}.  Though a majority of them
+do not~\cite{wippien}.
 Centralized and decentralized VPNs do not suffer from this problem
 as all traffic passes through the central server or managed links.  To address
 the management and overhead concerns presented these systems, we propose
@@ -805,44 +845,6 @@ To verify the usefulness of two-hop over overlay routing when direct connectivit
 is not possible, we performed experiments and share the results in Section~\ref{relay_motivation}.
 We also present some initial comparing our methods for selecting relays, age and latency,
 in Section~\ref{relay_eval}.
-
-\subsection{Bootstrapping Private Overlays}
-In P2P systems, distributed security cannot provide the same level of security
-as centralized or managed security.  Hopefully securing an overlay using
-well-known security concepts such as PKI and SSL will encourage
-wider adoption of P2P systems.  One problem with this approach though is that
-users who want a private overlay may not have the resources, i.e. public
-addresses, to host there own overlays.  To address this, we suggest
-bootstrapping a private overlay from an existing public overlay.  The private
-overlay will be completely encrypted and authenticated with only members of the
-VPN allowed access.  This work is similar to previous in suggesting the use of
-a public overlay to bootstrap application specific overlay has been discussed
-in~\cite{one_ring}.
-
-Members of the VPN are the only members of the overlay, providing a powerful
-feature that the entire P2P overlay can be secured through groups.  This
-prevents malicious users outside of the VPN from attacking it and more easily
-enabled the removal of misbehaving peers, primarily rooted in the fact that
-the use of a broadcast to signal a certificate revocation is now important to
-the entire overlay.
-
-The process for bootstrapping a private overlay follows.  Once the VPN software
-begins, it starts by connecting with the public overlay.  It queries the public
-overlay's DHT at the key ``private:groupname'', where groupname is the
-GroupVPN's name.  The values stored at the key are the public overlay node IDs
-of members actively in the private overlay.  The joining VPN software will
-attempt to form private overlay leaf (bootstrap) connections with members of this
-list over the public overlay.  During this process, both peers verify each
-other's authenticity and form a secure connection.  This connection is then used
-to bootstrap direct connections with members of the private overlay.  The reason
-why the public overlay node IDs are stored at the public overlay's DHT key and
-for using private overlay bootstrap connections over the public overlay is to
-support NAT traversal.  This model allows reusing Brunets underlying NAT
-traversal techniques to easily bootstrap private overlays.  As a member of a
-private overlay, the VPN can somewhat more safely store information in the
-private overlay's DHT, relegating the public overlay for private overlay
-discovery.  Additionally, the public overlay could be used for relaying, when
-direct connectivity is not possible, though this has not been looked into yet.
 
 \section{Evaluation of VPN Models}
 \label{evaluation}
@@ -1107,6 +1109,12 @@ supports a single server and gateway per a client
 and does support distributed load balancing.  VINI may benefit from using a
 VPN that uses a full tunnel model similar to the our's as it lends itself
 readily to interesting load balancing schemes.
+
+Our work is not the first to suggest using a P2P infrastructure to enable the
+discovery of physically close TURN-like servers.  Skype~\cite{skype_overview}
+queries super nodes in an attempt to find a physically close relays.
+The primary difference in our work is that our model could easily be configured
+to let user's create and select their own relays.
 
 \subsection{P2P VPN in Other Structured Overlays}
 The purpose of this work is to develop a P2P VPN model that can easily be
