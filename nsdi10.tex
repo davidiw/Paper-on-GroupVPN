@@ -106,7 +106,7 @@ of a central server as a partially-automated  public key infrastructure (PKI)
 via a user-friendly web interface.  Our model also provides the first design and
 implementation of a P2P VPN with full tunneling support, whereby all non-P2P based
 Internet traffic routes through a trusted third party and does so in a way that
-is more secure than existing full tunnel implementations.  To verify our model,
+is more secure than existing full tunnel techniques.  To verify our model,
 we evaluate reference implementation by comparing it quantitatively 
 to other VPN technologies focusing on latency, bandwidth,
 and memory usage.  We also discuss some of our experiences with developing,
@@ -271,7 +271,7 @@ packets from local sockets are read from the TAP device.
 The VN device can be configured manually through static addressing or
 dynamically through dynamic host configuration process (DHCP)~\cite{dhcp0,
 dhcp1}.  Setting the IP address of the VN device causes the system to add a new
-routing rule to the routing table that directs all packets sent to the
+rule to the routing table that directs all packets sent to the
 VPN address space to be sent to the VN device.  Packets are read from the
 the TAP device, encrypted and sent to the overlay via the VPN client.
 The overlay delivers the packet to another client or a server  with a 
@@ -353,7 +353,8 @@ Open Source\\ \hline
 
 \subsection{Centralized VPN Servers}
 OpenVPN is an open and well-documented platform for deploying
-centralized VPNs. Because it provides a representation of features found in most centralized VPNs, we use it as a basis for comparison with our approach.
+centralized VPNs. We use it as the basis for comparison with our approach,
+as it provides a representation of features found in most centralized VPNs.
 Centralized VPNs are responsible for authentication and routing between clients,
 providing a NAT to the servers local resources and Internet (full tunnel), and
 handling inter-server communication.
