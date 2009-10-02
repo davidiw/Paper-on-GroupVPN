@@ -231,7 +231,7 @@ is started.
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/vpn.png.eps, width=3in}
+\epsfig{file=figs/vpn.png.eps, width=2.75in}
 \caption{A typical VPN client.  The VPN uses a VN device to make interaction
 over the VPN transparent.  Packets going to VPN destinations are
 directed towards the VN device, which interfaces  the VPN client.
@@ -292,7 +292,7 @@ in Figure~\ref{fig:tunnel}.
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/tunnel.png.eps, width=3in}
+\epsfig{file=figs/tunnel.png.eps, width=2.75in}
 \caption{A VPN setup expressing both full and split tunnel modes.  In both modes,
 packets for the server are sent directly to the server.  In split
 tunnel mode, Internet packets bypass the VPN and are routed directly to the Internet.  In full
@@ -308,7 +308,7 @@ typical home network, an Internet bound packet will be retrieved at the VN
 device, encrypted, and sent to the VPN gateway via the LAN's gateway.  At the
 VPN gateway, the packet is decrypted and delivered to the Internet.  All other
 traffic is sent to the VN device, then sent securely to the VPN gateway.  A P2P
-system encouters two challenges in supporting full tunnels:  1) P2P traffic must not be routed
+system encouters two challengen in supporting full tunnels:  1) P2P traffic must not be routed
 to the VPN gateway and 2) there may be more than one VPN gateway.  We further
 discuss this issue and provide solutions to this problem in Section~\ref{fulltunnel}.
 
@@ -714,7 +714,7 @@ full tunnel gateway and then sends the packet to the remote peer.
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/tunnel_packet.png.eps, width=3in}
+\epsfig{file=figs/tunnel_packet.png.eps, width=2.75in}
 \caption{The contents of a full tunnel Ethernet packet.  PN and VN are defined
 as physical and virtual network, respectively. 
 1) the destination Ethernet address is the LAN gateway, 2) the
@@ -802,20 +802,21 @@ The next step is to write the packet to the physical Ethernet device, but Window
 support for this operation.
 Our platform independent solution uses a second TAP device bridged to the
 physical Ethernet device, allowing Ethernet frames to be written indirectly to the physical
-Ethernet device via the TAP device.  Interestingly, P2P packets that come back from the Internet are delivered
-directly to the VPN application with no ill effect even though the incoming destination and outgoing source IP addresses
-do not match.  Tunnel packets wrapped in P2P packets enter the VPN client and
-using the existing method of delivering the packet to the application.
-This method has been verified to work on both Linux and Windows using OS dependent TAP devices
+Ethernet device via the TAP device.  Incoming P2P packets from the Internet are
+delivered directly to the VPN application with no ill effect even though the incoming
+destination and outgoing source IP addresses do not match.  All other packets enter the system same
+as before.  This method has been verified to work on both Linux and Windows using OS dependent TAP devices
 and bridge utilities.
-This solution does have a minor drawback, which is that an outgoing packet will
-traverse the VPN stack twice, once as an application packet and the second as
-a P2P packet.  This cost is probably negligible as most of the round trip time on the
-packet will occur over the wide area which will be orders of magnitude slower than
-the VPNs packet processor.  This solution does have a significant upside beyond
-even P2P use: it fixes a security hole in existing
-full tunnel models, because there is no chance of insecure traffic ever being transmitted
-from the physical Ethernet device when a machine is in full tunnel mode.
+
+While this method effectively resolves the lingering problem of ensuring that all packets
+in a full tunnel will be secure, it raises a couple of issues 1) could the effect of
+having all packets traverse the VPN application be prohibitively expensive and 2) why not
+have the P2P application write LAN destined Ethernet packets directly avoiding the VPN client.
+The cost of passing all packets through the VPN application should be negligible since
+they are destined for the wide area, where the time to traverse the network will be
+orders of magnitude larger than passing through the VPN's packet processor.  Adding a
+direct Ethernet writer in the P2P system is not a clean abstraction as a VPN portion of the
+system now becomes library dependent and reduces VPN software portability.
 
 \subsection{Autonomic Relays}
 When NAT traversal using STUN~\cite{stun} fails or there are other connectivity
@@ -843,7 +844,7 @@ of each other's neighbor set to proactively create an overlap, as represented in
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/relay.png.eps, width=3in}
+\epsfig{file=figs/relay.png.eps, width=2.75in}
 \caption{Creating relays across the node address space, when direct
 connectivity is not possible.  Two members, 0000 and ABCD,  desire a direct
 connection but are unable to directly connect, perhaps due to NATs or firewalls.
@@ -863,8 +864,8 @@ fastest or most stable overlap is used with many more in reserve.
 
 To verify the usefulness of two-hop over overlay routing,
 we performed experiments and share the results in Section~\ref{relay_motivation}.
-We also present a comparison of our methods for selecting relays, age and latency,
-in Section~\ref{relay_eval}.
+In a live system, we verify the accuracy and usefulness of our latency-based relay selection
+algorithm in in Section~\ref{relay_eval}.
 
 \section{Evaluation of VPN Models}
 \label{evaluation}
@@ -1145,7 +1146,7 @@ VPN that uses a full tunnel model similar to the our's as it lends itself
 readily to interesting load balancing schemes.
 
 Our work is not the first to suggest using a P2P infrastructure to enable the
-discovery of physically close TURN-like servers.  Skype~\cite{skype_overview}
+discovery of physically close TURN-like relays.  Skype~\cite{skype_overview}
 queries super nodes in an attempt to find a physically close relays.
 The primary difference in our work is that our model could easily be configured
 to let user's create and select their own relays.
