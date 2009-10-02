@@ -929,9 +929,8 @@ Hamachi-Free & 60.8 & 2.54 & 40.2 & 0.87 \\ \hline
 Hamachi-Pro & 60.2 & 1.68 & 1000 & 1.29 \\ \hline
 Latency-aware & 58.1 & 35.5 & 2245 & 1080 \\ \hline
 \end{tabular}
-\caption{Results of the Relay evaluation comparing time to establish a relay,
-bandwidth, and latency amongst Hamachi's relay service, a latency-focused relay
-model, and an stability-focused relay model.}
+\caption{Results of the evaluation comparing latency and bandwdith of Hamachi 
+relays and IPOP latency-aware autonomic relay selection.}
 \label{tab:relay_eval}
 \end{table}
 
@@ -1073,7 +1072,7 @@ the log typically provides some useful information.  Additionally, as with all
 multithreaded applications, deadlocks happen, we found it useful to add
 liveness states to threads to assist in finding deadlocks.
 
-Other information, we watch, includes peer count, memory, and CPU usage.
+Other information we monitor includes peer count, memory, and CPU usage.
 Node count can be quite difficult to keep track of in Planet-Lab as machines at
 a rate of 5 to 20 per day are restarted and our software is not automatically
 restarted on these machines, thus the case to watch for is non-linear loss of
@@ -1096,46 +1095,46 @@ provide system wide searches and status checks in $O(\log(N))$ time.
 \section{Related Works}
 \label{related_work}
 Our work is not the first to propose using a group like mechanism for regulating
-member in a VPN, Hamachi presently offers the ability to create and join a
-network from either a VPN client or through their website.  To create a group,
+member in a VPN. Hamachi presently offers the ability to create and join a
+network from either a VPN client or through their Web site.  To create a group,
 a user can either form a private invite only VPN or a password protected public VPN.
-User's must exchange out of band both the password and the VPNs name and both
+Users must exchange out of band both the password and the VPNs name and both
 registered and unregistered users (guest) can join Hamachi VPNs.  Also, Hamachi
 uses a key distribution center (KDC) as opposed to a PKI, thus it is quite
 easy for Hamachi to do man-in-the-middle attacks.  Hamachi's server is not
-redistributable and all user's must use LogMeIn's (Hamachi's owner) KDC and relays.
+redistributable and all users must use LogMeIn's (Hamachi's owner) KDC and relays.
 Our model ensures that each user is traceable and has to be authenticated by the
 group administrator.  Groups entrance is further secured by giving each user a
 unique key to retrieve signed certificates.  Most importantly our PKI is open
-and redistributable, so user's can self-host, and our relays are built into the
+and redistributable, so users can self-host the group VPN web server, and our relays are built into the
 VPN and require no management.
 
-Our group system is not the first to provide an automatic PKI, previous work in
+Our group system is not the first to provide an automatic PKI. Previous work in
 this field includes RobotCA~\cite{robotca}.  RobotCAs receive requests via e-mail,
-they verify that the e-mail and the embedded PGP key match and sign the request.
+then verify that the e-mail and the embedded PGP key match and sign the request.
 RobotCAs are only as secure as the underlying e-mail infrastructure and provide
 no guarantees about the person beyond their ownership of an e-mail address.  In
 certain cases, this model could be used in our use cases, such as a SMB or handful
 of universities that enforce all users to use university e-mails, then the RobotCA 
-would only only sign e-mails, if they come from a specific domain.  Our experience
+would only only sign e-mails if they come from a specific domain.  Our experience
 suggests that is not rare for an academic to use a non-university e-mail for
 university purposes.  Another concern is that the RobotCA would require management
 to limit allowed users to members of a class or an organization whose e-mail
 addresses do not contain domain names.
 
-VINI~\cite{vini}, an network infrastructure for evaluating new protocols and
+VINI~\cite{vini}, a network infrastructure for evaluating new protocols and
 services, uses OpenVPN along with Click~\cite{click} to provide access
 from a VINI instance to outside hosts, as an ingress mechanism.  OpenVPN only
 supports a single server and gateway per a client
 and does support distributed load balancing.  VINI may benefit from using a
-VPN that uses a full tunnel model similar to the our's as it lends itself
+VPN that uses a full tunnel model similar to ours, as it lends itself
 readily to interesting load balancing schemes.
 
 Our work is not the first to suggest using a P2P infrastructure to enable the
 discovery of physically close TURN-like relays.  Skype~\cite{skype_overview}
 queries super nodes in an attempt to find a physically close relays.
 The primary difference in our work is that our model could easily be configured
-to let user's create and select their own relays.
+to let users create and select their own relays.
 
 \subsection{P2P VPN in Other Structured Overlays}
 The purpose of this work is to develop a P2P VPN model that can easily be
@@ -1169,7 +1168,7 @@ over the overlay between two peers.}
 \label{tab:structured_p2p_compare}
 \end{table*}
 
-The bootstrapping of a connection in NChord, begins by finding the owner of the
+The bootstrapping of a connection in NChord begins by finding the owner of the
 DHT key containing the mapping of virtual IP address to node ID
 through ``find\_successor''.  After establishing a connection with the owner of
 that key, the owner needs to query for it's value, which would be the node ID of the
@@ -1181,16 +1180,16 @@ our system, NChord does not support sending messages through the overlay,
 thus a separate ``connection'' for application purposes will need to be
 created.
 
-FreePastry begin by looking up the mapping of virtual
+FreePastry begins by looking up the mapping of virtual
 IP to node ID in PAST.  To form a connection through overlay, the VPN
 client would use ``route'' to send packets and ``deliver'' to receive incoming packets.
 In fact, the model is very similar to Brunet.  Furthermore,  FreePastry has
 knowledge of proximity in shortcuts, so it may be very easy to apply
 high-performance autonomic relays in pastry potentially reusing some of their work from ePost~\cite{epost}.
-FreePastry does not have the ability to form shortcuts based upon demands, so if two peers were
+FreePastry does not have the ability to form shortcuts based upon communication demands, so if two peers were
 actively communicating, they may always have to route traffic over the
 overlay, which in most cases will be significantly slower than if they were
-directly connected.  Though one could argue, that since FreePastry does
+directly connected.  Though one could argue that since FreePastry does
 not support NAT traversal, all nodes will already be public and thus an
 application, as in the NChord example, could form a direct connection bypassing
 the overlay.
@@ -1204,7 +1203,7 @@ peer discovery, NAT traversal, relays, full tunnel clients and gateways, and sec
 (PtP) and end-to-end (EtE) links.  In the paper, we focus primarily on relays,
 full tunnels, and group security.  The relay seekers can use arbitrary information,
 such as connection age or latency, to assist in finding suitable overlap.  With
-overlapped formed, relays will be created automatically using an existing infrastructure.
+overlap sets formed, relays will be created automatically using an existing infrastructure.
 We present a novel method for client full tunneling that works in P2P and provides a level
 of security not present in prior works by ensuring that only secure data is transmitted over the LAN.
 The PtP and EtE links are secured via an group system
@@ -1213,7 +1212,7 @@ by a group or they may use our public system~\cite{gridappliance}.
 
 Through the use of the group interface, users can create their own VPNs with
 private P2P pools while using public pools as a bootstrap.  Users are able to join
-the system by downloading a stock VPN and loading it with their binary blob.  The
+the system by downloading a stock VPN and loading it with their user specific configuration or binary blob.  The
 VPN will automatically connect to the appropriate web server and both parties will
 verify each other's authenticity.  The user is then quickly connected to the VPN.
 Administrators are able to police the system through the web interface and
