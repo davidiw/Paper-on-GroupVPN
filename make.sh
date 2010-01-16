@@ -1,7 +1,7 @@
-latex nsdi10 -interaction=nonstopmode
-bibtex nsdi10
-latex nsdi10 -interaction=nonstopmode
-latex nsdi10 -interaction=nonstopmode
-dvips -t letter nsdi10.dvi
-ps2pdf nsdi10.ps
-xpdf nsdi10.pdf
+latex GroupVPN -interaction=nonstopmode
+bibtex GroupVPN
+latex GroupVPN -interaction=nonstopmode
+latex GroupVPN -interaction=nonstopmode
+dvips -t letter GroupVPN.dvi
+ps2pdf GroupVPN.ps
+xpdf GroupVPN.pdf
