@@ -174,7 +174,7 @@ or a password.  Using accounts and passwords with or without a shared secret
 provides individualized authentication, allowing an administrator to block all
 users if the shared secret is compromised or individual users who act
 maliciously.  In the most secure approaches, each client has a unique signed
-certificate making brute force attacks very difficults.  The trade-offs in the
+certificate making brute force attacks very difficult.  The trade-offs in the
 approaches come in terms of security, usability, and management.  While the use
 of signed certificates provides better security than shared secrets,
 certificates require more configuration and maintenance.  In a system comprising
@@ -315,7 +315,7 @@ either smaller or larger to the data's node ID and for fault tolerance the data
 can be stored at other nodes.  
 
 Our previous work,\cite{sc09}, describes a virtual, though not private, network
-using structured P2P overlays.  This system provides the underying VN component
+using structured P2P overlays.  This system provides the underlying VN component
 for the VPN described in this paper.  In this system, each VN has a unique
 identifier or namespace so that the VPNs can share a common overlay.
 To perform address allocation, peers perform atomic writes into the structured
@@ -369,15 +369,15 @@ the use of network address translation (NAT) to enable many machines and devices
 to share a single IP address but preventing bidirectional connection initiation
 and 2) IPv6 which supports $2^{128}$ addresses.  IPv6 does not necessarily imply
 direct connectivity as there are no guarantees of NAT disappearing and outbound
-only firwalls allowing incoming connections.
+only firewalls allowing incoming connections.
 
-Approaches for handling NAT and firwall traversal come from two main branches:
+Approaches for handling NAT and firewall traversal come from two main branches:
 hole punching and relaying.  When performing hole punching, peers
-simulataneously attempt to create "holes" in their NAT / firewall devices
+simultaneously attempt to create "holes" in their NAT / firewall devices
 allowing direct TCP or UDP communication with a peer behind another NAT /
 firewall.  This works by confusing the NAT into believing that the peer
 behind that NAT initiated the connection.  NATs work by making IP:Port mappings
-and so if two peers do this simulataneously, they may be able to have both of
+and so if two peers do this simultaneously, they may be able to have both of
 their NATs create these holes allowing direct communication.  TCP NAT hole
 punching, though, does not work on systems that use stateful firewalls.
 Relaying, on the other hand, always works as peers behind NATs communicate with
@@ -390,7 +390,7 @@ Centralized and decentralized VPNs do not suffer from this problem as all
 traffic passes through the central server or managed links.  In the
 unstructured examples, P2PVPN does not support any form of relaying though
 N2N allows peers to communicate through the overlay when traversal fails.
-Simiarly a structured P2P VPN can use the overlay, though as an overlay
+Similarly a structured P2P VPN can use the overlay, though as an overlay
 grows in size, so does the hop count between peers increasing latency and
 potentially creating a bandwidth bottle neck.  This issue can be addressed
 through a distributed, autonomic relaying system.  Building upon previous
@@ -428,7 +428,7 @@ changes, peers review these metrics to decide which subset of the overlap to
 use as a proxy leaving the remaining peers as reserves.
 
 \subsection{Usefulness of Relays}
-To verify the usefulness of two-hop over overlay routing, we have evaluted
+To verify the usefulness of two-hop over overlay routing, we have evaluated
 the latency approach using an event-driven simulator that reuses the code
 base of IPOP to faithfully implement its functionality using event-driven
 simulated times to emulate WAN latencies.  For this experiment, we chose
@@ -482,12 +482,12 @@ averages were 2245 Kbit/s $\pm$ 1080 and 58.1 ms $\pm$ 35.5, respectively.
 \section{Full Tunnel VPN Operations}
 \label{full_tunnel}
 The configuration detailed so far describes a split tunnel: a VPN connection
-that handles \emph{internal VPN traffic only and not Internet traffic}.  Prior
-to this work, only centralized VPNs currently support full tunnel: a VPN that
-provides the features of a split tunnel in addition to securely forwarding
+that handles \emph{internal VPN traffic only, not Internet traffic}.  Prior
+to this work, only centralized VPNs currently support full tunnel: providing
+the features of a split tunnel in addition to securely forwarding
 \emph{all their Internet traffic} through a VPN gateway.  A full tunnel provides
 network-layer privacy when a user is in a remote, insecure location such as an
-open wireless network at a coffee shop by securly relaying all Internet traffic
+open wireless network at a coffee shop by securely relaying all Internet traffic
 through a trusted third party, the VPN gateway.  Both models are illustrated
 in Figure~\ref{fig:tunnel}.
 
@@ -503,7 +503,7 @@ Internet destination.}
 \end{figure}
 
 Central VPN clients use full tunneling through a routing rule swap, setting
-the default gateway to be an endpoint in the VPN subnet and traffic for thE
+the default gateway to be an endpoint in the VPN subnet and traffic for the
 VPN server is routed explicitly to the LAN gateway.  This rule swap causes
 all Internet packets to be routed to the VN device and the VPN software
 can then send them to the remote VPN gateway.  At the VPN gateway, the packet
@@ -544,7 +544,7 @@ VPN Clients wishing to use full tunnel must redirect their default traffic to
 their VN device.  In our VPN model, we use a virtual IP address for the purpose
 of providing distributed VN services DHCP and DNS.  This same address is used
 as the the default gateway's IP.  Because this IP address never appears in a
-Internet bound packet, only its Ethernet addres does, as shown in
+Internet bound packet, only its Ethernet address does, as shown in
 Figure~\ref{fig:tunnel_packet}, this approach enables the use of any and
 multiple remote gateways.
 
@@ -604,12 +604,12 @@ Linux and Windows using OS dependent TAP devices and bridge utilities.
 
 \subsection{Full Tunnel Overhead}
 \label{full_tunnel_eval}
-While our full tunnel client method effectively resolves the lingering problem
+While the full tunnel client method effectively resolves the lingering problem
 of ensuring that all packets in a full tunnel will be secure, it raises an
 issue:  could the effect of having all packets traverse the VPN application be
-prohibitively expensive.  To analyze this, we have implemented our approach
-and compared it to one that uses the routing rule switch.  In
-Figure~\ref{tab:full_tunnel_eval}, we present the ping time from a residential
+prohibitively expensive.  Analysis of this approach compares it with one that
+uses the traditional routing rule switch.  Figure~\ref{tab:full_tunnel_eval}
+present the ping time from a residential
 location to one of Google's IP addresses using a gateway located at the
 University of Florida when the VPN is in split tunnel mode, full tunnel using
 the routing rule switch, and full tunnel using Ethernet forwarding.  The
@@ -660,7 +660,7 @@ range, namespace, enabling security, and if they would like to use an existing
 overlay network or provide their own set of overlay nodes.  When a user has
 been accepted into the group, they are able to download VPN configuration data,
 that assists in the self-configuration of the VPN.  The configuration is
-self-contained and requries that the user provide it to the VPN, by either
+self-contained and requires that the user provide it to the VPN, by either
 placing it in a specific directory, a GUI, or a command-line utility whose only
 input parameter is the path to a configuration file.  Though in our system, we
 have only implemented the file system and command-line approaches.  The
@@ -732,7 +732,7 @@ define an abstraction for the VPN component and the features required in a
 structured overlay for this style of VPN.  The VPN abstraction handles local
 networking components and interacts with the overlay for communication, link
 creation, and peer discovery.  In addition, we presented novel ways of
-configuring the VPN through a Web 2.0 envrionment and creating full tunnel
+configuring the VPN through a Web 2.0 environment and creating full tunnel
 VPNs that can be used on centralized, decentralized, and P2P VPNs.
 
 This approach has been used to construct real systems, such as the
