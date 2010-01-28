@@ -14,6 +14,9 @@
 \setlength{\topmargin}{0pt}
 \setlength{\topsep}{0pt}
 \setlength{\partopsep}{0pt}
+\setlength{\floatsep}{0pt}
+\setlength{\textfloatsep}{0pt}
+\setlength{\intextsep}{5pt}
 
 \widowpenalty=10000
 \clubpenalty=10000
@@ -23,6 +26,20 @@
 \title{On the Design and Implementation of Autonomic, Decentralized GroupVPNs}
 
 \author{
+\IEEEauthorblockA{
+  David Isaac Wolinsky$^{\ast}$,
+  Linton Abraham$^{\bullet}$,
+  Kyungyong Lee$^{\ast}$,
+  Yonggang Liu$^{\ast}$,
+\\
+  Jiangyan Xu$^{\ast}$,
+  P. Oscar Boykin$^{\ast}$,
+  Renato Figueiredo$^{\ast}$
+}
+\IEEEauthorblockN{
+  $^{\ast}$University of Florida,
+  $^{\bullet}$Clemson University
+}
 }
 
 \maketitle
@@ -232,17 +249,18 @@ overhead on communication.
 \subsection{Centralized P2P VPN Systems}
 Hamachi~\cite{hamachi} is the first well known centralized VPN that used the
 ambiguous moniker ``P2P VPN''.  In reality, these systems would be best
-classified as centralized VPN servers with P2P clients.  Specifically, the
-nature of P2P in this, Wippien~\cite{wippien}, and Gbridge~\cite{gbridge} is
-direct connectivity between clients once authenticated by a central server.  In
-the case where direct connectivity is unavailable due to NATs or firewalls, the
-central server can act as a relay and if not peers will be unable to
-communicate.  Each approach uses their own security protocols that involve using
-a server to verify the authenticity and setup secure connections between
-clients.  Furthermore, most of these projects are closed preventing users from
-hosting their own authentication servers and relays and verifying the code for
-security purposes forcing users to trust the third-party server to not eavesdrop
-or perform other man-in-the-middle attacks.
+classified as centralized VPN servers with P2P clients.  Other similar VPNs
+include Wippien~\cite{wippien}, Gbridge~\cite{gbridge}, and PVC~\cite{pvc}.
+Specifically, P2P in these systems is limited to direct connectivity between
+clients orchestrated through a central server.  In the case where direct
+connectivity is unavailable due to NATs or firewalls, the central server can
+act as a relay and if not peers will be unable to communicate.  Each approach
+uses their own security protocols that involve using a server to verify the
+authenticity and setup secure connections between clients.  Furthermore, most
+of these projects are closed preventing users from hosting their own
+authentication servers and relays and verifying the code for security purposes
+forcing users to trust the third-party server to not eavesdrop or perform other
+man-in-the-middle attacks.
 
 \subsection{Decentralized VPN Systems}
 Some examples of systems that assist in distributing load in VPN systems are
@@ -291,53 +309,53 @@ a 2D ring or a hypercube, deterministically by randomly generated node
 identifiers.
 
 Most structured P2P overlays support decentralized storage/retrieval of
-information by mapping keys to specific node IDs in an overlay.  At a minimum,
-the data is stored at the node ID either smaller or larger to the data's node
-ID and for fault tolerance the data can be stored at other nodes.  This sort
-of mapping and data storage is called a distributed hash table (DHT).
+information by mapping keys to specific node IDs in an overlay called a
+distributed hash table (DHT).  At a minimum, the data is stored at the node ID
+either smaller or larger to the data's node ID and for fault tolerance the data
+can be stored at other nodes.  
 
-In~\cite{sc09}, we describe the construction of a virtual, though not private,
-network using structured P2P overlays named IPOP.  Because this is the
-basis of our work in this paper, we first describe the construction of this
-structured P2P VN and then we describe our first novel contribution, privacy
-for the structured P2P VN.  Each VN has a unique identifier or namespace so
-that the VPNs can share a common overlay.  To perform address allocation, peers
-perform atomic writes into the structured overlays DHT, where the key is a hash
-of the VPN's namespace and the desired address and the value is the peer's node
-ID.  A successful write implies that the user is the first to have written a
-value to that key and the user successfully has reserved an IP address.  When a
-peer's VPN wants to communicate with an unknown VPN IP address, it queries the
-DHT using the hash of the VPN's namespace and the remote peer's IP address.
-This will be used to create a cached mapping, so that future packets can be
-directly routed to the remote peer.  When two peers have a reasonable stream of
-communication, this triggers the creation of a direct connection between them.
+Our previous work,\cite{sc09}, describes a virtual, though not private, network
+using structured P2P overlays.  This system provides the underying VN component
+for the VPN described in this paper.  In this system, each VN has a unique
+identifier or namespace so that the VPNs can share a common overlay.
+To perform address allocation, peers perform atomic writes into the structured
+overlays DHT, where the key is a hash of the VPN's namespace and the desired
+address and the value is the peer's node ID.  A successful write implies that
+the user was the first to have written a value to that key resulting in a
+successfully reserved IP address.  When an IP packet arrives in the system
+destined for an unknown host, the VPN queries the overlay's DHT using the hash
+of the VPN's namespace and remote peer's IP address.  A successful query will
+result in retrieving an overlay ID, the location where the VPN should forward
+all IP packets for that VPN IP.  Since packets are initially routed over the
+overlay the performance can be undesirably slow, thus after communication has
+surpassed a few packets, the peers form direct connections via the overlay.
 
-The minimum requirement for communicating in a VPN is using secure links between
-communicating peers.  In free-to-join structured overlays, this will not be
-enough as the DHT can easily become polluted and the overlay may become
-unreliable due to malicious peers~\cite{sybil}.  While there are many works that
-describe tamper resistant overlays, they cannot make the same security
-guarantees made by centralized systems.  In that regard, we refer to security
-systems that protect the centralized system like PKI and shared secrets.  If
-they were protected by those types of security systems, they would no longer be
-public, free-to-join systems.  In~\cite{icdcs10}, we presented a method by which
-a public overlay could be used to bootstrap a private overlay secured by PKI.
-Peers first join the public overlay, then using the public overlays DHT find
-other peers in the private overlay and connect with them.  Connection messages
-are routed securely over the public overlay enabling the creation of an overlay
-constructed only of peers behind oppressive NATs and firewalls.  In the private
-overlay, both IP and overlay control messages are secured using the PKI encrypted
-and authenticated using DTLS~\cite{dtls}, thus if a peer misbehaves in the
-overlay, he can easily be revoked using both the centralized and decentralized
-approaches described in the prior work.
+To provide privacy, a VPN must have secure links between communicating peers.
+In free-to-join structured overlays, this will not be enough as the DHT can
+easily become polluted or the overlay may become unreliable due to malicious
+peers~\cite{sybil}.  There are many works towards tamper resistant overlays,
+they do not map well to existing security standards used in VPNs, such as a
+PKI or shared secrets.  These approaches limit the availability of the overlay
+to trusted users making them no longer free-to-join.  This issue has been
+address in our previous work, \cite{icdcs}, which presents a method by which
+a public overlay is used to bootstrap a private overlay secured by PKI.  Peers
+first join the public overlay, then using the public overlays DHT to find
+other peers in the private overlay.  Peers send encrypted and authenticated
+connection messages over the public overlay.  The approach allows peers to find
+each other using a free-to-join overlay to form their own private overlays
+enabling the construction of an overlay constructed of peers behind NATs and
+firewalls, who would otherwise be unable to form their own overlay.  In the
+private overlay, both IP and overlay control messages are secured using the PKI
+encrypted and authenticated using DTLS~\cite{dtls}, thus if a peer misbehaves
+in the overlay, they can easily be revoked using both a revocation list or a
+broadcast revocation in the overlay~\cite{icdcs}.
 
-I3~\cite{i3} or Internet Indirection Infrastructure presents another approach
-to structured overlay based virtual networking.  Peers use the DHT similarly to
-IPOP, though there is no discussion on address exclusivity.  Also the purpose
-of I3 is not to provide direct communication between peers, but rather, indirect
-communication so that peers never discover each others real identities.  The
-purpose of I3 does not align with the requirements we set forth in the
-introduction.
+I3~\cite{i3} or Internet Indirection Infrastructure provides an alternative
+structured overlay approach.  Peers use the DHT similarly to IPOP, though there
+is no discussion on address exclusivity.  Unlike IPOP, I3 does not provide
+direct communication between peers, but rather, indirect communication so that
+peers never discover each others real identities.  The purpose of I3 does not
+align with the requirements set forth in the introduction.
 
 \section{Dealing with Oppressive NATs and Firewalls}
 \label{relays}
@@ -346,24 +364,26 @@ version 4.  A limitation in this protocol is that there are only $2^{32}$
 addresses total though or approximately 4 billion addresses.  With the
 Earth already having a population of over 8 billion and each individual having
 multiple devices that have Internet connectivity the IPv4 limitation is becoming
-more and more apparent.  IPv6 provides an alternative, supporting $2^{128}$
-addresses, it is not pervasive with sparse amounts of the Internet reachable
-via IPv6.  In the meantime during the transition from IPv4 to IPv6, network
-address translation (NAT) enables many machines and devices to share a single IP
-address.  The cost of this operation means that such machines lose direct
-addressability on the Internet.
+more and more apparent.  To address this issue there have been two focuses:  1)
+the use of network address translation (NAT) to enable many machines and devices
+to share a single IP address but preventing bidirectional connection initiation
+and 2) IPv6 which supports $2^{128}$ addresses.  IPv6 does not necessarily imply
+direct connectivity as there are no guarantees of NAT disappearing and outbound
+only firwalls allowing incoming connections.
 
-Approaches for handling NAT traversal come from two main branches: traversal
-and relay.  When performing NAT traversal, peers simulataneously attempt to
-create "holes" in their NAT devices allowing direct TCP or UDP communication
-with a peer behind another NAT.  NATs work by making IP:Port mappings and
-so if two peers do this simulataneously, they may be able to have both of
-their NATs create these holes allowing direct communication.  The issue with
-TCP NAT traversal is that it works poorly on systems that use stateful
-firewalls.  Relaying always works as peers behind NATs communicate with a third
-peer who is not behind a NAT, though it has the obvious side effect of
-additional latency and the cost for the relay of supporting the bidirectional
-communication.
+Approaches for handling NAT and firwall traversal come from two main branches:
+hole punching and relaying.  When performing hole punching, peers
+simulataneously attempt to create "holes" in their NAT / firewall devices
+allowing direct TCP or UDP communication with a peer behind another NAT /
+firewall.  This works by confusing the NAT into believing that the peer
+behind that NAT initiated the connection.  NATs work by making IP:Port mappings
+and so if two peers do this simulataneously, they may be able to have both of
+their NATs create these holes allowing direct communication.  TCP NAT hole
+punching, though, does not work on systems that use stateful firewalls.
+Relaying, on the other hand, always works as peers behind NATs communicate with
+a third peer with whom they have have direct connectivity, though with the side
+effect of additional latency and the cost for the relay of supporting the
+bidirectional communication.
 
 \subsection{Relays}
 Centralized and decentralized VPNs do not suffer from this problem as all
@@ -372,18 +392,18 @@ unstructured examples, P2PVPN does not support any form of relaying though
 N2N allows peers to communicate through the overlay when traversal fails.
 Simiarly a structured P2P VPN can use the overlay, though as an overlay
 grows in size, so does the hop count between peers increasing latency and
-potentially creating a bandwidth bottle neck.  To address this issue, we propose
-the use of distributed, autonomic relaying system based upon previous
-work~\cite{hpdc08_0}, wherein, peers next to each other in the overlays node
-ID space communicate ``'directly'' through overlapping connections due to
+potentially creating a bandwidth bottle neck.  This issue can be addressed
+through a distributed, autonomic relaying system.  Building upon previous
+work~\cite{hpdc08_0}, wherein, peers next to each other in the overlay's node
+ID space communicate ``directly'' through overlapping connections due to
 firewall, NAT, or Internet fragmentation issues.  
 
 When two nodes discover each other via the overlay and attempt to become
 connected but fail during NAT and firewall traversal, they exchange peer
-lists overlap through the overlay.  Upon receiving this list, the two peers
-identify the overlap in the neighbor sets to form a two-hop connection.  In
-this work, we further extend this model to support cases when nodes do not have
-an overlap set.  This involves having the peers connect to each other's
+lists through the overlay.  Upon receiving this list, the two peers identify
+the overlap in the neighbor sets to form a two-hop connection.  When peers
+are not located near each other in the overlay, most likely they will have
+no overlap.  This can be addressed by having peers connect to each other's
 neighbor set proactively creating overlap, as represented in
 Figure~\ref{fig:relay}.
 
@@ -400,13 +420,12 @@ across the entire overlay.}
 \label{fig:relay}
 \end{figure}
 
-To assist in the selection of overlap connection, we exchange arbitrary
-information along with the neighbor lists.  So far we have implemented systems
-that share information about node stability (measured by the age of a
-connection) and proximity (based upon ping latency to neighbors).  When
-overlap changes, we make it optional to select to use only a subset of the
-overlap, thus only the fastest or most stable peers are used with extras in
-reserve.
+In addition to exchanging overlap, peers also exchange some state of their
+connections with the neighbors.  For example, the data shared could be
+regarding node stability as measured by the age of a connection and proximity
+as measured by ping latency to the neighbor.  When creating overlap or overlap
+changes, peers review these metrics to decide which subset of the overlap to
+use as a proxy leaving the remaining peers as reserves.
 
 \subsection{Usefulness of Relays}
 To verify the usefulness of two-hop over overlay routing, we have evaluted
@@ -661,7 +680,7 @@ This experiments explores bandwidth and latency in a distributed VPN system to
 motivate the usage of P2P links in a VPN.  The VPNs used are our reference
 implementation (IPOP), OpenVPN, and Hamachi.  OpenVPN represents a typical
 centralized VPN, while Hamachi represents a well-tuned P2P-link VPN.  The
-evaluation was performed on Amazon EC2~\cite{ec2} using small instance sized
+evaluation was performed on Amazon EC2 using small instance sized
 Ubuntu i386 instances to create various sized networks ranging from 1 to 32.
 OpenVPN uses an additional node as the central server and Hamachi has an upper
 bound of 16 due to limitations in the Linux version at the time of this
