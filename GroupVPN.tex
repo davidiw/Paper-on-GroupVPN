@@ -44,16 +44,12 @@ approach to existing VPN systems.
 \section{Introduction}
 A Virtual Private Network (VPN) provides the illusion of a local area network
 (LAN) spanning a wide area network (WAN) infrastructure by creating encrypted
-and authenticated, secure\footnote{For the remainder of this proposal, unless
+and authenticated, secure\footnote{For the remainder of this paper, unless
 explicitly stated otherwise, security implies encryption and authentication.}
 communication links amongst participants.  Common uses of VPNs include secure
 access to enterprise network resources from remote/insecure locations,
 connecting distributed resources from multiple sites, and establishing virtual
-LANs for multiplayer video games over the Internet.  VPNs, in the context of
-this paper, differ from others that provide ```emulation of a private Wide
-Area Network (WAN) facility using IP facilities' (including the public Internet
-or private IP backbones).  ''~\cite{ip_vpns}.  These style of VPNs connect large
-sets of machines through virtual routers to a virtual WAN environment.
+LANs for multiplayer video games over the Internet.  
 
 The architecture described in this paper addresses a usage scenario such as
 collaborative academic environments linking individuals spanning multiple
@@ -72,7 +68,7 @@ In this paper, we discuss an architecture that fits the following requirements:
 or handling, 3) security based on a public key infrastructure (PKI), 4)
 decentralized discovery of members in the system, 5) ability to route Internet
 traffic through a secure location (full tunnel VPN), 6) self-configuring links
-amongst peers, and 7) user interfaces for managing the VPN.  
+amongst peers, and 7) user interfaces for managing the VPN.
 
 Centralized approaches (e.g.  OpenVPN~\cite{openvpn}) by their very nature
 require dedicated infrastructures and do not allow direct communication between
@@ -82,12 +78,12 @@ approaches (e.g. Hamachi~\cite{hamachi}, Wippien~\cite{wippien},
 Gbridge~\cite{gbridge}, PVC~\cite{pvc}) are vulnerable to man-in-the-middle
 attacks if session management is handled by an external provider, rely on a
 central resource for the creation of VPN links, and require centralized relays
-if NAT and firewall traversal fails.  While other approachs require manual
-configuration of links between members of the virtual network (e.g.,
-ViNe~\cite{vine}, Violin~\cite{violin}, VNET~\cite{vnet}, tinc~\cite{tinc}).
-Decentralized approaches (N2N~\cite{n2n} and P2PVPN~\cite{p2pvpn}) lack the
-ability to scale to large networks and only support pre-shared key security and
-thus cannot remove malicious peers from the VPN.
+if direct peer communication across NATs and firewalls fails.  Decentralized
+approaches require manual configuration of links between members of the virtual
+network (e.g., ViNe~\cite{vine}, Violin~\cite{violin}, VNET~\cite{vnet},
+tinc~\cite{tinc}).  Existing P2P approaches lack scalability (N2N~\cite{n2n}
+and P2PVPN~\cite{p2pvpn}) or are difficult to configure and lack privacy
+(I3~\cite{i3}).
 
 To address these issues and meet our requirements, we propose the use of
 structured peer-to-peer (P2P) overlay as the fundamental building block to
@@ -115,12 +111,11 @@ Section~\ref{conclusions} with a discussion on real systems using our approach.
 
 \section{Virtual Private Networks}
 \label{vpns}
-There exist many VPN architectures, in Table~\ref{tab:vpn_types}, we present
-some of the more common abstractions.  In this section, we begin by reviewing
-the fundamental features found in all VPN clients and then we describe the
-components that are attributed to the different VPN approaches, such as VPN
-client address allocation, peer discovery and authentication, and the available
-security models using real VPN systems.
+Common VPN architectures are presented in Table~\ref{tab:vpn_types}.  This
+section begins by reviewing the fundamental features found in all VPN clients
+and then differentiating the components as they relate to the various VPN
+approaches, these components include client address allocation, peer discovery
+and authentication, and the available security models using real VPN systems.
 
 \begin{table}[ht]
 \caption{VPN Classifications}
@@ -146,16 +141,17 @@ distributed data store for discovery \\ \hline
 \end{table}
 
 \subsection{The Basic Client VPN Configuration}
-In Figure~\ref{fig:vpn}, we abstract the common features of all VPNs clients, a
-service that communicates with the VPN system and a virtual network (VN) device
-for host integration.  During initialization, the VPN services authenticates
-with the overlay~\footnote{An overlay in this context refers any portion of the
-VPN system including a central server, another VPN client, or a relay.},
-optionally, querying for information about the network, such as network address
-space, address allocations, and domain name service (DNS) servers.  At which
-point, the VPN enables secure communication amongst participants.
+Figure~\ref{fig:vpn} presents an abstraction of the common features found in
+all VPN client, a service that communicates with the VPN system and a virtual
+network (VN) device for host integration.  During initialization, the VPN
+services authenticates with the overlay~\footnote{An overlay in this context
+refers any portion of the VPN system including a central server, another VPN
+client, or a relay.}, optionally, querying for information about the network,
+such as network address space, address allocations, and domain name service
+(DNS) servers.  At which point, the VPN enables secure communication amongst
+participants.
 
-Clients can authenticate with the overlay using a variety of methods.  A system
+There are many ways in which a client authenticates with the overlay.  A system
 can be setup quickly by using no authentication or a shared secret such as a key
 or a password.  Using accounts and passwords with or without a shared secret
 provides individualized authentication, allowing an administrator to block all
@@ -661,68 +657,66 @@ secure communication amongst the VPN peers.
 
 \section{Evaluation of VPN Models}
 \label{evaluation}
-%Turns out my OpenVPN tests were lacking all-to-all ping messages... Will need to
-%redo them.
-In this section, we compare our reference implementation of a P2P VPN as
-described in the body of this paper to OpenVPN and Hamachi to understand
-the advantages and constraints of the various approaches.  We evaluted the VPNs
-using Amazon EC2~\cite{ec2} to dynamically create various sized networks
-ranging from 1 to 129 with one client used as the control.  In the bootstrap
-phase, the control machine initiates communication with a subset of the
-remaining clients in the VPN.  Once the system has warmed, the control
-continues pinging this subset every 15 seconds for the next 10 minutes.  We
-capture bytes transmitted into and out of the system, as well as the memory
-size of the VPN application at the end of each stage.  As we test the varying
-network sizes, we begin by communicating with 0 peers and exponentially
-increase the amount (powers of two) until the control is communicating with all
-members of the VPN.  For these evaluations, we used a licensed version of
-Hamachi, but due to very recent changes in Hamachi, the Linux client will not
-support networks larger than 16.  Due to amount of data collected and space
-limitations, we only present figures for results that provide interesting data
-and summarize the rest in the text.
-
-Memory, for the most part, exhibited an intuitive behavior: for each additional
-connection there was more memory used.  The OpenVPN control client showed
-negligible additional memory usage for additional nodes, though the server
-showed a linear increment, around 1 MB, for each additional client in the system,
-while activity had negligible effect on the results.  Hamachi had a
-base line of a less than 1 MB and like OpenVPN, each additional client
-in the system had a linear effect on memory, on the order of 4 KB, there was
-no change based upon activity.  The effect of additional inactive nodes in
-an IPOP network had negligible effect on memory, unlike Hamachi and OpenVPN.
-The only time IPOP's memory consumption increased was during activity and it
-scaled at a 200 KB per additional node.
+This experiments explores bandwidth and latency in a distributed VPN system to
+motivate the usage of P2P links in a VPN.  The VPNs used are our reference
+implementation (IPOP), OpenVPN, and Hamachi.  OpenVPN represents a typical
+centralized VPN, while Hamachi represents a well-tuned P2P-link VPN.  The
+evaluation was performed on Amazon EC2~\cite{ec2} using small instance sized
+Ubuntu i386 instances to create various sized networks ranging from 1 to 32.
+OpenVPN uses an additional node as the central server and Hamachi has an upper
+bound of 16 due to limitations in the Linux version at the time of this
+evaluation.  To perform bandwidth tests, the instances are booted and query an
+NFS for the list virtual IP addresses, peers are ordered such that half the
+peers are act as clients and the other half the peers creating a 1 to 1 mapping
+between all sets.  Latency and bandwidth tests are performed using netperf's
+request-reply and streaming tests respectively.  Prior to the start of the
+tests, peers have no knowledge of each other, except the virtual IP addresses,
+thus connection startup costs are included in the test.  Test are run for 10
+minutes diluting the connection initiation overhead but represent an example of
+real usage.  Results from the clients are polled at all locations and averaged
+together, though the OpenVPN server is measured separately.  IPOP and OpenVPN
+use authenticated 128-bit AES, while Hamachi does not allow configuration of
+the security parameters and uses the default Hamachi settings.
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/bandwidth_128.png.eps, width=3in}
-\caption{Comparison of bandwidth costs for member activity versus network size.
-As stated in the text, Hamachi limits the system to network sizes of 16, so to
-estimate the Hamachi bandwidth we used a linear regression model.}
-\label{fig:bandwidth_128}
+\epsfig{file=figs/latency.eps, width=3in}
+\caption{System transaction rate for various VPN approaches.}
+\label{fig:latency}
 \end{figure}
 
-In Figure~\ref{fig:bandwidth_128}, we present the bandwidth results from our
-experiment.  Though we show results up to 128 clients, Hamachi is limited to
-network sizes of 16 when using Linux, so we used a linear regression ($.049 +
-.002 KB/s * N + .02 KB/s * A$, .049 the bandwidth in a network size of 0, i.e.,
-keep-alives with the central server, N is the network size, and A is the active
-links.  Hamachi clearly shows P2P efficiency over centralized VPNs.  Our
-approach requires improvement for these environments though unlike Hamachi it
-is not an academic not a commercial project.  Though one cost that IPOP does not
-share with the other approaches is the stateful keeping open of NAT holes.
+\begin{figure}[ht]
+\centering
+\epsfig{file=figs/bandwidth.eps, width=3in}
+\caption{System bandwidth for various VPN approaches.}
+\label{fig:bandwidth}
+\end{figure}
+
+Figure \ref{fig:latency} and \ref{fig:bandwidth} present the results for latency
+and bandwidth respectively.  Latency is measured in transactions of successful
+request/reply messages.  In the latency test, it is obvious that having the
+central server increases the delay between the client and server and the results
+degrade more quickly as additional peers are added to the system.  In small
+systems, OpenVPN shines probably due to optimized software, though as the system
+grows, the system bandwidth does not.  By the time 8 peers have entered into
+the system, both decentralized approaches perform better than the OpenVPN
+solution.  To summarize, decentralized VPN approaches provide better
+scalability, which can be immediately noticed by low latency times and, as the
+system grows, available bandwidth.
 
 \section{Conclusions}
 \label{conclusions}
-This paper presents a novel VPN approach designed to facilitate eace of use
-while maintaining security.  We described how to construct a VPN using structured
-P2P overlays providing security, peer discovery, NAT traversal, and relay
-formation.  In addition, we presented novel ways of configuring the VPN through
-a Web 2.0 envrionment and creating full tunnel VPNs that can be used on
-centralized, decentralized, and P2P VPNs.
+As a canonical resource, this paper describe all the necessary components to
+design and implement decentralized VPN approach designed to facilitate ease of
+use while maintaining security and scalability.  The methods in this paper
+define an abstraction for the VPN component and the features required in a
+structured overlay for this style of VPN.  The VPN abstraction handles local
+networking components and interacts with the overlay for communication, link
+creation, and peer discovery.  In addition, we presented novel ways of
+configuring the VPN through a Web 2.0 envrionment and creating full tunnel
+VPNs that can be used on centralized, decentralized, and P2P VPNs.
 
-This approach can be used to construct real systems.  The VPN in question has
-been used to construct a publicly and freely available
+This approach has been used to construct real systems, such as the
 GroupVPN~\cite{gridappliance} and a SocialVPN~\cite{cops08}.  The GroupVPN has
 been used to construct a Grid Appliance that enables the creation of distributed,
 decentralized, dynamic computing grids.  Over the past 2 years, we have had an
@@ -731,13 +725,15 @@ Archer currently spans four universities with 500 resources, we have had 100s of
 users who connect seamlessly to these resources from home, school, hotels, etc.
 Most recently, a grid at La Jolla Institute for Allergy and Immunology went live
 with minimal communication with us.  Researchers at the Clemson University and
-Purdue are using this as the basis of their future distributed compute clusters.  
+Purdue have opted for this approach over centralized VPNs as the basis of their
+future distributed compute clusters and have actively tested networks of over
+1000 nodes.
 
 While this paper introduces solutions to creating a complete structured P2P based
 VPN, it introduces many new interesting research problems: 1) distributed load 
 balancing of full tunnel gateways, 2) understanding the long term effects of different
 automatic relay selection models, 3) understanding the benefits beyond security
-of using a private overlays for a VPN such as multicast.  
+of using a private overlays for a VPN such as multicast.
 
 \bibliographystyle{IEEEtran}
 \small{
