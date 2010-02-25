@@ -7,16 +7,16 @@
 \usepackage{footnote}
 \usepackage{amsmath}
 
-\setlength{\parskip}{0pt}
-\setlength{\parsep}{0pt}
-\setlength{\headsep}{0pt}
-\setlength{\topskip}{0pt}
-\setlength{\topmargin}{0pt}
-\setlength{\topsep}{0pt}
-\setlength{\partopsep}{0pt}
-\setlength{\floatsep}{0pt}
-\setlength{\textfloatsep}{1pt}
-\setlength{\intextsep}{1pt}
+%\setlength{\parskip}{0pt}
+%\setlength{\parsep}{0pt}
+%\setlength{\headsep}{0pt}
+%\setlength{\topskip}{0pt}
+%\setlength{\topmargin}{0pt}
+%\setlength{\topsep}{0pt}
+%\setlength{\partopsep}{0pt}
+%\setlength{\floatsep}{0pt}
+%\setlength{\textfloatsep}{1pt}
+%\setlength{\intextsep}{1pt}
 
 %\widowpenalty=10000
 %\clubpenalty=10000
@@ -27,108 +27,113 @@
 
 \author{
 \IEEEauthorblockA{
-  David Isaac Wolinsky$^{\ast}$,
-  Linton Abraham$^{\bullet}$,
-  Kyungyong Lee$^{\ast}$,
-  Yonggang Liu$^{\ast}$,
-\\
-  Jiangyan Xu$^{\ast}$,
-  P. Oscar Boykin$^{\ast}$,
-  Renato Figueiredo$^{\ast}$
+  David Isaac Wolinsky,
+  P. Oscar Boykin,
+  Renato Figueiredo
 }
 \IEEEauthorblockN{
-  $^{\ast}$University of Florida,
-  $^{\bullet}$Clemson University
+  University of Florida
 }
 }
 
 \maketitle
 
 \begin{abstract}
-Virtual private networks (VPNs) enable existing network applications to run
-unmodified in insecure and constrained environments by creating an isolated and
-secure virtual environment providing all-to-all connectivity for VPN members.
-Traditionally VPNs have been used in dedicated systems to connect many users to
-a single site or a few sites together through manual configuration.  Recently,
-decentralized VPNs have been developed to support those that require systems
-with no dedicated resources and reduced configuration overhead.  We extend this
-concept to provide a truly novel approach to VPNs, a decentralized,
-self-configuring VPN.  To put our approach in prospective, we survey existing
-VPN approaches and quantitatively compare a reference implementation of our
-approach to existing VPN systems.
+Virtual private networks (VPNs) enable safe and simple use of network
+applications in distributed, insecure, and constrained environments by providing
+all-to-all connectivity in a secure, isolated virtual environment.  Existing
+systems present challenges to users lacking networking, security, and operating
+expertise in small and medium groups, such as academic, business, and home
+environments.  In this paper, we describe a VPN architecture motivated by the
+challenges with existing systems and their application in these environments.
+Our contribution is a system that provides autonomic, decentralized VPNs using
+common Web 2.0 group collabration systems for configuration and management.  To
+evaluate these claims, we provide a reference implementation and compare it to
+existing VPN approaches.
 \end{abstract}
 
 \section{Introduction}
 A Virtual Private Network (VPN) provides the illusion of a local area network
 (LAN) spanning a wide area network (WAN) infrastructure by creating encrypted
 and authenticated, secure\footnote{For the remainder of this paper, unless
-explicitly stated otherwise, security implies encryption and authentication.}
-communication links amongst participants.  Common uses of VPNs include secure
-access to enterprise network resources from remote/insecure locations,
-connecting distributed resources from multiple sites, and establishing virtual
-LANs for multiplayer video games over the Internet.  
+explicitly stated otherwise, security implies encryption and mutual
+authentication between peers.} communication links amongst participants.  Common
+uses of VPNs include secure access to enterprise network resources from
+remote/insecure locations, connecting distributed resources from multiple sites,
+and establishing virtual LANs for multiplayer video games and media sharing
+over the Internet.
 
-The architecture described in this paper addresses a usage scenario such as
-collaborative academic environments linking individuals spanning multiple
-institutions belong to the same virtual organization, where coordinated
-configuration of network infrastructure across the different sites is often
-impractical.  Another example is the small/medium business (SMB) environment,
-where it is often desirable to interconnect desktops and servers across
-distributed sites and secure traffic to enterprise networked resources without
-incurring the complexity or management costs of traditional VPNs.
-Alternatively, consider an academic at a conference who wants their Internet
-traffic encrypted to prevent eavesdropping from their peers or desires to
-browse websites only available to those on the university network.
+The architecture described in this paper addresses usage scenarios where VPNs
+are desired but complexity in deployment and management limits their
+applicability, such as collaborative academic environments linking individuals
+spanning multiple institutions, where coordinated configuration of network
+infrastructure across the different sites is often impractical.  Another example
+is the small/medium business (SMB) environment, where it is often desirable to
+interconnect desktops and servers across distributed sites and secure traffic to
+enterprise networked resources without incurring the complexity or management
+costs of traditional VPNs.  Alternatively, use of a VPN across an extended
+family enables sharing of media, such as family videos and pictures, though
+none of the individual sites have the capability of hosting a centralized
+service nor want computers left on all the time.
 
-In this paper, we discuss an architecture that fits the following requirements:
-1) direct communication between remote members, 2) NAT and firewall traversal
-or handling, 3) security based on a public key infrastructure (PKI), 4)
-decentralized discovery of members in the system, 5) ability to route Internet
-traffic through a secure location (full tunnel VPN), 6) self-configuring links
-amongst peers, 7) user interfaces for managing the VPN, and 8) efficient
-IP broadcast and multicast.
+In this paper, we discuss an architecture that deals with the following
+challenges:
+\begin{enumerate}
+\item \textbf{Configuration}:  How will users connect to the VPN, what type
+of security credentials will be used, and what will the network parameters be?
+\item \textbf{Peer Management}:  How are new users added to the system, what if
+they have many resources to add as well?  What happens when a user becomes
+malicious, how are users revoked?
+\item \textbf{Connectivity}:  Given a hostname for a remote node, how will the
+VPN discover the remote peer and what will there method of communication be?
+\item \textbf{Privacy}:  Will communication in the VPN be transmitted in clear
+text amongst members but secure in transit or will secure links be established
+between source and destintation?
+\end{enumerate}
 
 Centralized approaches (e.g.  OpenVPN~\cite{openvpn}) require dedicated
-infrastructures and disallow direct communication between peers, limiting
-bandwidth and creating inefficient multicast paths, though it is the only
-approach to support full tunnel operation and guarantee all-to-all
-communication regardless of NAT and firewall conditions.  Centralized
-systems with P2P links (e.g. Hamachi~\cite{hamachi}, Wippien~\cite{wippien},
-Gbridge~\cite{gbridge}, PVC~\cite{pvc}) are vulnerable to man-in-the-middle
-attacks if session management is handled by an external provider, rely on a
-central resource for the creation of VPN links, and rely on centralized relays
-if direct peer communication across NATs and firewalls fails.  Decentralized
-approaches (e.g., ViNe~\cite{vine}, Violin~\cite{violin}, VNET~\cite{vnet},
-tinc~\cite{tinc}) require manual configuration of links between members of the
-virtual network and do not automatically reconfigure when links fail.  Existing
-P2P approaches lack scalability (N2N~\cite{n2n} and P2PVPN~\cite{p2pvpn}).
+infrastructures, which by default see all messages in the clear text, and
+prevent direct communication between peers, limiting bandwidth and creating
+inefficient multicast paths.  Centralized systems with P2P (peer-to-peer) links
+(e.g. Hamachi~\cite{hamachi}, Wippien~\cite{wippien}, Gbridge~\cite{gbridge},
+PVC~\cite{pvc}, allow secure and direct communication amongst peers but rely on
+a central resource to provide session establishment and are thus vulnerable to
+man-in-the-middle attacks.  Decentralized approaches (e.g., ViNe~\cite{vine},
+Violin~\cite{violin}, VNET~\cite{vnet}, tinc~\cite{tinc}) require manual
+configuration of links between members of the virtual network and do not
+automatically reconfigure when links fail; security in these systems does not
+secure communication between end hosts.  Existing P2P approaches lack
+scalability and availability (N2N~\cite{n2n}).
 
-In this paper, we present a generic construction of a VPN and use this model
-to assist in comparing other VPN approaches.  None of the VPN approaches
-discussed meet our requirements, leading to our proposal of a novel
-structured P2P overlay VPN. The contributions of this paper towards P2P VPNs
-include securing a VPN through the use of private virtual overlays; methods of
-using Web 2.0 group infrastructures to create and manage a VPN; decentralized,
-autonomic creation of relays; decentralized full tunnel VPN mode; and efficient
-multicast and broadcast.  This paper stands alone as a canonical resource to
-provide necessary documentation to create a structured P2P VPN supporting all
-the requirements listed earlier.
+In this paper, we present a novel VPN architecture that uses an existing public
+overlay to self-organize a VPN using a set of P2P systems known as structured
+overlays and configured with a Web 2.0 group collaborative environment.  Popular
+examples of large, public overlay networks include Gnutella, Kademlia, and
+Skype.  P2P sytems provide automatic link creation, facilities for discovering
+peers in an overlay, and efficient methods for broadcasting.  We describe
+methods by which the VPN can be configured from a web interface and use features
+of P2P systems to create an autonomic and decentralized GroupVPN.
 
-The rest of this paper is organized as follows.  Section~\ref{vpns} discusses
-the different VPN approaches.  We present our novel contributions for P2P VPNs
-consisting of decentralized relays in Section~\ref{relays}, efficient multicast
-and broadcast in Section~\ref{efficient_xcast}, full tunnel VPN modes for P2P
-VPNs in Section~\ref{full_tunnel}, and user-friendly configuration of VPNs
-using groups in Section~\ref{groups}.  To validate the P2P approach, we compare
-it against centralized VPNs in Section~\ref{evaluation}.  We present conclusions
-and real usage of the system in Section~\ref{conclusions}.
+Section~\ref{vpns} begins the paper by discussing the various VPN approaches.
+The core features of a VPN using a structured overlay are described in
+Section~\ref{structured_vns}.  The following sections, ~\ref{relays} and
+~\ref{efficient_xcast} have a detailed focus on on P2P network constraints and
+efficient IP broadcast and multicast.  Section~\ref{evaluation} presents a
+validation of our approach in comparison to existing approaches through
+quantitative analysis.  We conclude in Section~\ref{conclusions} by exploring a
+usage scenario and how the constraints apply to our approach with existing
+approaches use in a real environment.
 
 \section{Virtual Private Networks}
 \label{vpns}
-Common VPN architectures are presented in Table~\ref{tab:vpn_types}.  This
-reviews the fundamental features found in all VPN clients and then describes
-the their implementation in various VPN approaches with particular emphasis on
-address allocation, peer discovery, and authentication.
+VPNs can be divided into two components, a local or end point configuration
+and a network configuration.  Most VPNs share a common local configuration and
+differ significantly in the area of network configuration.  Local configuration
+deals with user or system interaction with the VPN, whereas network
+configuration tackles with the challenges of infrastructure and peer discovery,
+connectivity, and security.  This section begins by reviewing the fundamental
+local configuration features and then reviews common network configurations as
+presented in Table~\ref{tab:vpn_types}.
 
 \begin{table}[ht]
 \caption{VPN Classifications}
@@ -155,32 +160,24 @@ distributed data store for discovery \\ \hline
 
 \subsection{The Basic Client VPN Configuration}
 Figure~\ref{fig:vpn} presents an abstraction of the common features found in
-all VPN client, a service that communicates with the VPN system and a virtual
+all VPN clients: a service that communicates with the VPN system, and a virtual
 network (VN) device for host integration.  During initialization, the VPN
-services authenticates with the overlay~\footnote{An overlay in this context
-refers any portion of the VPN system including a central server, another VPN
-client, or a relay.}, optionally, querying for information about the network,
+service authenticates with the overlay~\footnote{An overlay in this context
+refers to the topology formed by VPN nodes including central servers, other VPN
+clients, or relays.}, optionally, querying for information about the network,
 such as network address space, address allocations, and domain name service
 (DNS) servers.  At which point, the VPN enables secure communication amongst
 participants.
 
-Authentication with an overlay can be performed using various methods including
-user accounts, signed certificates, shared secrets, or a combination of them.
-Each approach has varying advantages and disadvantages.  Though the most secure
-is signed certificates as it provides a mechanism to uniquely identify users
-directly without inquirying through a third party, yet the peer can easily be
-revoked from the system.  Whereas user accounts require a third party to
-authenticate peers and shared secrets to not lend easy to peer revocation.
-
 A VN device allows applications to communicate transparently over the VPN.  By
-providing mechanisms for injecting incoming packets into and retrieving
-outgoing packets from the networking stack, VN device enable the use of common
-network APIs such as Berkeley Sockets, thereby allowing existing application to
-work over the VPN without modification.  While there are various types of VN
-devices, TAP~\cite{tap} stands out due to its open source and pervasive nature.
-TAP allows the creation of virtual Ethernet and / or IP devices and is
-available for almost all operating systems including Windows, Linux, Mac OS/X,
-BSD, and Solaris.
+providing mechanisms for injecting incoming packets into and retrieving outgoing
+packets from the networking stack, a VN device enables the use of common network
+APIs such as Berkeley Sockets, thereby allowing unmodified applications to work
+over the VPN.  To do this VN devices allow the creation of a virtual network
+interface providing either a virtual Ethernet or IP device.  The most widely
+available, free VN device is TAP~\cite{tap}.  Most operating systems support TAP
+either through existing features in the OS or through third party drivers,
+these systems include Windows, Linux, Mac OS/X, BSD, and Solaris.
 
 VN devices can be configured manually though command-line tools or OS' APIs or
 dynamically by the universally supported dynamic host configuration process
@@ -207,41 +204,43 @@ In this paper, it is used as the basis for understanding centralized VPNs as it
 represents features common to most centralized VPNs.
 
 In centralized VPN systems, clients forward all VPN related packets to the
-server.  Clients responsibilities are limited to configuring the VN device and
+server.  Client responsibilities are limited to configuring the VN device and
 authenticating with the VPN server; whereas the servers are responsible for
-authentication and routing between clients and providing access to the servers'
-local resources and the Internet (full tunnel).  Likewise, broadcast and
-multicast packets also must pass through the central server.
+authentication and routing between clients Likewise, broadcast and multicast
+packets also must pass through the central server.
 
-While central VPNs do support multiple servers, upon starting the client
-randomly selects from a list of known servers, implementing a simple load
+Centralized systems do not prohibit multiple servers, though each server must
+be manually configured to interact with remote servers.  Clients randomly
+select a server from a list of known servers, implementing a simple load
 balance.  Once connected, the servers provide the client an IP address in the
-VPN address space. Depending on configuration this will allow a client to
-communicate with other clients, resources on the same network as the server,
-or Internet hosts via the VPN.  Servers require additional configuration to
-communicate with each other beyond adding them to a list.
+VPN address space.  Thus two peers on different servers will have three hops
+between each other, two from routing over the two servers and one for the
+forwarding to the destination.
 
-All inter-client communication flows through the central server.  By default, a
+All inter-client communication flows through a central server.  By default, a
 client encrypts a packet and sends it to the server.  Upon receiving the packet,
 the server decrypts it, determines where to relay it, encrypts it, and then
 sends the packet to its destination.  This model allows a server to eavesdrop on
 communication.  While a second layer of encryption is possible through a shared
 secret, it requires out-of-band communication and increases the computing
-overhead on communication.
+overhead on communication since the packet will now need to be encrypted and
+authenicated twice at both the VPN source and destination sites.
 
 \subsection{Centralized P2P VPN Systems}
-Hamachi~\cite{hamachi} is the first well known centralized VPN that used the
+Hamachi~\cite{hamachi} is the first well-known centralized VPN that used the
 ambiguous moniker ``P2P VPN''.  In reality, these systems are better classified
 as centralized VPN servers with P2P links.  Similar VPNs include
 Wippien~\cite{wippien}, Gbridge~\cite{gbridge}, PVC~\cite{pvc}, and
 P2PVPN\footnote{Due to the similarities between the name P2PVPN and focus of
 this paper, ``P2PVPN'' refers to ~\cite{p2pvpn} and ``P2P VPN'' to to the use
-of P2P in VPNs.}~\cite{p2pvpn}.  The P2P in tehse systems is limited to direct
-connectivity between clients orchestrated through a central server, in Wippien
-it is an chat server while P2PVPN uses a BitTorrent tracker.  If NAT traversal
+of P2P in VPNs.}~\cite{p2pvpn}.  The P2P in these systems is limited to direct
+connectivity between clients orchestrated through a central server: in Wippien
+it is a chat server, while P2PVPN uses a BitTorrent tracker.  If NAT traversal
 or firewalls prevent direct connectivity, the central server can act as a
 relay.  Each approach uses their own security protocols with most using a
 server to verify the authenticity and setup secure connections between clients.
+In regards to the P2PVPN, long term goals involve the creation of an
+unstructured, which would provide a method of decentralized organization.
 
 \subsection{Decentralized VPN Systems}
 Some examples of systems that assist in distributing load in VPN systems are
@@ -257,18 +256,25 @@ are manually configured.
 \subsection{Unstructured P2P VPN Systems}
 Unlike centralized and decentralized systems, P2P environments require the
 user to connect to the overlay, which then automatically configures links.
-The most simplest form of overlays are unstructured, where peers form random
+The simplest form of overlays are unstructured, where peers form random
 connections with each other and use broadcast and stochastic techniques to find
 information and other peers, though due to its unstructured nature, the system
 cannot guarantee distance and routability between peers.  The only example of
-an unstructured VPN is N2N~\cite{n2n}.  In N2N, peers first connect to super
-node and then to find another peer they broadcast discovery messages to the
+an unstructured VPN is N2N~\cite{n2n}.  In N2N, peers first connect to a super
+node and then, to find another peer, they broadcast discovery messages to the
 entire overlay.  In the case that peers cannot form direct connection, peers
 can route to each other over the N2N overlay.  In the realm of VPNs, all client
 VPNs are also servers performing authentication though neither approach deals
-with decentralized address allocation.
+with decentralized address allocation.  N2N does not address the challenges of
+IP address allocation and management, relegating that to the user to handle.
 
-\subsection{Structured P2P VPN Systems}
+\section{Structured P2P VPN Systems}
+\label{structured_vns}
+This section describes the basic construction of a Structured P2P VPN,
+including background on structured overlays, address allocation and discovery,
+security, and connectivity.
+
+\subsection{Background}
 An alternative to dealing with scalability concerns in unstructured systems,
 structured overlays provide distributed look up services with guaranteed search
 time with a lower bound of $O(\log N)$, in contrast to unstructured systems,
@@ -276,87 +282,165 @@ which rely on global knowledge/broadcasts, or stochastic techniques such as
 random walks~\cite{unstructured_v_structured}.  Some examples of structured
 systems are Pastry~\cite{pastry}, Chord~\cite{chord}, Symphony~\cite{symphony},
 Kademlia~\cite{kademlia}, CAN~\cite{can}, and Brunet~\cite{brunet}.  In
-general, structured systems are able to make these guarantees by
-self-organizing into a structured topology, such as a 2D ring or a hypercube,
-deterministically by randomly generated, though uniformly distributed, node
-identifiers.  A key component of most structured overlays is support for
-decentralized storage/retrieval of information by mapping keys to specific node
-IDs in an overlay called a distributed hash table (DHT).  At a minimum, the
-data is stored at the node ID either smaller or larger to the data's node ID
-and for fault tolerance the data can be stored at other nodes.  
+general, structured systems are able to make these guarantees by self-organizing
+into a well-defined structured topology, such as a 2D ring or a hypercube, by
+randomly generated, though uniformly distributed, node identifiers.  A key
+component of most structured overlays is support for decentralized
+storage/retrieval of information by mapping keys to specific node IDs in an
+overlay called a distributed hash table (DHT).  At a minimum, the data is
+stored at the node ID either smaller or larger to the data's node ID and for
+fault tolerance the data can be stored at other nodes.  DHTs can be used by
+peers of systems to coordinate allocation and discovery of resources, making
+them attractive for self-configuration in decentralized collaborative
+environments.
 
-Our previous work,\cite{sc09}, describes a virtual, though not private, network
-using structured P2P overlays.  This system provides the underlying VN component
-for the VPN described in this paper.  In this system, each VN has a unique
-identifier or namespace so that the VPNs can share a common overlay.
-To perform address allocation, peers perform atomic writes into the structured
-overlays DHT, where the key is a hash of the VPN's namespace and the desired
-address and the value is the peer's node ID.  A successful write implies that
-the user was the first to have written a value to that key resulting in a
-successfully reserved IP address.  When an IP packet arrives in the system
-destined for an unknown host, the VPN queries the overlay's DHT using the hash
-of the VPN's namespace and remote peer's IP address.  A successful query will
-result in retrieving an overlay ID, the location where the VPN should forward
-all IP packets for that VPN IP.  Since packets are initially routed over the
-overlay the performance can be undesirably slow, thus after communication has
-surpassed a few packets, the peers form direct connections via the overlay.
-This environment is similar to I3~\cite{i3} or Internet Indirection
-Infrastructure, though I3 does not support direct communication and provides
-abstracted communication methods.
+\subsection{Address Allocation and Discovery}
+In the context of VPNs, structured overlays can handle address allocation and
+discovery through the use of a DHT, such systems have been proposed
+in~\cite{pcgrid07,i3}.  In order to connect with the VPN overlay, each VPN
+member becomes a member of the structured overlay.  To address the challenges
+of having multiple VPNs in the same overlay, each VPN has its own namespace,
+reducing the likelihood of overlap.  To enable scalable and decentralized
+address allocation and discovery, peers store mappings of IP address to node ID
+into the DHT, typically of the form $hash(namespace + IP) = node ID$.  Thus a
+peer attempting to allocate an address will insert this key, value pair into
+the overlay.  The first peer to do this will be the owner of the IP address
+allocation.  Therefore the DHT must either support atomic writes into the DHT
+and prevent future writes or provide creation times of key, value pairs during
+queries.
 
-To provide privacy, a VPN must have secure links between communicating peers.
-In free-to-join structured overlays, this will not be enough as the DHT can
-easily become polluted or the overlay may become unreliable due to malicious
-peers~\cite{sybil}.  There are many works towards tamper resistant overlays,
-they do not map well to existing security standards used in VPNs, such as a
-PKI or shared secrets.  These approaches limit the availability of the overlay
-to trusted users making them no longer free-to-join.  This issue has been
-address in our previous work, \cite{icdcs10}, which presents a method by which
-a public overlay is used to bootstrap a private overlay secured by PKI.  Peers
-first join the public overlay using the public overlay's DHT to find
-other peers and routing to send encrypted and authenticated connection messages.
-By using this method, structured overlay based VPNs can use a free-to-join to
-organize a private overlay enabling the construction of an overlay constructed
-of entirley of peers behind NATs and firewalls, who would otherwise be unable
-to form their own overlay.  In the private overlay, both IP and overlay control
-messages are secured using the PKI encrypted and authenticated using
-DTLS~\cite{dtls}, thus if a peer misbehaves in the overlay, they can easily be
-revoked using both a revocation list or a broadcast revocation in the overlay.
+Mechanisms to self-configure the IP address and network parameters of the local
+system can be provided by DHCP, the user manually configuring the IP address,
+or the VPN hooking into OS APIs.  Address discovery is initiated when an
+outgoing packet for a remote peer arrives at the VPN software.  At which point,
+the VPN will query the DHT for the node ID who owns the IP address and forward
+the packet to the destination.  More discussion on both these topics is further
+covered in our previous work~\cite{sc09}.
 
-\section{Dealing with Oppressive NATs and Firewalls}
+\subsection{Securing the VPN}
+Structured overlays are difficult to secure.  Malicious users can pollute the
+DHT, send bogus messages, and even prevent the overlay from functioning.  When
+using a structured overlay for a VPN, tamper-resistance and reliable routing
+mechanisms are ideal, but a structured overlay requires both the point-to-point
+(PtP), or communication between connected peers, and end-to-end (EtE), or
+communication between peers across the overlay, security.  While tamper
+resistance and reliability will reduce the ability to affecting an overlay, an
+expectation of a VPN is that no members are malicious, and if a member is found
+to be malicious their access revoked.  Then the question becomes, why so much
+security?  PtP security ensures that malicious third parties cannot insert
+material into the system, while EtE ensures message security between the
+commuicating peers.  Enablng just PtP security would limit the security to
+the type of VPN security found in other VPNs, all member must be trusted,
+whereas EtE enables message security even from overlay members.
+
+In our previous work~\cite{vpo}, we described mechanism that enable the
+construction of a private overlay providing both EtE and PtP security.  In this
+system, EtE and PtP communication has been abstracted into a common sender
+layer.  The security component has been instantiated as a filter, enabling it
+to be placed anywhere in the sending stack and thus securing either EtE or PtP
+communication without additional complexity.  Existing security filter support
+uses DTLS~\cite{dtls}.
+
+\subsection{Connecting to the VPN}
+Creating and connecting to a private overlay can be difficult when there are
+no dedicated resources with public addresses, even if the system has many
+active members behind NATs and firewalls.  This is because peers behind NATs
+and firewalls may be unable to handle incoming connections without the
+assistance of a third-party.  The same work~\cite{vpo} describes how
+abitrary public overlays can act as a middle ground to bootstrapping private
+overlays, using mechanisms unique to these environments to bootstrap into the
+private overlay.  Of course, this mechanism does not preclude the creation
+of a private overlay without the use of a public bootstrapping mechanism.
+
+In practical implementation, peers first join a public structured overlay using
+the public overlay's DHT to find other peers.  The private overlay node can then
+either attempt to connect directly with other private overlay nodes using TCP or
+UDP or use the public overlay as another transport mechanism.  We have termed
+this approach to creating private overlays, virtual private overlays.  In all
+cases, the communication is secured via the EtE and PtP security filters.  This
+approach enables the construction of an overlay consisting entirely of peers
+behind NATs and firewalls, who would otherwise be unable to form their own
+overlay.
+
+\subsection{Managing the VPN}
+\label{groups}
+A Group based Web 2.0 environment enables low overhead configuration of
+collaborative environments.  The roles in a group environment can be divided
+into administrators and users.  Users have the ability to join and create
+groups; whereas administrators can accept or deny join requests, remove users,
+and promote other users to administrators.  To apply this to a VPN, the group
+environment provides a wrapper around a public key infrastructure (PKI), where
+the administrators of the group act as the certificate authority (CA) and the
+members have the ability to obtain signed certificates.  Elaborating further,
+when a user joins a group, the administrator can enable automatic signing of
+certificates or require prior review; and when peers have overstayed their
+welcome, they can have their certificates revoked by removing them from the
+group.  As described in~\cite{vpo}, revocation can be stored as a CRL on
+the group site or distributed through broadcast and DHT on the overlay.  Though
+for these forms of systems a user revocation list (URL) as opposed to a CRL
+simplifies revocation in the case where a malicious user has automatically
+signed large amounts of certificates.
+
+In the case of the GroupVPN, administrators of a group configure the VPN
+address range, namespace, and security.  Options are also available to specify
+the reuse of an existing public overlay or a list of user managed nodes.  When
+a user has been accepted into the group, they are able to download VPN
+configuration data, which can be seamlessly added to the VPN by running the
+VPN configuration process.  In addition to IP address range, namespace, and
+security options, the configuration data also contains the group website's
+address and a shared secret.  The shared secret uniquely identifies the user,
+so that the website can determine how to handle certificate requests.  When
+making a certificate request, the user sends over HTTPS a public key and their
+shared secret, the website creates and signs a certificate request based upon
+the public key and the user's relevant information ensuring that users cannot
+trick the website into signing malicious data.  Upon receiving the signed
+certificate, peers are able to join the private overlay and VPN enabling secure
+communication amongst the VPN peers.
+
+There are many ways of implementing and hosting the web site.  For example, Google
+offers free hosting of Python web applications through Google Apps, but this
+requires that the user owns a domain.  Alternatively, the user could host the
+group site on a public VN, peers interacting with the GroupVPN would need to
+connect with the public VN in order to create an account, get the configuration
+data, and to sign their certificate at which point they could disconnect from
+it.  This does not preclude the use of other social mediums nor a central site
+dedicated to the formation of many GroupVPNs.  As a many GroupVPNs can share a
+single site, so long as the group members trust the site to host the CA private
+key.
+
+\section{Dealing with NATs and Firewalls}
 \label{relays}
 As of 2010, the majority of the Internet is connected via Internet Protocol (IP)
 version 4.  A limitation in this protocol is that there are only $2^{32}$
-addresses total though or approximately 4 billion addresses.  With the
-Earth already having a population of over 8 billion and each individual having
-multiple devices that have Internet connectivity the IPv4 limitation is becoming
-more and more apparent.  To address this issue there have been two focuses:  1)
-the use of network address translation (NAT) to enable many machines and devices
-to share a single IP address but preventing bidirectional connection initiation
-and 2) IPv6 which supports $2^{128}$ addresses.  IPv6 does not necessarily imply
-direct connectivity as there are no guarantees of NAT disappearing and outbound
-only firewalls allowing incoming connections.
+addresses (approximately 4 billion) available.  With the Earth's population of
+over 8 billion and each individual potentially having multiple devices that
+have Internet connectivity, the IPv4 limitation is becoming more and more
+apparent.  To address this issue there have been two approaches:  1) the use of
+network address translation (NAT) to enable many machines and devices to share
+a single IP address but preventing bidirectional connection initiation, and 2)
+IPv6 which supports $2^{128}$ addresses.  Though even when IPv6 becomes the
+primary Internet protocol, it does not necessarily imply the demise of NAT or
+firewalls that only allow outbound connections.
 
 Approaches for handling NAT and firewall traversal come from two main branches:
-hole punching and relaying.  When performing hole punching, peers
+hole punching and relaying.  When performing hole punching~\cite{ice}, peers
 simultaneously attempt to create "holes" in their NAT / firewall devices
 allowing direct TCP or UDP communication with a peer behind another NAT /
-firewall.  This works by confusing the NAT into believing that the peer
-behind it initiated the connection.  TCP NAT hole punching, though, does not
-work on systems that use stateful firewalls.  Relaying, on the other hand,
-always works as peers behind NATs communicate with a third peer with whom
-they have have direct connectivity, though with the side effect of additional
-latency and the cost for the relay of supporting the bidirectional
-communication.
+firewall.  This works by confusing the NAT into believing that the peer behind
+it initiated the connection.  TCP NAT hole punching, though, does not work on
+systems that use stateful firewalls.  Relaying, on the other hand, always works
+as peers behind NATs communicate with a third peer with whom they have have
+direct connectivity, though with the side-effect of additional latency and the
+cost for the relay of supporting the bidirectional communication.
 
 \subsection{Relays}
-Centralized and decentralized VPNs do not suffer from this problem as all
-traffic passes through the central server or managed links.  In the
-centralized P2P approaches that lack dedicated servers, there exists no
-relay implementation.  Though in unstructured networks peers can communicate
-through the overlay when traversal fails.  Similarly a structured P2P VPN can
-use the overlay, though as an overlay grows in size, so does the hop count
-between peers increasing latency and reducing bandwidth.
+Centralized and decentralized VPNs do not suffer from connectivity limitations
+due to NATs and firewalls as all traffic passes through the central server or
+managed links.  In the centralized P2P approaches that lack dedicated servers,
+there exists no relay implementation.  Though in unstructured networks peers
+can communicate through the overlay when traversal fails.  Similarly a
+structured P2P VPN can use the overlay, though as an overlay grows in size, so
+does the hop count between peers increasing latency and reducing bandwidth.
 
 \begin{figure}[ht]
 \centering
@@ -369,41 +453,37 @@ neighbors, creating an overlap.  The overlap then becomes a relay path
 \label{fig:relay}
 \end{figure}
 
-P2P systems can address this issue through a distributed, autonomic relaying
-system, whereby peers form overlapping connections with each others peers,
-creating two-hop links.  When two nodes discover each other via the overlay and
-attempt to become connected but fail during NAT and firewall traversal, they
-exchange peer lists through the overlay.  Upon receiving this list, the two
-peers identify the overlap in the neighbor sets to form a two-hop connection.
-When peers are not located near each other in the overlay, most likely they
-will have no overlap.  This can be addressed by having peers connect to each
-other's neighbor set proactively creating overlap, as represented in
-Figure~\ref{fig:relay}.
+P2P systems can address the connectivity issue through a distributed, autonomic
+relaying system, whereby peers form overlapping connections with each others
+peers, creating two-hop links.  When two nodes discover each other via the
+overlay and attempt to become connected but fail during NAT and firewall
+traversal, they exchange peer lists through the overlay.  Upon receiving this
+list, the two peers identify the overlap in the neighbor sets to form a two-hop
+connection.  When peers are not located near each other in the overlay, most
+likely they will have no overlap.  This can be addressed by having peers
+connect to each other's neighbor set proactively creating overlap, as
+represented in Figure~\ref{fig:relay}.
 
-In addition to exchanging overlap, peers also exchange some state of their
-connections with the neighbors.  For example, the data shared could be
-regarding node stability as measured by the age of a connection and proximity
-as measured by ping latency to the neighbor.  When creating overlap or overlap
-changes, peers review these metrics to decide which subset of the overlap to
-use as a proxy leaving the remaining peers as reserves.
+With the set of neighbors, the peers can include additional data such as
+latency and connection lifetime to each of the the neighbors.  When creating
+overlap or overlap changes, peers review these metrics to decide which subset
+of the overlap to use as a proxy leaving the remaining peers as reserves.
 
 \subsection{Usefulness of Relays}
-This experiment verifies the usefulness of two-hop over overlay routing using
-an event-driven simulator that reuses the code base of our prototype VPN to
-faithfully implement its functionality using event-driven simulated times to
-emulate WAN latencies.  Pair-wise latency in this experiment is set using
-the MIT King Data Set~\cite{king_data}, which consists of all-to-all latencies
-between 1,740 well-distributed Internet hosts, thus network size of up to 1,740
-are evaluated.  After starting the overlay and it has reached steady state, the
-simulator sends packets amongst all peers to derive the average all-to-all
-latency and hop count for messaging in the overlay.  In the low latency relay
-model, each destination node forms a connection to the source node's physically
-closest peer as determined via latency (in a live system by application level
-ping).  Then this pathway is used as a two-hop relay between source and node.
-Only peers with two hops or more are analyzed, as a single hop would only
-benefit under triangular inequalities, which are not a consideration in this
-work.  The simulations were performed on a distributed grid platform,
-Archer~\cite{archer}, that uses the prototype for its VPN component. 
+To determine the value in two-hop overlays as opposed to using the overlay in
+restrictive NAT and firewall scenarios, this experiment uses an event-driven
+modeler that reuses the code base of the prototype structured P2P VPN to
+faithfully implement routing in an overlay as well as latency between peers.
+Pair-wise latency in this experiment is set using the MIT King Data
+Set~\cite{king_data}, which consists of all-to-all latencies among 1,740
+distributed Internet hosts.  The modeler measured average overlay, 2-hop,
+and 1-hop latency between peers.  Overlay latency represents the time to
+route a packet via the overlay.  2-hop latency is based upon the low-latency
+formed 2-hop connections, where peers route over the overlap with the lowest
+latency.  1-hop latency is based upon peers forming a direct connection with
+each other.  Only peers that are not directly connected (i.e., have two hops
+or more) are analyzed, as a single hop would only benefit under triangular
+inequalities, which are not a consideration in this work.
 
 \begin{figure}[ht]
 \centering
@@ -413,56 +493,68 @@ direct connection latency in a ring based structured overlay.}
 \label{fig:simulated_relays}
 \end{figure}
 
-Results are presented in Figure~\ref{fig:simulated_relays}.  The network sizes
-began at 25 because network sizes around 20 and under tend to be fully connected
-due to the connectivity requirements of the system.  It is not until the network
-size expands past 100 and towards 200 nodes that relays become significantly
-beneficial.  At 100 nodes, there is approximately a 54\% performance increase,
-whereas at 200 there is an 87\% increase and it appears to grow proportionately
-to the size of the pool, ensuring the validity of this two-hop relays.
+Results are presented in Figure~\ref{fig:simulated_relays}. The network sizes
+considered begin at 25 nodes because small networks of sizes 20 and under tend
+to be fully connected in the underlying structured overlay.  It is not until
+the network size expands past 100 and towards 200 nodes that relays become
+significantly beneficial.  At 100 nodes, there is approximately a 54\%
+performance increase, whereas at 200 there is an 87\% increase and it appears
+to grow proportionately to the size of the pool, demonstrating the performance
+advantage of two-hop autonomous relays.
 
-Additionally, we verified their use in a reference implementation of our VPN
-using a real system.  The environment consists of using PlanetLab as the public
-overlay and our Archer environment as the VPN environment.
-PlanetLab~\cite{planetlab} provides a set of over 500 distributed computing
-nodes all with public IP addresses.  Archer provides grid computing to computer
-architecture researchers and consists of over 500 nodes located at various
-academic sites.  To ensure that peers formed two-hop connections, we instituted
-a firewall preventing direct communication between the two.  In tests, we found
-that the peers were always able to find a good relays, the bandwidth and latency
-averages were 2245 Kbit/s $\pm$ 1080 and 58.1 ms $\pm$ 35.5, respectively.
+In addition, the autonomous relays functionality were verified in a reference
+implementation of a structured P2P VPN using a real system.  The environment
+consists of PlanetLab as the public overlay and the Archer environment as the
+VPN environment.  PlanetLab~\cite{planetlab} provides a set of over 500
+distributed computing nodes all with public IP addresses.  Archer provides grid
+computing to computer architecture researchers and consists of over 500 nodes
+located at various academic sites.  To ensure that peers under study formed
+two-hop connections, a firewall was instantiated preventing direct communication
+between the two.  In tests, it was revealed that the overlay was always able to
+self-configure a relay; the bandwidth and latency averages and deviations were
+2245 Kbit/s $\pm$ 1080 and 58.1 ms $\pm$ 35.5, respectively.
 
 \section{Efficient Broadcast and Multicast}
 \label{efficient_xcast}
-The use of a private virtual overlay enables a new method for sending multicast
-and broadcast packets.  In the previous approach, when a broadcast or multicast
-packet arrived at the VPN, it would query a DHT key where all peers in the VPN
-would place their overlay address so that they could receive the packets, the
-packets were sent via the overlay using unicast messaging.  Approaches such as
-broadcasting to the entire overlay were frowned upon because the overlay could
-consist of peers from other VPNs and those not even involved with VPN
-operations.  In a private virtual overlay, the only peers in the overlay are
-peers for a single VPN.
+In the original set of structured P2P virtual networks, broadcast and multicast
+used DHT to keep a list of all the active peers in the VPN.  When a peer wanted
+to send out a broadcast or multicast packet, it would query this list and then
+send out unicast packets to each peer either directly or via the overlay.
+Furthermore, as more peers join the system, so does the count of key, value
+pairs in the DHT.  If the peer wishes to send out many multicast or broadcast
+messages after another, it would either need to query the DHT every time or
+maintain a cache.  In the case of a cache, new peers joining the overlay would
+need to notify the entire VPN when they joined so that they could be added to
+caches.  The simplistic approach of querying each time does not scale well,
+while the other approach involving caches can be quite complciated to implement.
 
-An example of a valid ring based structured P2P overlay broadcast algorithm
-was presented in~\cite{icdcs10} used to broadcast certificate revocation.  The
-algorithm is called bounded-broadcast, because it is capable of broadcasting
-to a subset of the ring, though it is also capable of broadcasting to the
-entire overlay.  A bounded broadcast uses the following recursive algorithm:
-Begin with node $x$ triggering a broadcast message over the region $[x, y]$.
-$x$ has $F$ connections to nodes in the range $[x, y]$.  Denoting the $i^{th}$
-such neighbor as $b_i$, the node $x$ sends a bounded broadcast over a
-sub-range, $[b_i, b_{i+1})$, to $b_i$, except the final neighbor who handles
-$[b_F, y]$, in other words, $b_i$ is responsible for bounded-broadcast in the
-range $[b_i, b_{i+1})$. If there is no connection to a node in the sub-range,
-the recursion has ended.  When a node receives a message to a range that
-contains its own address the message is delivered to that node and then routed
-to others in that range.  Figure \ref{fig:tree} shows how this bounded-broadcast
-forms a local tree recursively.   The time required for a bounded broadcast is
-$O(\log^2 N)$ as shown in~\cite{small_world}.  To perform a broadcast on the
-entire overlay, a peer performs the bounded-broadcast starting from its node
-ID with the end address being the node ID immediately preceding its own in the
-address space.  
+With the use of virtual private overlays, broadcast and multicast can be
+implemented stateless as they can be routed using overlay broadcast.  An
+example of a scalable ring-based structured P2P overlay broadcast algorithm
+was presented in~\cite{vpo} to broadcast certificate revocation within a private
+overlay.  The algorithm is called bounded-broadcast, because it is capable of
+broadcasting to a subset of the ring or the entire overlay.  Bounded broadcast
+uses the following recursive algorithm:  Begin with node $x$ triggering a
+broadcast message over the region $[x, y]$.  $x$ has $F$ connections to nodes
+in the range $[x, y]$.  Denoting the $i^{th}$ such neighbor as $b_i$, the node
+$x$ sends a bounded broadcast over a sub-range, $[b_i, b_{i+1})$, to $b_i$,
+except the final neighbor.  Differently stated, $b_i$ is in charge of
+bounded-broadcasting in the sub-range $[b_i, b_{i+1})$. If there is no
+connection to a node in the sub-range, the recursion has ended.  The final
+neighbor, ($b_F$), is responsible for continuing the bounded broadcast from
+$[b_F, y]$.  When a node receives a message to a range that contains its own
+address the message is delivered to that node and then routed to others in that
+range.  Figure \ref{fig:tree} shows how this bounded broadcast forms a local
+tree recursively.   The time and bandwidth for a bounded broadcast is
+$O(\log^2 N)$ and $N * packet size$ as shown in~\cite{small_world}.  To perform
+a broadcast on the entire overlay, a peer performs the bounded-broadcast
+starting from its node ID with the end address being the node ID immediately
+preceding its own in the address space.  Though in VPN situations, many peers
+may already have connections to most if not all of their VPN peers, thus the
+broadcast algorithm has been modified to route to only connections created for
+structured overlay purposes and not explicitly only for VPN purposes.  Otherwise
+in many cases, this algorithm will degenerate into one similar to the unicast
+approach.
 
 \begin{figure}[h]
 \centering
@@ -471,211 +563,33 @@ address space.
 \label{fig:tree}
 \end{figure}
 
-A validation of the overlay broadcast method for IP broadcast and multicast
-communication comparing it to the original DHT method is presented in
-Figure~\ref{fig:broadcast}.  Metrics measured include bandwidth used by
-the packet originator and time required for all peers to receive the packet.
-System bandwidth remains the same as bounded-broadcast requires exactly N
-messages to broadcast the message to the entire overlay.  By using a broadcast
-algorithm to route multicast and broadcast IP packets instead of the unicast
-packets, the sending node has much less used bandwidth.  The time required by
-the DHT approach involves the time to retrieve all entrees from the DHT and the
-latency to the peer farthest away.  Whereas the broadcast approach has no DHT
-lookup and is somewhere around the average latency in the system multiplied by
-$O(\log^2 N)$.
+The validation of broadcasting was done using the same modeler used in the
+relay evaluation.  This evaluation compares broadcasting to a simple unicast
+mechanism that assumes the peer has already queried the DHT.  Both models are
+evaluated in a private overlay and in a public overlay consisting of 100,000
+peers.  The VPN size varies from 10 members up to 10,000.  It is important to
+note that the network modeler does not consider host overheads including
+bandwidth limitations nor simulataneous packet sending, thus the results are
+from an ideal system.  The modeler measures network bandwidth, sending peer
+bandwidth, and the time to complete the broadcast.  The results are presented
+in Figure~\ref{fig:broadcast}.  
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=2.5in]{figs/tree.eps}
 \caption{Bounded Broadcast in range $[x, y]$}
-\label{fig:broadcast}
+\label{fig:broadcast_results}
 \end{figure}
 
-\section{Full Tunnel VPN Operations}
-\label{full_tunnel}
-The configuration detailed so far describes a split tunnel: a VPN connection
-that handles \emph{internal VPN traffic only, not Internet traffic}.  Prior
-to this work, only centralized VPNs currently support full tunnel: providing
-the features of a split tunnel in addition to securely forwarding
-\emph{all their Internet traffic} through a VPN gateway.  A full tunnel provides
-network-layer privacy when a user is in a remote, insecure location such as an
-open wireless network at a coffee shop by securely relaying all Internet traffic
-through a trusted third party, the VPN gateway.  Both models are illustrated
-in Figure~\ref{fig:tunnel}.
-
-\begin{figure}[ht]
-\centering
-\epsfig{file=figs/tunnel.png.eps, width=2.5in}
-\caption{An example of both full and split tunnel VPN modes.  In both, packets
-for the server are sent directly to the server.  In split tunnel mode, Internet
-packets bypass the VPN and are routed directly to the Internet.  In full tunnel
-mode, Internet packets are first routed to the VPN gateway, and then to their
-Internet destination.}
-\label{fig:tunnel}
-\end{figure}
-
-Central VPN clients use full tunneling through a routing rule swap, setting
-the default gateway to be an endpoint in the VPN subnet and traffic for the
-VPN server is routed explicitly to the LAN gateway.  This rule swap causes
-all Internet packets to be routed to the VN device and the VPN software
-can then send them to the remote VPN gateway.  At the VPN gateway, the packet
-is decrypted and delivered to the Internet.  A P2P system encounters two
-challenges in supporting full tunnels:  1) P2P traffic must not be routed
-to the VPN gateway and 2) there may be more than one VPN gateway.  We address
-these issues and provide a solution to this problem in Section~\ref{full_tunnel}.
-
-The challenges we face in our VPN are providing decentralized discovery of a
-VPN gateway and supporting full tunnel mode in a P2P environment such that
-all P2P traffic is sent to the intended receiver directly instead of through
-the gateway.  The remainder of this section covers our gateway and client
-solutions to address these challenges.
-
-\subsection{The Gateway}
-\label{the_gateway}
-A gateway can be configured through NAT software, like masquerading in IPtables
-or Internet Connection Sharing with Windows.  This automatically handles the
-forwarding of packets received on the NAT interface to another interface
-bringing the packet closer to its destination.  Similarly, incoming packets
-on the outgoing interface must be parsed in order to determine the destination
-NAT client.
-
-Following from our previous work on VPNs~\cite{sc09}, if a VPN is a gateway,
-the VPN state machine no longer rejects packets when the destination is not
-in the VPN subnet, though when the VPN gateway mode is disabled these packets
-are still rejected.  When enabled, all Internet and non-VPN based traffic is
-written to the TAP device setting the destination Ethernet address to the TAP
-device.  The remaining configuration is identical to other members of the
-system as packets from the Internet will automatically have the clients IP as
-the destination as a product of the NAT.  To provide for dynamic,
-self-configuring systems, VPN gateways announce their availability via an entry
-in the DHT.  As future work, this approach can be explored to provide
-intelligent selection and load balancing of gateways.
-
-\subsection{The Client}
-VPN Clients wishing to use full tunnel must redirect their default traffic to
-their VN device.  In our VPN model, a virtual IP address provides an endpoint
-for virtual DHCP and DNS servers.  This same address is used as the the default
-gateway's IP.  Because this IP address never appears in a Internet bound packet,
-only its Ethernet address does, as shown in Figure~\ref{fig:tunnel_packet}, thus
-enabling the use of any and remote multiple gateways.
-
-To support full tunnel mode, the VPN's state machine has to be slightly modified
-to handle outgoing packets destined for IP addresses outside of the VPN.
-Typically these packets are rejected, though when in full tunnel the VPN
-software sends packets to the remote peer acting as a full tunnel gateway.
-Likewise, incoming packets that have a source address outside the subnet should
-not be rejected but instead the receiving peer should verify that the overlay
-address as being a certified VPN gateway prior to forwarding the packet to the
-TAP device.
-
-\begin{figure}[ht]
-\centering
-\epsfig{file=figs/tunnel_packet.png.eps, width=2.5in}
-\caption{The contents of a full tunnel Ethernet packet.  PN and VN are defined
-as physical and virtual network, respectively.}
-\label{fig:tunnel_packet}
-\end{figure}
-
-Peers select the remote gateway by querying the DHT.  As there may be multiple
-gateways, the peer randomly selects one, forwarding packets to that node.  
-Peers occassionaly send pings to the gateway to ensure liveness.  If the
-gateway stops responding, the next ensuing Internet packet will trigger the
-selection of a new gateway.
-
-Dynamic connections in P2P systems introduce challenges to applying full tunnel
-VPN modes to P2P VPNs.  A simple route rule switch does not work as peers do
-not know remote peers ahead of time.  Watching incoming connection requests and
-adding routing rules as needed, only enables UDP as as a TCP handshake message
-would need to be intercepted and potentially replayed by the local host in
-order to enable the rule and allow proper routing.  Even with that limitation
-the approach has a significant draw back in that UDP messages can easily be
-spoofed by remote peers enabling unsecured Internet packets to be leaked in the
-public environment.  Even if the connections are secured, it could take some
-time for the peers to recognize a false connection attempt and delete the rule.
-
-An alternative approach to solving the security problem can be had with no
-additional routing rules.  In this approach, the VPN is responsible for
-filtering P2P traffic and forwarding it to the LAN's gateway via Ethernet
-packets.  In the VPN application, outgoing IP packets' source ports are
-compared to VPN application's source ports.  Upon a match, the VPN application
-directs the packet to the LAN's gateway.  The three steps involved in this
-process are 1) translating the source IP address to match the physical
-Ethernet's IP address, 2) encapsulating the IP packet in an Ethernet packet
-with a randomly source address~\cite{sc09} and the destination the LAN's
-gateway, and 3) sending the packet via the physical Ethernet device.  Sending
-an Ethernet packet is not trivial as Windows lacks support for this operation
-and most Unix systems require administrator privilege.  Our platform
-independent solution uses a second TAP device bridged to the physical Ethernet
-device, allowing Ethernet packets to be sent indirectly through the Ethernet
-device via the TAP device.  Because our solution results in incoming packets to
-arrive at a different IP address than the actual original source IP address TCP
-does not work in this solution.  This method has been verified to work on both
-Linux and Windows using OS dependent TAP devices and bridge utilities.
-
-\subsection{Full Tunnel Overhead}
-\label{full_tunnel_eval}
-While the full tunnel client method effectively resolves the lingering problem
-of ensuring that all packets in a full tunnel will be secure, it raises an
-issue:  could the effect of having all packets traverse the VPN application be
-prohibitively expensive.  To determine if this is the case, this experiment
-compares it with the traditional routing rule switch.
-Figure~\ref{tab:full_tunnel_eval} present the ping time from a residential
-location to one of Google's IP addresses using a gateway located at the
-University of Florida when the VPN is in split tunnel mode, full tunnel using
-the routing rule switch, and full tunnel using Ethernet forwarding.  The
-results express a negligible difference between the full tunnel approaches.
-The reason why the latency to the gateways public address in the routing swap
-test is low is due to the ping being sent by avoiding the VPN stack.
-
-\begin{table}[ht]
-\begin{center}
-\begin{tabular}[c]{|b{1.5cm}||b{1.25cm}|b{1.25cm}|b{1.25cm}|} \hline
-& Google & Gateway Private & Gateway Public \\ \hline \hline
-Ethernet & 70.6 & 12.9 & 13.9 \\ \hline
-Routing & 71.4 & 13.2 & 11.0 \\ \hline
-Direct & 66.1 & N/A & 10.9 \\ \hline
-\end{tabular}
-\end{center}
-\label{tab:full_tunnel_eval}
-\caption{Latency results for full tunnel approaches in ms.}
-\end{table}
-
-\section{Enabling User-Friendly VPN Operation Through Groups}
-\label{groups}
-A Group based Web 2.0 environment enables collaborative environments in a
-user-friendly approach.  The roles in a group environment are users who can
-join and create groups and administrators who can accept or deny join requests,
-remove users, and promote other users to administrators.  To apply this to a
-VPN, the group environment provides a wrapper around a public key infrastructure
-(PKI), where the administrators of the group act as the certificate authority
-(CA) and the members have the ability to obtain signed certificates. 
-Elaborating further, when a user joins a group, the administrator can enable
-automatic signing of certificates or require prior review; and when peers have
-overstayed their welcome, they can have their certificates revoked by removing
-them from the group.  As described in~\cite{icdcs10}, revocation can be stored
-as a CRL on the group site or distributed through broadcast and DHT on the
-overlay.  Though for these forms of systems a user revocation list (URL) as
-opposed to a CRL simplifies revocation in the case where a malicious user has
-automatically signed large amounts of certificates.
-
-During the creation of the group, the administrator configures the VPNs address
-range, namespace, enabling security, and if they would like to use an existing
-overlay network or provide their own set of overlay nodes.  When a user has
-been accepted into the group, they are able to download VPN configuration data,
-which is used to self-configure the VPN.  The configuration is self-contained
-and requires that the user provide it to the VPN, by either placing it in a
-specific directory, a GUI, or a command-line utility whose only input parameter
-is the path to a configuration file. In the prototype, the only the file system
-and command-lien approaches have been implemented.  The configuration data
-contains the IP address space, VPN namespace, group website's address, and a
-shared secret.  The shared secret uniquely identifies the user, so that the
-website can determine how to handle certificate requests.  When making a
-certificate request, the user sends over HTTPS a public key and their shared
-secret, the website creates and signs a certificate request based upon the
-public key and the user's relevant information ensuring that users cannot trick
-the website into signing malicious data.  Upon receiving the signed
-certificate, peers are able to join the private overlay and VPN enabling secure
-communication amongst the VPN peers.
+The results in the virtual private overlays indicate that in the ideal system,
+bounded-broadcast can distribute the message nearly as fast as the unicast
+method though using signficantly less bandwidth.  Use in the public overlay
+is not recommended unless the broadcast message has a significant amount
+destinations, which typically will not be the case in GroupVPN.  In almost all
+cases, the sending peers has less bandwidth utilization when using broadcast
+as opposed to unicast.  So beyond being stateless, the approach is not only
+more efficient in terms of bandwidth but all peers receive the message in a
+reasonable amount of time in comparison to a unicast approach.
 
 \section{Evaluation of VPN Models}
 \label{evaluation}
@@ -714,7 +628,7 @@ the security parameters and uses the default Hamachi settings.
 \label{fig:bandwidth}
 \end{figure}
 
-Figure \ref{fig:latency} and \ref{fig:bandwidth} present the results for latency
+Figures \ref{fig:latency} and \ref{fig:bandwidth} present the results for latency
 and bandwidth respectively.  Latency is measured in transactions of successful
 request/reply messages.  In the latency test, it is obvious that having the
 central server increases the delay between the client and server and the results
@@ -728,15 +642,17 @@ system grows, available bandwidth.
 
 \section{Conclusions}
 \label{conclusions}
-As a canonical resource, this paper describe all the necessary components to
-design and implement decentralized VPN approach designed to facilitate ease of
-use while maintaining security and scalability.  The methods in this paper
-define an abstraction for the VPN component and the features required in a
-structured overlay for this style of VPN.  The VPN abstraction handles local
-networking components and interacts with the overlay for communication, link
-creation, and peer discovery.  In addition, we presented novel ways of
-configuring the VPN through a Web 2.0 environment and creating full tunnel
-VPNs that can be used on centralized, decentralized, and P2P VPNs.
+This paper describe all the necessary components to design and implement a
+decentralized VPN approach designed to facilitate ease of use while maintaining
+security and scalability.  The methods in this paper define an abstraction for
+the VPN component and the features required in a structured overlay to support
+this style of VPN.  The VPN abstraction handles local networking components and
+interacts with the overlay for communication, link creation, and peer discovery.
+Thus a structured overlay should have a DHT and potentially have NAT traversal.
+The paper describes an enhancement to structured overlays, autonomic relays,
+that enable scalable NAT traversal when NAT hole punching does not work.  In
+addition, we presented novel ways of configuring the VPN through a Web 2.0
+environment.
 
 This approach has been used to construct real systems, such as the
 GroupVPN~\cite{gridappliance} and a SocialVPN~\cite{cops08}.  The GroupVPN has
@@ -751,11 +667,26 @@ Purdue have opted for this approach over centralized VPNs as the basis of their
 future distributed compute clusters and have actively tested networks of over
 1000 nodes.
 
-While this paper introduces solutions to creating a complete structured P2P based
-VPN, it introduces many new interesting research problems: 1) distributed load 
-balancing of full tunnel gateways, 2) understanding the long term effects of different
-automatic relay selection models, 3) understanding the benefits beyond security
-of using a private overlays for a VPN such as multicast.
+In Archer, users first create an account on a web site and then request to join
+the Archer GroupVPN group.  Once access has been granted, users can obtain
+configuration data that enables them to seamlessly add resources to the grid by
+handing the configuration file to the Grid Appliance initialization scripts.
+Other forms of grid environments, typically have a shared submission site, but
+Archer is open to all architecture researchers and monitoring usage on a shared
+system would require a dedicated administrator.  Each user instantiates their
+own submission site, typically by using a virtual machine appliance, that
+connects to the rest of the system through the GroupVPN, enabling them to
+connect from anywhere without configuration.  Archer allows users to easily add
+resources using similar mechanisms.  In the case of decentralized VPNs, this
+would be difficult as the user would need to create a manual link to the rest of
+the system for each new resource.  N2N may work, but the network size of Archer
+is larger than the recommendations made by N2N and would still require the setup
+of address allocation facilities.  In general, all existing approaches would
+fail besides those with centralized components, because, at the time of this
+writing, all of Archer's resources are behind NATs.  While centralized could
+be used, they would require additional dedicated resources and management and
+limit access if the central component went offline.  Archer and Grid Appliance
+would not be possible without the GroupVPN architecture.
 
 \bibliographystyle{IEEEtran}
 \small{
