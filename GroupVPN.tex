@@ -23,7 +23,7 @@
 
 \begin{document}
 
-\title{On the Design and Implementation of Autonomic, P2P GroupVPNs}
+\title{On the Design and Implementation of \\Autonomic, P2P GroupVPNs}
 
 \author{
 \IEEEauthorblockA{
@@ -96,19 +96,15 @@ direct connections?  What are efficient methods for peers to transmit broadcast
 / multicast IP traffic?
 \end{enumerate}
 
-Centralized approaches (e.g.  OpenVPN~\cite{openvpn}) require dedicated
-infrastructures, which by default see all messages in the clear text, and
-prevent direct communication between peers, limiting bandwidth and creating
-inefficient multicast paths.  Centralized systems with P2P (peer-to-peer) links
-(e.g. Hamachi~\cite{hamachi}, Wippien~\cite{wippien}, Gbridge~\cite{gbridge},
-PVC~\cite{pvc}, support secure and direct communication amongst peers but rely
-on central resources for session establishment and thus are vulnerable to
-man-in-the-middle attacks.  Decentralized approaches (e.g., ViNe~\cite{vine},
-Violin~\cite{violin}, VNET~\cite{vnet}, tinc~\cite{tinc}) require manual
-configuration of links between members of the virtual network, lacking the
-ability to automatically reconfigure when links fail; security in these systems
-does not secure communication between end hosts.  Existing P2P approaches lack
-scalability and availability (N2N~\cite{n2n}).
+The work in this paper is motivated from our Archer~\cite{archer} project.  The
+primary goal for Archer is to create a dynamic and decentralized environment
+for computer architecture researchers to share and access voluntary compute
+cycles from each other.  Centralized systems would limit the scope of Archer and
+require dedicated administration from multiple parties if the system becomes
+large.  Decentralized VPNs typically require manual configuration of links
+between peers, way beyond the scope of the target users.  Current P2P VPN
+approaches either lack scalability or proper security components to be useful
+for VPN approaches.
 
 In this paper, we present a novel VPN architecture that uses an existing public
 overlay to self-organize a private VPN overlay using a set of P2P systems known
@@ -489,19 +485,21 @@ of the overlap to use as a proxy leaving the remaining peers as reserves.
 
 \subsection{Usefulness of Relays}
 To determine the value in two-hop overlays as opposed to using the overlay in
-restrictive NAT and firewall scenarios, this experiment uses an event-driven
-modeler that reuses the code base of the GroupVPN to faithfully implement
-routing in an overlay as well as latency between peers.  Pair-wise latency in
-this experiment is set using the MIT King Data Set~\cite{king_data}, which
-consists of all-to-all latencies among 1,740 distributed Internet hosts.  The
-modeler measured average overlay, 2-hop, and 1-hop latency between peers.
-Overlay latency represents the time to route a packet via the overlay.  2-hop
-latency is based upon the low-latency formed 2-hop connections, where peers
-route over the overlap with the lowest latency.  1-hop latency is based upon
-peers forming a direct connection with each other.  Only peers that are not
-directly connected (i.e., have two hops or more) are analyzed, as a single hop
-would only benefit under triangular inequalities, which are not a consideration
-in this work.
+restrictive NAT and firewall scenarios, this experiment uses a network modeler
+that reuses the code base of the GroupVPN to faithfully implement routing in an
+overlay as well as latency between peers.  Pair-wise latency in this experiment
+is set using the MIT distribution of the King Data Set~\cite{king_data},
+consisting of all-to-all latency for 1,740 distributed Internet peers.  The
+modeler randomly assigns each peer in the modeler a matching physical location
+based upon the data set, thus for simulations of over 1,740, peers may be
+co-located.  The modeler measured average overlay, 2-hop, and 1-hop latency
+between peers.  Overlay latency represents the time to route a packet via the
+overlay.  2-hop latency is based upon the low-latency formed 2-hop connections,
+where peers route over the overlap with the lowest latency.  1-hop latency is
+based upon peers forming a direct connection with each other.  Only peers that
+are not directly connected (i.e., have two hops or more and are not located in
+the same physical location) are analyzed, as these situations would only benefit
+under triangular inequalities, which are not a consideration in this work.
 
 \begin{figure}[ht]
 \centering
@@ -511,26 +509,24 @@ direct connection latency in a ring based structured overlay.}
 \label{fig:simulated_relays}
 \end{figure}
 
-Results are presented in Figure~\ref{fig:simulated_relays}. The network sizes
-considered begin at 25 nodes because small networks of sizes 20 and under tend
-to be fully connected in the underlying structured overlay.  It is not until
-the network size expands past 100 and towards 200 nodes that relays become
-significantly beneficial.  At 100 nodes, there is approximately a 54\%
-performance increase, whereas at 200 there is an 87\% increase and it appears
-to grow proportionately to the size of the pool, demonstrating the performance
-advantage of two-hop autonomous relays.
+Results are presented in Figure~\ref{fig:simulated_relays}.  Immediately the
+two-hop routing shows improvement.  While the overlay grows logarithmically,
+the results for direct and relay remain nearly identical.  Clearly when
+timing, which can affect bandwidth, is critical, direct paths are most desired,
+though when they are not available, this experiment clearly shows that two-hop
+paths, or relays, are significantly better than routing the packet through an
+overlay.
 
-In addition, the autonomous relays functionality were verified in GroupVPN
-using a real system.  The environment consists of PlanetLab as the public
-overlay and the Archer environment as the VPN environment.
-PlanetLab~\cite{planetlab} provides a set of over 500 distributed computing
-nodes all with public IP addresses.  Archer provides grid computing to computer
-architecture researchers and consists of over 500 nodes located at various
-academic sites.  To ensure that peers under study formed two-hop connections, a
-firewall was instantiated preventing direct communication between the two.  In
-tests, it was revealed that the overlay was always able to self-configure a
-relay; the bandwidth and latency averages and deviations were 2245 Kbit/s $\pm$
-1080 and 58.1 ms $\pm$ 35.5, respectively.
+In addition, the relays functionality were verified in GroupVPN using a real
+system consisting of PlanetLab as the public overlay and the Archer as the VPN
+environment.  PlanetLab~\cite{planetlab} provides a set of over 500 distributed
+computing nodes all with public IP addresses.  Archer provides grid computing
+to computer architecture researchers and consists of over 500 nodes located at
+various academic sites.  To ensure that peers under study formed two-hop
+connections, a firewall was instantiated preventing direct communication between
+the two.  In tests, it was revealed that the overlay was always able to
+self-configure a relay; the bandwidth and latency averages and deviations were
+2245 Kbit/s $\pm$ 1080 and 58.1 ms $\pm$ 35.5, respectively.
 
 \section{Efficient Broadcast and Multicast}
 \label{efficient_xcast}
@@ -547,7 +543,7 @@ Many VPN technologies either do not support multicast and broadcast or route
 the packets to all peers or through a central server, which may be reasonable
 for relatively small groups and for discovery, but they do not scale well for
 media streaming or lrage groups.  In the original set of structured P2P virtual
-networks, broadcast and multicast used DHT to keep a list of all the active
+networks, broadcast and multicast used the DHT to keep a list of all the active
 peers in the VPN.  When a peer wanted to send out a broadcast or multicast
 packet, it would query this list and then send out unicast packets to each peer
 either directly or via the overlay.  Furthermore, as more peers join the system,
@@ -559,6 +555,7 @@ so that they could be added to caches.  The simplistic approach of querying
 each time does not scale well, while the other approach involving caches can be
 quite complciated to implement.
 
+\subsection{Overlay Broadcast}
 With the use of virtual private overlays, broadcast and multicast can be
 implemented stateless as they can be routed using overlay broadcast.  An
 example of a scalable ring-based structured P2P overlay broadcast algorithm
@@ -577,15 +574,16 @@ $[b_F, y]$.  When a node receives a message to a range that contains its own
 address the message is delivered to that node and then routed to others in that
 range.  Figure \ref{fig:tree} shows how this bounded broadcast forms a local
 tree recursively.   The time and bandwidth for a bounded broadcast is
-$O(\log^2 N)$ and $N * packet size$ as shown in~\cite{small_world}.  To perform
-a broadcast on the entire overlay, a peer performs the bounded-broadcast
-starting from its node ID with the end address being the node ID immediately
-preceding its own in the address space.  Though in VPN situations, many peers
-may already have connections to most if not all of their VPN peers, thus the
-broadcast algorithm has been modified to route to only connections created for
-structured overlay purposes and not explicitly only for VPN purposes.  Otherwise
-in many cases, this algorithm will degenerate into one similar to the unicast
-approach.
+$O(\log^2 N)$ and $N * packet size$ as shown in~\cite{small_world}.
+
+To perform a broadcast on the entire overlay, a peer performs the
+bounded-broadcast starting from its node ID with the end address being the node
+ID immediately preceding its own in the address space.  Though in VPN
+situations, many peers may already have connections to most if not all of their
+VPN peers, thus the broadcast algorithm has been modified to route to only
+connections created for structured overlay purposes and not explicitly only for
+VPN purposes.  Otherwise in many cases, this algorithm will degenerate into one
+similar to the unicast approach.
 
 \begin{figure}[h]
 \centering
@@ -594,33 +592,51 @@ approach.
 \label{fig:tree}
 \end{figure}
 
-The validation of broadcasting was done using the same modeler used in the
-relay evaluation.  This evaluation compares broadcasting to a simple unicast
+Another consideration, left unexplored, is whether or not to create separate
+overlays for each multicast group.  In IP multicast, peers register group
+membership using IGMP (Internet Group Management Protocol), thus a VPN can be
+configured to parse these packets and join a unique private overlay for that
+multicast group.  In general, the cost of joining an additional overlay is
+minimal, though, when used for zeroconf like applications, most peers will join
+the group and more importantly the traffic is minimal anyway.  
+
+\subsection{IP Broadcast Evaluation}
+The broadcast validation was done using the same modeler used in the relay
+evaluation.  This evaluation compares broadcasting to a simple unicast
 mechanism that assumes the peer has already queried the DHT.  Both models are
-evaluated in a private overlay and in a public overlay consisting of 100,000
-peers.  The VPN size varies from 10 members up to 10,000.  It is important to
-note that the network modeler does not consider host overheads including
-bandwidth limitations nor simulataneous packet sending, thus the results are
-from an ideal system.  The modeler measures network bandwidth, sending peer
-bandwidth, and the time to complete the broadcast.  The results are presented
-in Figure~\ref{fig:broadcast}.  
+evaluated in a private overlay varyin from 10 members up to 10,000.  It is
+important to note that the network modeler does not consider host overheads
+including bandwidth limitations nor simulataneous packet sending, thus the
+results are from an ideal system.  The modeler measures network bandwidth,
+sending peer bandwidth, and the time to complete the broadcast.  The results
+are presented in Figures \ref{fig:broadcast_time} and \ref{fig:broadcast_hops}.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=2.5in]{figs/tree.eps}
-\caption{Bounded Broadcast in range $[x, y]$}
-\label{fig:broadcast_results}
+\includegraphics[width=2.5in]{figs/broadcast_time.eps}
+\caption{Time to complete an IP Broadcast}
+\label{fig:broadcast_time}
 \end{figure}
 
-The results in the virtual private overlays indicate that in the ideal system,
-bounded-broadcast can distribute the message nearly as fast as the unicast
-method though using signficantly less bandwidth.  Use in the public overlay
-is not recommended unless the broadcast message has a significant amount
-destinations, which typically will not be the case in GroupVPN.  In almost all
-cases, the sending peers has less bandwidth utilization when using broadcast
-as opposed to unicast.  So beyond being stateless, the approach is not only
-more efficient in terms of bandwidth but all peers receive the message in a
-reasonable amount of time in comparison to a unicast approach.
+\begin{figure}[h]
+\centering
+\includegraphics[width=2.5in]{figs/broadcast_hops.eps}
+\caption{Peers the broadcast packet traversed}
+\label{fig:broadcast_hops}
+\end{figure}
+
+The timing results (Figure~\ref{fig:broadcast_time} indicate that the overlay
+broadcast never takes longer than the unicast broadcast.  Another interesting
+result was that the broadcast mechanism seems to avoid some of the longer paths.
+This result is most likely related to the fewer packets sent across the network.
+In Figure~\ref{fig:broadcast_hops}, the unicast broadcast can easily consists of
+$N$ outgoing messages representing somewhere around $\log(N) * N$ hops, whereas
+the overlay broadcast mechanism will always be $N$ hops.  In smaller networks
+this does not have a significant effect in terms of network utilization, but
+from the perspective of the broadcast originator, having to send $\log(N)$
+messages as compared to $N$, can save significant bandwidth.  So beyond being
+stateless, the approach is not only more efficient in terms of bandwidth but all
+peers receive the message in a reasonable amount of time.
 
 \section{Evaluation of VPN Models}
 \label{evaluation}
@@ -647,14 +663,14 @@ the security parameters and uses the default Hamachi settings, 256-bit AES.
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/latency.eps, width=2.75in}
+\epsfig{file=figs/latency.eps, width=2.5in}
 \caption{System transaction rate for various VPN approaches.}
 \label{fig:latency}
 \end{figure}
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/bandwidth.eps, width=2.75in}
+\epsfig{file=figs/bandwidth.eps, width=2.5in}
 \caption{System bandwidth for various VPN approaches.}
 \label{fig:bandwidth}
 \end{figure}
@@ -679,32 +695,22 @@ for security, and collaborative web environments for configuration and
 management.  The paper furthers previous work done by virtual private overlays
 to enhance key VPN features, relays and IP broadcast and multicast.  
 
-This approach has been used to construct real systems, such as the
-GroupVPN~\cite{gridappliance} and a SocialVPN~\cite{cops08}.  The GroupVPN has
-been used to construct Grid Appliance that enables the creation of distributed,
-decentralized, dynamic computing grids.  Grid Appliance has provided the basis
-for free-to-join computer architecture research grid, Archer~\cite{archer}.
-Archer currently spans four universities with 500 resources, over the past year,
-we have had 100s of users who connect seamlessly to these resources from many
-locations, such as homes, schools, and hotels.  Recently, a grid at La Jolla
-Institute for Allergy and Immunology went live using GroupVPN and Grid Appliance
-without receiving any technical support from us.  Researchers at Clemson
-University and Purdue have opted for this approach over centralized VPNs as the
-basis of their future distributed compute clusters and have actively tested
-networks of over 700 nodes.
-
-In Archer, users begin by creating an account at \url{Grid-Appliance.org} and
-requesting membership in the Archer GroupVPN group.  Once access has been
-granted, users can obtain configuration data that enables them to seamlessly
-add resources to the grid by handing the configuration file to the Grid
-Appliance initialization scripts.  Other forms of grid environments, typically
-have a shared submission site, but Archer is open to all architecture
-researchers and monitoring usage on a shared system would require a dedicated
-administrator.  Each user instantiates their own submission site, typically by
-using a virtual machine appliance, that connects to the rest of the system
-through the GroupVPN, enabling them to connect from anywhere without
-configuration.  Archer allows users to easily add resources using similar
-mechanisms.  In the case of decentralized VPNs, this would be difficult as the
+Without GroupVPN projects like Archer~\cite{archer}, would be impractical.
+Archer consists of over 500 resources from 5 different universities,
+including University of Florida, Florida State University, Northeastern
+University, University of Minnesota, and University of Texas.  In the past
+year, since Archer came online, over 100 unique users have contributed and taken
+advantage of the voluntary computing cycles.  A new user to the system begins by
+creating an account at \url{Grid-Appliance.org} and requesting membership in the
+Archer GroupVPN group.  Once access has been granted, users can obtain
+configuration data that enables them to seamlessly add resources to the grid by
+handing the configuration file to the Grid Appliance initialization scripts.
+This method allows independent submission sites, unlike most grid systems that
+have a shared submission site, which require dedicated administrators.  Most
+users connect to the system using a pre-configured virtual machine appliance,
+so that they do not need to be experts in grid systems to take advantage of
+Archer.  GroupVPN allows users to connect to the system and dynmaically add
+resources.  In the case of decentralized VPNs, this would be difficult as the
 user would need to create a manual link to the rest of the system for each new
 resource.  N2N may work, but the network size of Archer is larger than the
 recommendations made by N2N and would still require the setup of address
@@ -712,9 +718,18 @@ allocation facilities.  In general, all existing approaches would fail besides
 those with centralized components, because, at the time of this writing, all of
 Archer's resources are behind NATs.  While centralized could be used, they
 would require additional dedicated resources and management and limit access if
-the central component went offline.  Archer and Grid Appliance would not be
-possible without the GroupVPN architecture described in this paper. 
+the central component went offline.
 
+In addition to Archer, the components in GroupVPN have been used to construct
+a VPN that uses online social networking identities to establish trust, called
+SocialVPN~\cite{cops08}.  The GroupVPN has been used to construct Grid Appliance
+that enables the creation of distributed, decentralized, dynamic computing
+grids, which form the basis for Archer.  Recently, a grid at La Jolla Institute
+for Allergy and Immunology went live using GroupVPN and Grid Appliance without
+receiving any technical support from us.  Researchers at Clemson University and
+Purdue have opted for this approach over centralized VPNs as the basis of their
+future distributed compute clusters and have actively tested networks of over
+700 nodes.
 \bibliographystyle{IEEEtran}
 \small{
 \bibliography{GroupVPN}
