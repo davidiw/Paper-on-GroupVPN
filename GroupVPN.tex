@@ -109,8 +109,7 @@ for VPN approaches.
 In this paper, we present a novel VPN architecture that uses an existing public
 overlay to self-organize a private VPN overlay using a set of P2P systems known
 as structured overlays and configured with a Web 2.0 group collaborative
-environment.  Examples of large, public overlay networks include Gnutella,
-Kademlia, and Skype.  We describe how the VPN can be configured from a web
+environment.  We describe how the VPN can be configured from a web
 interface and use features of P2P systems to create an autonomic and
 decentralized GroupVPN.  We then focus on enhancements that can be made to the
 VPN made available by the use of structured overlays in terms of traffic
@@ -374,6 +373,14 @@ NATs communicate through a third peer with whom they have direct
 connectivity, though with the side-effect of additional latency and the cost
 incurred by the relay of supporting the bidirectional communication.
 
+NATs are not the only consideration for the targeted environments, a reasonable
+expectation is that many users may be unaware of their local IP nor understand
+concepts such as ports.  As such, it is unsafe to assume these peers can
+properly act as a bootstrapping peer in a small P2P system.  So even when peers
+have public IP addresses, the owner may be unaware of how or unwilling to
+properly utilize it.
+
+These consideration lead into the common bootstrapping problem for P2P systems.
 Creating and connecting to a private overlay can be difficult when there are
 no dedicated resources with public addresses, even if the system has many
 active members behind NATs and firewalls.  This is because peers behind NATs
@@ -381,8 +388,9 @@ and firewalls may be unable to handle incoming connections without the
 assistance of a third-party.  The same work~\cite{vpo} describes how
 arbitrary public overlays can act as a middle ground to bootstrapping private
 overlays, using mechanisms unique to these environments to bootstrap into the
-private overlay.  Thus as mentioned in the introduction, peers can discover
-each other using public overlays to connect to a private overlay.  The key
+private overlay.  As mentioned in the introduction, peers can discover each
+other using public overlays to connect to a private overlay.  Examples of
+potential, large public overlays include Gnutella, Skype, and Kademlia.  The key
 challenge to using public overlays is that they must allow peers to send
 arbitrary data to each other via the overlay, otherwise two peers behind NATs
 will be unable to coordinate NAT traversal with each other.  Of course, this
@@ -689,34 +697,33 @@ system grows, available bandwidth.
 \label{conclusions}
 This paper describes a novel approach to VPNs utilizing structured overlays
 to deal with organization, public overlays for connectivity, private overlays
-for security, and collaborative web environments for configuration and
-management.  The paper furthers previous work done by virtual private overlays
-to enhance key VPN features, relays and IP broadcast and multicast.  
+for security, and collaborative environments for configuration and management.
+The paper furthers previous work using virtual private overlays to enhance key
+VPN features, relays and IP broadcast and multicast.  
 
 Without the functionality of GroupVPN projects like Archer~\cite{archer}, would
-be impractical.  Archer consists of over 500 resources from 5 different universities,
-including University of Florida, Florida State University, Northeastern
-University, University of Minnesota, and University of Texas.  In the past
-year, since Archer came online, over 100 unique users have contributed and taken
-advantage of the voluntary computing cycles.  A new user to the system begins by
-creating an account at \url{Grid-Appliance.org} and requesting membership in the
-Archer GroupVPN group.  Once access has been granted, users can obtain
-configuration data that enables them to seamlessly add resources to the grid by
-handing the configuration file to the Grid Appliance initialization scripts.
-This method allows independent submission sites, unlike most grid systems that
-have a shared submission site, which require dedicated administrators.  Most
-users connect to the system using a pre-configured virtual machine appliance,
-so that they do not need to be experts in grid systems to take advantage of
-Archer.  GroupVPN allows users to connect to the system and dynamically add
-resources.  In the case of decentralized VPNs, this would be difficult as the
-user would need to create a manual link to the rest of the system for each new
-resource.  N2N may work, but the network size of Archer is larger than the
-recommendations made by N2N and would still require the setup of address
-allocation facilities.  In general, all existing approaches would fail besides
-those with centralized components, because, at the time of this writing, all of
-Archer's resources are behind NATs.  While centralized could be used, they
-would require additional dedicated resources and management and limit access if
-the central component went offline.
+be impractical.  Archer consists of over 500 resources from 5 different
+universities, including University of Florida, Florida State University,
+Northeastern University, University of Minnesota, and University of Texas.  In
+the past year, since Archer came online, over 100 unique users have contributed
+and taken advantage of the voluntary computing cycles.  A new user to the system
+begins by creating an account at \url{Grid-Appliance.org} and requesting
+membership in the Archer GroupVPN group.  Once access has been granted, users
+can obtain configuration data used by the Grid Appliance initialization scripts
+to seamlessly add resources to the grid.  This method allows independent
+submission sites, unlike most grid systems that have a shared submission site,
+which require dedicated administrators.  Most users connect to the system using
+a pre-configured virtual machine appliance, so that they do not need to be
+experts in grid systems to take advantage of Archer.  Enabling this using
+decentralized VPNs would be difficult as the user would need to create manual
+links to the rest of the system for each new resource.  N2N may work, but the
+network size of Archer is larger than the recommendations made by N2N and
+would still require the setup of address allocation facilities.  In general,
+all existing approaches would fail besides those with centralized components,
+because, at the time of this writing, all of Archer's resources are behind
+NATs.  Even though centralized could be used, it would require additional
+dedicated resources and management, limiting access if the central component
+went offline.  
 
 Much of the work in this paper has contributed to the framework for
 SocialVPN~\cite{cops08}.  Instead of a group environment for peer management,
@@ -725,9 +732,9 @@ Facebook, MySpace, or Google Talk, to discover VPN partners.  Unlike Wippien,
 which will then attempt to negotiate links through the social network, SocialVPN
 decentralizes itself and uses a public overlay to discover the peers different
 end points, establish direct and  relayed links, and form private overlays for
-broadcast and multicast messages.  Once peers have registered with each other
-through a social network, in future sessions, they can connect to the overlay
-to discover and connect with each other.
+broadcast and multicast messages.  After registering with each other through a
+through a social network, peers are able to discover and connect with each other
+through the overlay.
 
 The GroupVPN has been used as the virtual network for the Grid Appliance, which
 is the basis of Archer and, in general, enables the enables the creation
