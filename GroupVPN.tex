@@ -14,9 +14,9 @@
 \setlength{\topmargin}{0pt}
 \setlength{\topsep}{0pt}
 \setlength{\partopsep}{0pt}
-\setlength{\floatsep}{0pt}
-\setlength{\textfloatsep}{1pt}
-\setlength{\intextsep}{1pt}
+\setlength{\floatsep}{5pt}
+\setlength{\textfloatsep}{5pt}
+\setlength{\intextsep}{5pt}
 
 \widowpenalty=10000
 \clubpenalty=10000
@@ -41,15 +41,15 @@
 Virtual private networks (VPNs) enable safe and simple use of network
 applications in distributed, insecure, and constrained environments by providing
 all-to-all connectivity in a secure, isolated virtual environment.  Existing
-systems present challenges to users lacking networking, security, and operating
-expertise in small and medium groups, such as academic, business, and home
-environments.  In this paper, we describe a VPN architecture motivated by the
-challenges with existing systems and their application in these environments.
-Our contribution is a system that provides autonomic, decentralized VPNs using
-common Web 2.0 group collabration systems for configuration and management.  To
-evaluate these claims, we provide a reference implementation, GroupVPN, and
-compare it to existing VPN approaches.  GroupVPN is an extension of previous
-work known as IPOP.
+systems present challenges to users in small and medium groups, such as
+academic, business, and home environments, lacking networking, security, and
+operating system expertise.  In this paper, we describe a VPN architecture
+motivated by the challenges with existing systems and their application in these
+environments.  Our contribution is a system that provides autonomic,
+decentralized VPNs using common Web 2.0 group collaboration systems for
+configuration and management.  To evaluate these claims, we provide a reference
+implementation, GroupVPN, and compare it to existing VPN approaches.  GroupVPN
+is an extension of previous work known as IPOP.
 \end{abstract}
 
 \section{Introduction}
@@ -85,9 +85,9 @@ of security credentials will be used, and what will the network parameters be?
 be used for address allocation and peer discovery?
 \item \textbf{Privacy}:  Will communication in the VPN be transmitted in clear
 text amongst members but secure in transit or will secure links be established
-between source and destintation?
+between source and destination?
 \item \textbf{Connectivity}:  Given a hostname for a remote node, how will the
-VPN discover the remote peer and what will there method of communication be?
+VPN discover the remote peer and what will the method used for communication?
 \item \textbf{Peer Management}:  How are new users added to the system, what if
 they have many resources to add as well?  What happens when a user becomes
 malicious, how are users revoked?
@@ -109,17 +109,17 @@ for VPN approaches.
 In this paper, we present a novel VPN architecture that uses an existing public
 overlay to self-organize a private VPN overlay using a set of P2P systems known
 as structured overlays and configured with a Web 2.0 group collaborative
-environment.  The approach is made feasible by the existence of many large,
-public overlay networks including Gnutella, Kademlia, and Skype.  We describe
-how the VPN can be configured from a web interface and use features of P2P
-systems to create an autonomic and decentralized GroupVPN.  We then focus on
-enhancements that can be made to the VPN made available by the use of structured
-overlays in terms of traffic relaying and IP broadcast / multicast.
+environment.  Examples of large, public overlay networks include Gnutella,
+Kademlia, and Skype.  We describe how the VPN can be configured from a web
+interface and use features of P2P systems to create an autonomic and
+decentralized GroupVPN.  We then focus on enhancements that can be made to the
+VPN made available by the use of structured overlays in terms of traffic
+relaying and IP broadcast / multicast.
 
 Section~\ref{vpns} introduces VPNs and various approaches to VPN overlays.
 Section~\ref{structured_vns} describes the application of core VPN features to
-a structured overlay.  The following sections, ~\ref{relays} and
-~\ref{efficient_xcast} have a detailed focus on on P2P network constraints and
+a structured overlay.  The following sections, \ref{relays} and
+\ref{efficient_xcast} have a detailed focus on P2P network constraints and
 efficient IP broadcast and multicast.  Section~\ref{evaluation} presents a
 validation of our approach in comparison to existing approaches through
 quantitative analysis.  We conclude in Section~\ref{conclusions} by exploring a
@@ -185,8 +185,8 @@ VN devices can be configured manually though command-line tools or OS' APIs or
 dynamically by the universally supported dynamic host configuration process
 (DHCP)~\cite{dhcp0}.  When a VN device obtains an IP address, it triggers the
 OS to add a new rule to the routing table directing all packets sent to the VPN
-subnet to the VN device.  Packets read from the the TAP device are encrypted
-and sent to the overlay via the VPN client.  The overlay delivers the packet to
+subnet to the VN device.  Packets read from the TAP device are encrypted and
+sent to the overlay via the VPN client.  The overlay delivers the packet to
 another client or a server with a VN stack enabled.  Received packets are
 decrypted, verified for authenticity, and then written to the VN device.  In
 most cases, the IP layer header remains unchanged, while VPN configuration
@@ -226,7 +226,7 @@ sends the packet to its destination.  This model allows a server to eavesdrop on
 communication.  While a second layer of encryption is possible through a shared
 secret, it requires out-of-band communication and increases the computing
 overhead on communication since the packet will now need to be encrypted and
-authenicated twice at both the VPN source and destination sites.
+authenticated twice at both the VPN source and destination sites.
 
 \subsection{Centralized P2P VPN Systems}
 Hamachi~\cite{hamachi} is the first well-known centralized VPN that used the
@@ -241,11 +241,12 @@ it is a chat server, while P2PVPN uses a BitTorrent tracker.  If NAT traversal
 or firewalls prevent direct connectivity, the central server can act as a
 relay.  Each approach uses their own security protocols with most using a
 server to verify the authenticity and setup secure connections between clients.
-In regards to the P2PVPN, long term goals involve the creation of an
-unstructured, which would provide a method of decentralized organization.  A
-disadvantage to the more robust approaches of Hamachi and GBridge is that they
-do not allow network configuration, nor do they allow use without connecting
-through their systems.
+Thus the peers must trust the central authentication server, though
+communication between peers, or EtE communication, is secure.  In regards to the
+P2PVPN, long term goals involve the creation of an unstructured network, which
+would provide a method of decentralized organization.  More security minded
+individuals may feel uncomfortable using Hamachi and GBridge as they do not
+support independent systems, thus requiring use of their private resources.
 
 \subsection{Decentralized VPN Systems}
 Some examples of systems that assist in distributing load in VPN systems are
@@ -255,7 +256,9 @@ configuration of links between resources.  This means that, like OpenVPN, these
 systems can suffer VPN outages when nodes go offline, thus administrators must
 maintain the VPN connection table.  Unlike OpenVPN, these approaches typically
 do not require all-to-all direct connectivity for all-to-all communication.
-Users can either setup out-of-band NAT traversal or route through relays.
+These systems support NAT traversal through out-of-band mechanisms or routing
+through relays.  Current decentralized VPNs only secure PtP communication,
+leaving EtE communication in the clear text when sent via the overlay.
 
 \subsection{Unstructured P2P VPN Systems}
 Unlike centralized and decentralized systems, P2P environments require the
@@ -327,16 +330,16 @@ using a structured overlay for a VPN, tamper-resistance and reliable routing
 mechanisms are ideal, but they only reduce the ability of a malicious user to
 affect the overlay, an expectation of a VPN is that no members are malicious
 and malicious users have their access revoked.  As such a structured overlay
-requires both the point-to-point (PtP), or communication between connected
-peers, and end-to-end (EtE), or communication between peers across the
-overlay, security.  Each component provides secrity uniquely from each other.
+requires both the point-to-point (PtP), communication between connected
+peers, and end-to-end (EtE), communication between peers across the
+overlay, security.  Each component provides security uniquely from each other.
 PtP security ensures that malicious third parties cannot insert material into
-the system, while EtE ensures message security between the commuicating peers.
-Enablng just PtP security would limit the security to the type of VPN security
-found in other VPNs, all member must be trusted, whereas EtE enables message
+the system, while EtE ensures message security between the communicating peers.
+Enabling just PtP security would limit the security to the type of VPN security
+found in other VPNs, all members must be trusted, whereas EtE enables message
 security even from overlay members.
 
-In our previous work~\cite{vpo}, we described mechanism that enable the
+In our previous work~\cite{vpo}, we described mechanisms that enable the
 construction of a private overlay providing both EtE and PtP security.  In this
 system, EtE and PtP communication has been abstracted into a common sender
 layer; while the security component has been placed into a filter, enabling it
@@ -367,7 +370,7 @@ communication with a peer behind another NAT / firewall.  This works by
 confusing the NAT into believing that the peer behind it initiated the
 connection.  TCP NAT hole punching, though, does not work on systems that use
 stateful firewalls.  Relaying, on the other hand, always works as peers behind
-NATs communicate through a third peer with whom they have have direct
+NATs communicate through a third peer with whom they have direct
 connectivity, though with the side-effect of additional latency and the cost
 incurred by the relay of supporting the bidirectional communication.
 
@@ -376,13 +379,13 @@ no dedicated resources with public addresses, even if the system has many
 active members behind NATs and firewalls.  This is because peers behind NATs
 and firewalls may be unable to handle incoming connections without the
 assistance of a third-party.  The same work~\cite{vpo} describes how
-abitrary public overlays can act as a middle ground to bootstrapping private
+arbitrary public overlays can act as a middle ground to bootstrapping private
 overlays, using mechanisms unique to these environments to bootstrap into the
 private overlay.  Thus as mentioned in the introduction, peers can discover
 each other using public overlays to connect to a private overlay.  The key
 challenge to using public overlays is that they must allow peers to send
-abitrary data to each other via the overlay, otherwise two peers behind NATs
-will be unable to coordinate NAT traversal with each ohter.  Of course, this
+arbitrary data to each other via the overlay, otherwise two peers behind NATs
+will be unable to coordinate NAT traversal with each other.  Of course, this
 mechanism does not preclude the creation of a private overlay without the
 use of a public bootstrapping mechanism.
 
@@ -410,11 +413,11 @@ certificates.  Elaborating further, when a user joins a group, the
 administrator can enable automatic signing of certificates or require prior
 review; and when peers have overstayed their welcome, an administrator can
 revoke their certificate by removing them from the group.  As described
-in~\cite{vpo}, revocation can be stored as a CRL on the group site or
-distributed through broadcast and DHT on the overlay.  Though for these forms
-of systems a user revocation list (URL) as opposed to a CRL simplifies
-revocation in the case where a malicious user has automatically signed large
-amounts of certificates.
+in~\cite{vpo}, revocation can be stored as a CRL (certificate revocation list)
+on the group site or distributed through broadcast and DHT on the overlay.
+Though for these forms of systems a user revocation list (URL) as opposed to a
+CRL simplifies revocation in the case where a malicious user has automatically
+signed large amounts of certificates.
 
 In the case of the GroupVPN, administrators of a group configure the VPN
 address range, namespace, and security.  Options are also available to specify
@@ -439,7 +442,7 @@ group site on a public VN, peers interacting with the GroupVPN would need to
 connect with the public VN in order to create an account, get the configuration
 data, and to sign their certificate at which point they could disconnect from
 it.  This does not preclude the use of other social mediums nor a central site
-dedicated to the formation of many GroupVPNs.  As many GroupVPNs can share a
+dedicated to the formation of many GroupVPNs.  Many GroupVPNs can share a
 single site, so long as the group members trust the site to host the CA private
 key.
 
@@ -451,11 +454,11 @@ managed links.  In the centralized P2P approaches, peers that cannot form direct
 links can potentially route through a dedicated relay system, but if not, the
 peers will be unable to communicate.  Whereas in decentralized approaches,
 including P2P systems, peers can communicate through the overlay when traversal
-fails.  Though as the overlay grows in size, especially in structured overlays,
+fails.  As the overlay grows in size, especially in structured overlays,
 so does the hop count between peers, increasing latency and reducing bandwidth,
 greatly reducing the value of routing through an overlay.
 
-\subsection{An Autnomic Relay Infrastructure}
+\subsection{An Autonomic Relay Infrastructure}
 \begin{figure}[ht]
 \centering
 \epsfig{file=figs/relay.png.eps, width=2.75in}
@@ -468,7 +471,7 @@ neighbors, creating an overlap.  The overlap then becomes a relay path
 \end{figure}
 
 P2P systems can address this connectivity issue through a distributed, autonomic
-relaying system, whereby peers form overlapping connections with each others
+relaying system, whereby peers form overlapping connections with each other's
 peers, creating two-hop links.  When two nodes discover each other via the
 overlay and attempt to become connected but fail during NAT and firewall
 traversal, they exchange peer lists through the overlay.  Upon receiving this
@@ -479,7 +482,7 @@ connect to each other's neighbor set proactively creating overlap, as
 represented in Figure~\ref{fig:relay}.
 
 With the set of neighbors, the peers can include additional data such as
-latency and connection lifetime to each of the the neighbors.  When creating
+latency and connection lifetime to each of the neighbors.  When creating
 overlap or overlap changes, peers review these metrics to decide which subset
 of the overlap to use as a proxy leaving the remaining peers as reserves.
 
@@ -493,17 +496,18 @@ consisting of all-to-all latency for 1,740 distributed Internet peers.  The
 modeler randomly assigns each peer in the modeler a matching physical location
 based upon the data set, thus for simulations of over 1,740, peers may be
 co-located.  The modeler measured average overlay, 2-hop, and 1-hop latency
-between peers.  Overlay latency represents the time to route a packet via the
-overlay.  2-hop latency is based upon the low-latency formed 2-hop connections,
-where peers route over the overlap with the lowest latency.  1-hop latency is
-based upon peers forming a direct connection with each other.  Only peers that
-are not directly connected (i.e., have two hops or more and are not located in
-the same physical location) are analyzed, as these situations would only benefit
-under triangular inequalities, which are not a consideration in this work.
+between peers over 100 executions.  Overlay latency represents the time to route
+a packet via the overlay.  2-hop latency is based upon the low-latency formed
+2-hop connections, where peers route over the overlap with the lowest latency.
+1-hop latency is based upon peers forming a direct connection with each other.
+Only peers that are not directly connected (i.e., have two hops or more and are
+not located in the same physical location) are analyzed, as these situations
+would only benefit under triangular inequalities, which are not a consideration
+in this work.
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/relay_motivation.png.eps, width=2.75in}
+\epsfig{file=figs/relay_motivation.png.eps, width=2.5in}
 \caption{A comparison of the average all-to-all overlay routing, two-hop relay, and
 direct connection latency in a ring based structured overlay.}
 \label{fig:simulated_relays}
@@ -517,7 +521,7 @@ though when they are not available, this experiment clearly shows that two-hop
 paths, or relays, are significantly better than routing the packet through an
 overlay.
 
-In addition, the relays functionality were verified in GroupVPN using a real
+In addition, the relays functionality was verified in GroupVPN using a real
 system consisting of PlanetLab as the public overlay and the Archer as the VPN
 environment.  PlanetLab~\cite{planetlab} provides a set of over 500 distributed
 computing nodes all with public IP addresses.  Archer provides grid computing
@@ -532,7 +536,7 @@ self-configure a relay; the bandwidth and latency averages and deviations were
 \label{efficient_xcast}
 Within the past few years, self-configuring protocols like zeroconf and Bonjour
 have enabled the use of complex applications transparently through
-self-configuring, these include music sharing applications, like iTunes, chat
+self-configuring; these include music sharing applications, like iTunes, chat
 programs, like Pidgin, and even web sites and data shares.  The underlying
 enabling technology is multicast DNS and service discovery.  Multicast has
 also been used in other applications to enable efficient streaming of media,
@@ -542,7 +546,7 @@ for small and medium groups.
 Many VPN technologies either do not support multicast and broadcast or route
 the packets to all peers or through a central server, which may be reasonable
 for relatively small groups and for discovery, but they do not scale well for
-media streaming or lrage groups.  In the original set of structured P2P virtual
+media streaming or large groups.  In the original set of structured P2P virtual
 networks, broadcast and multicast used the DHT to keep a list of all the active
 peers in the VPN.  When a peer wanted to send out a broadcast or multicast
 packet, it would query this list and then send out unicast packets to each peer
@@ -553,7 +557,7 @@ query the DHT every time or maintain a cache.  In the case of a cache, new
 peers joining the overlay would need to notify the entire VPN when they joined
 so that they could be added to caches.  The simplistic approach of querying
 each time does not scale well, while the other approach involving caches can be
-quite complciated to implement.
+quite complicated to implement.
 
 \subsection{Overlay Broadcast}
 With the use of virtual private overlays, broadcast and multicast can be
@@ -587,8 +591,8 @@ similar to the unicast approach.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=2.25in]{figs/tree.eps}
-\caption{Bounded Broadcast in range $[x, y]$}
+\includegraphics[width=2.5in]{figs/tree.eps}
+\caption{Bounded-Broadcast performing a complete overlay broadcast}
 \label{fig:tree}
 \end{figure}
 
@@ -604,12 +608,11 @@ the group and more importantly the traffic is minimal anyway.
 The broadcast validation was done using the same modeler used in the relay
 evaluation.  This evaluation compares broadcasting to a simple unicast
 mechanism that assumes the peer has already queried the DHT.  Both models are
-evaluated in a private overlay varyin from 10 members up to 10,000.  It is
+evaluated in a private overlay varying from 10 members up to 10,000.  It is
 important to note that the network modeler does not consider host overheads
-including bandwidth limitations nor simulataneous packet sending, thus the
-results are from an ideal system.  The modeler measures network bandwidth,
-sending peer bandwidth, and the time to complete the broadcast.  The results
-are presented in Figures \ref{fig:broadcast_time} and \ref{fig:broadcast_hops}.
+including bandwidth limitations nor simultaneous packet sending.  The modeler
+measures network bandwidth, sending peer bandwidth, and the time to complete
+the broadcast.
 
 \begin{figure}[h]
 \centering
@@ -621,27 +624,22 @@ are presented in Figures \ref{fig:broadcast_time} and \ref{fig:broadcast_hops}.
 \begin{figure}[h]
 \centering
 \includegraphics[width=2.5in]{figs/broadcast_hops.eps}
-\caption{Peers the broadcast packet traversed}
+\caption{Number of peers the broadcast packet traversed}
 \label{fig:broadcast_hops}
 \end{figure}
 
-The timing results (Figure~\ref{fig:broadcast_time} indicate that the overlay
-broadcast never takes longer than the unicast broadcast.  Another interesting
-result was that the broadcast mechanism seems to avoid some of the longer paths.
-This result is most likely related to the fewer packets sent across the network.
-In Figure~\ref{fig:broadcast_hops}, the unicast broadcast can easily consists of
-$N$ outgoing messages representing somewhere around $\log(N) * N$ hops, whereas
-the overlay broadcast mechanism will always be $N$ hops.  In smaller networks
-this does not have a significant effect in terms of network utilization, but
-from the perspective of the broadcast originator, having to send $\log(N)$
-messages as compared to $N$, can save significant bandwidth.  So beyond being
-stateless, the approach is not only more efficient in terms of bandwidth but all
-peers receive the message in a reasonable amount of time.
+Comparing the timing results, Figure~\ref{fig:broadcast_time}, to the number
+of hops, Figure~\ref{fig:broadcast_hops}, indicates that the two are related
+by a factor of approximately $\log(N)$.  This experiment shows that the
+broadcast performs reasonably similar to unicast, which when combined with
+the fact that broadcast is stateless and does not put undue stress on the
+sending site as the network size increases makes it clear that this method
+is preferred for IP broadcasting and multicasting.
 
 \section{Evaluation of VPN Models}
 \label{evaluation}
-This experiments explores bandwidth and latency in a distributed VPN system to
-motivate the usage of P2P links in a VPN.  The VPNs used are include our
+This experiment explores bandwidth and latency in a distributed VPN system to
+motivate the usage of P2P links in a VPN.  The VPNs used include our
 GroupVPN, OpenVPN, and Hamachi.  OpenVPN represents a typical
 centralized VPN, while Hamachi represents a well-tuned P2P-link VPN.  The
 evaluation was performed on Amazon EC2 using small instance sized
@@ -654,7 +652,7 @@ peers are act as clients and the other half the peers creating a 1 to 1 mapping
 between all sets.  Latency and bandwidth tests are performed using netperf's
 request-reply and streaming tests respectively.  Prior to the start of the
 tests, peers have no knowledge of each other, except the virtual IP addresses,
-thus connection startup costs are included in the test.  Test are run for 10
+thus connection startup costs are included in the test.  Tests are run for 10
 minutes diluting the connection initiation overhead but represent an example of
 real usage.  Results from the clients are polled at all locations and averaged
 together, though the OpenVPN server is measured separately.  GroupVPN and OpenVPN
@@ -663,14 +661,14 @@ the security parameters and uses the default Hamachi settings, 256-bit AES.
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/latency.eps, width=2.5in}
+\epsfig{file=figs/latency.eps, width=2.25in}
 \caption{System transaction rate for various VPN approaches.}
 \label{fig:latency}
 \end{figure}
 
 \begin{figure}[ht]
 \centering
-\epsfig{file=figs/bandwidth.eps, width=2.5in}
+\epsfig{file=figs/bandwidth.eps, width=2.25in}
 \caption{System bandwidth for various VPN approaches.}
 \label{fig:bandwidth}
 \end{figure}
@@ -689,14 +687,14 @@ system grows, available bandwidth.
 
 \section{Conclusions}
 \label{conclusions}
-This paper describes a novel approach to VPNs utilitizing structured overlays
+This paper describes a novel approach to VPNs utilizing structured overlays
 to deal with organization, public overlays for connectivity, private overlays
 for security, and collaborative web environments for configuration and
 management.  The paper furthers previous work done by virtual private overlays
 to enhance key VPN features, relays and IP broadcast and multicast.  
 
-Without GroupVPN projects like Archer~\cite{archer}, would be impractical.
-Archer consists of over 500 resources from 5 different universities,
+Without the functionality of GroupVPN projects like Archer~\cite{archer}, would
+be impractical.  Archer consists of over 500 resources from 5 different universities,
 including University of Florida, Florida State University, Northeastern
 University, University of Minnesota, and University of Texas.  In the past
 year, since Archer came online, over 100 unique users have contributed and taken
@@ -709,7 +707,7 @@ This method allows independent submission sites, unlike most grid systems that
 have a shared submission site, which require dedicated administrators.  Most
 users connect to the system using a pre-configured virtual machine appliance,
 so that they do not need to be experts in grid systems to take advantage of
-Archer.  GroupVPN allows users to connect to the system and dynmaically add
+Archer.  GroupVPN allows users to connect to the system and dynamically add
 resources.  In the case of decentralized VPNs, this would be difficult as the
 user would need to create a manual link to the rest of the system for each new
 resource.  N2N may work, but the network size of Archer is larger than the
@@ -720,20 +718,29 @@ Archer's resources are behind NATs.  While centralized could be used, they
 would require additional dedicated resources and management and limit access if
 the central component went offline.
 
-In addition to Archer, the components in GroupVPN have been used to construct
-a VPN that uses online social networking identities to establish trust, called
-SocialVPN~\cite{cops08}.  The GroupVPN has been used to construct Grid Appliance
-that enables the creation of distributed, decentralized, dynamic computing
-grids, which form the basis for Archer.  Recently, a grid at La Jolla Institute
-for Allergy and Immunology went live using GroupVPN and Grid Appliance without
-receiving any technical support from us.  Researchers at Clemson University and
-Purdue have opted for this approach over centralized VPNs as the basis of their
-future distributed compute clusters and have actively tested networks of over
-700 nodes.
-\bibliographystyle{IEEEtran}
+Much of the work in this paper has contributed to the framework for
+SocialVPN~\cite{cops08}.  Instead of a group environment for peer management,
+SocialVPN, like Wippien, uses an online social networking backend, such as
+Facebook, MySpace, or Google Talk, to discover VPN partners.  Unlike Wippien,
+which will then attempt to negotiate links through the social network, SocialVPN
+decentralizes itself and uses a public overlay to discover the peers different
+end points, establish direct and  relayed links, and form private overlays for
+broadcast and multicast messages.  Once peers have registered with each other
+through a social network, in future sessions, they can connect to the overlay
+to discover and connect with each other.
+
+The GroupVPN has been used as the virtual network for the Grid Appliance, which
+is the basis of Archer and, in general, enables the enables the creation
+of distributed, decentralized, collaborative environments for computing grids.
+Recently, a grid at La Jolla Institute for Allergy and Immunology went live
+using GroupVPN and Grid Appliance without receiving any technical support from
+us.  Researchers at Clemson University and Purdue have opted for this approach
+over centralized VPNs as the basis of their future distributed compute clusters
+and have actively tested networks of over 700 nodes.
+
 \small{
+\bibliographystyle{IEEEtran}
 \bibliography{GroupVPN}
-\suppressfloats
 }
 
 \end{document}
