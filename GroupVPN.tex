@@ -83,9 +83,8 @@ challenges:
 of security credentials will be used, and what will the network parameters be?
 \item \textbf{Organization}:  How will peers find each other?  What methods will
 be used for address allocation and peer discovery?
-\item \textbf{Privacy}:  Will communication in the VPN be transmitted in clear
-text amongst members but secure in transit or will secure links be established
-between source and destination?
+\item \textbf{Privacy}:  Will communication routed through the VPN be secured
+between links or end points?
 \item \textbf{Connectivity}:  Given a hostname for a remote node, how will the
 VPN discover the remote peer and what will the method used for communication?
 \item \textbf{Peer Management}:  How are new users added to the system, what if
@@ -109,11 +108,14 @@ for VPN approaches.
 In this paper, we present a novel VPN architecture that uses an existing public
 overlay to self-organize a private VPN overlay using a set of P2P systems known
 as structured overlays and configured with a Web 2.0 group collaborative
-environment.  We describe how the VPN can be configured from a web
-interface and use features of P2P systems to create an autonomic and
-decentralized GroupVPN.  We then focus on enhancements that can be made to the
-VPN made available by the use of structured overlays in terms of traffic
-relaying and IP broadcast / multicast.
+environment.  Overlays can provide both scalability as the network becomes larger
+as well as autonomic features such as self-organization and self-configuration.
+These autonomic features are typically found in structured overlays and can
+enable low management overhead in decentralized systems.  Though in our
+research, we found limitations in existing overlays as they apply to IP,
+specifically NAT traversal through relaying and IP broadcast / multicast, and
+describe enhancements that can be made to a P2P overlay to scalably enable these
+features.
 
 Section~\ref{vpns} introduces VPNs and various approaches to VPN overlays.
 Section~\ref{structured_vns} describes the application of core VPN features to
@@ -462,9 +464,9 @@ managed links.  In the centralized P2P approaches, peers that cannot form direct
 links can potentially route through a dedicated relay system, but if not, the
 peers will be unable to communicate.  Whereas in decentralized approaches,
 including P2P systems, peers can communicate through the overlay when traversal
-fails.  As the overlay grows in size, especially in structured overlays,
-so does the hop count between peers, increasing latency and reducing bandwidth,
-greatly reducing the value of routing through an overlay.
+fails.  As the overlay grows in size, so does the hop count between peers,
+increasing latency and reducing bandwidth, greatly reducing the value of routing
+through an overlay.
 
 \subsection{An Autonomic Relay Infrastructure}
 \begin{figure}[ht]
