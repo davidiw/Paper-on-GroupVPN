@@ -8,16 +8,23 @@
 \usepackage{amsmath}
 \usepackage{algorithmic}
 
-%\setlength{\parskip}{0pt}
-%\setlength{\parsep}{0pt}
-%\setlength{\headsep}{0pt}
-%\setlength{\topskip}{0pt}
-%\setlength{\topmargin}{0pt}
-%\setlength{\topsep}{0pt}
-%\setlength{\partopsep}{0pt}
-%\setlength{\floatsep}{5pt}
-%\setlength{\textfloatsep}{5pt}
-%\setlength{\intextsep}{5pt}
+\setlength{\parskip}{0pt}
+\setlength{\parsep}{0pt}
+\setlength{\headsep}{0pt}
+\setlength{\topskip}{0pt}
+\setlength{\topmargin}{0pt}
+\setlength{\footskip}{0pt}
+
+\setlength{\topsep}{2pt}
+\setlength{\partopsep}{0pt}
+\setlength{\itemsep}{0pt}
+
+\setlength{\floatsep}{4pt}
+\setlength{\dblfloatsep}{4pt}
+\setlength{\textfloatsep}{4pt}
+\setlength{\dbltextfloatsep}{4pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\intextsep}{2pt}
 
 \widowpenalty=10000
 \clubpenalty=10000
@@ -148,9 +155,9 @@ systems.  Unstructured systems use mechanisms such as global knowledge,
 broadcasts, or stochastic techniques~\cite{unstruct_v_struct} to search the
 overlay. As the system grows, maintaining and searching this state may not
 scale.  Alternatively, structured approaches maintain provide guaranteed search
-times typically with a lower bound of $O(\log N)$ regardless of network size.
-In terms of complexity, for small systems, unstructured systems may be easier
-to implement but as the system grows it may become inefficient.
+times typically with a lower bound of $O(\log N)$, where N is the size of the
+network.  In terms of complexity, for small systems, unstructured systems may
+be easier to implement but as the system grows it may become inefficient.
 
 IPOP uses a structured P2P framework named Brunet~\cite{brunet}, which is based
 upon Symphony~\cite{symphony}.  Structured systems are able to provide bounds
@@ -174,7 +181,7 @@ to coordinate decentralized organization.
 
 \begin{figure*}[ht]
 \centering
-\includegraphics[width=3in,angle=-90]{figs/bootstrap_brunet_light.ps}
+\includegraphics[width=2.75in,angle=-90]{figs/bootstrap_brunet_light.ps}
 \caption{Bootstrapping a private overlay using Brunet}
 \label{fig:bootstrap}
 \end{figure*}
@@ -202,8 +209,8 @@ each other, without requiring peers to host their own bootstrap servers.  If a
 peer were to host their own bootstrap servers, they first need a public IP
 address and bind the application to a port on that system.  At which point,
 they could share the IP, port pair with other peers in the VPN.  Though if they
-were to go offline or their IP address were to change the P2P infrastructure,
-new users would be unable to join.
+were to go offline or their IP address changes the P2P infrastructure, new
+users would be unable to join.
 
 \subsection{Organization}
 
@@ -232,7 +239,7 @@ work~\cite{sc09}.
 \section{Experimental Environment}
 
 Throughout this paper, our quantitative evaluation environment uses both real
-deployments on planetLab and simulation.  The various evaluations dictate which
+deployments on PlanetLab and simulation.  The various evaluations dictate which
 mechanism we use.  When the perspective of a single node is useful, PlanetLab
 provides good results, though when attempting to measure detailed behavior of
 the entire system using PlanetLab can results in significant error.
@@ -243,21 +250,21 @@ updates, the code is run on PlanetLab~\cite{planetlab} for a period of 2 weeks.
 PlanetLab consists of of nearly 1,000 resources distributed across Earth.  In
 practical applications, though, roughly 40\% of the resources are unavailable
 at any given time and the remaining behave somewhat unpredictably.  This
-unpredictability provides behavior, that many times, is far more effective at
+unpredictability provides behavior, that many times, is more effective at
 finding bugs than users tests.
 
 Deploying on PlanetLab takes approximately 15 minutes to bootstrap all the
 resources and then many more to verify a certain behavior, making regression
 testing and verification tests complicated.  To address this, we have extended
-Brunet to support a simulation mode. The simulator inherits the entire codebase
-of the Brunet P2P overlay logic, but uses simulated virtual time based upon an
+Brunet to support a simulation mode. The simulator inherits the all of the
+Brunet P2P overlay logic, but uses simulated virtual time based upon an
 event-driven scheduler instead of physical time.  Furthermore, the simulation
 framework uses a specialized transport layer to avoid the overhead of using TCP
 or UDP on the host system, both of which are limited resources and can hamper
 the ability to simulate large systems.   The specialized transport uses
 datagrams to pass messages between nodes, thus from the node's perspective, it
 is very similar to a UDP transport and can simulate both latency and packet
-dropping.  In this paper, we set the latency between all node pairs to 100 ms.
+dropping.  Latency between all node pairs is set to 100 ms.
 
 Both simulation and real system evaluation provide unique advantages.
 Simulations allow faster than real time execution of reasonable sized networks
@@ -289,10 +296,10 @@ such as Gnutella, Skype, and Kademlia.  Our initial work supports bootstrapping
 from XMPP (Jabber) systems and our own P2P overlay, Brunet.
 
 To bootstrap from an existing Brunet overlay, peers first insert their public
-overlay address into the key represented by $hash(\$Private Overlay Namespace)$
-and continue to do so regularly until they disconnect, so as to not let the
-entry become stale and disappear.  Peers attempting to bootstrap into the
-private overlay can then query this key and obtain a list of public overlay
+overlay node address into the key represented by $hash(\$Private Overlay
+Namespace)$ and continue to do so regularly until they disconnect, so as to not
+let the entry become stale and disappear.  Peers attempting to bootstrap into
+the private overlay can then query this key and obtain a list of public overlay
 nodes that are currently acting as proxies into the private overlay.  By using
 the public overlay as a transport, similar to UDP or TCP, the private overlay
 node forms bootstrapping connections via the public overlay.  At which point,
@@ -322,55 +329,50 @@ into the system to a single round trip time in the bootstrapping phase.
 In our previous work~\cite{p2p10}, we only verified that generic private P2P
 overlays could be bootstrapped using a small set of resources behind NATs.
 Here we focus on the overheads in bootstrapping GroupVPNs.  This evaluation
-uses both PlanetLab and simulation to determine the delay in bootstrapping an
-IPOP-only overlay from a public shared overlay in constrast to a common IPOP
-overlay.  100 tests were run for each of the various network sizes.  In the
-case of simulation, a new network was generated for each test, while PlanetLab
-reused the same overlay, but the joining peer changed its P2P address as to
-cause the peer to connect to a different set of nodes in the public overlay.
-The results are presented in Figure~\ref{fig:private_bootstrapping}.
+uses both PlanetLab to determine the delay in bootstrapping an IPOP-only
+overlay from a public shared overlay in contrast to a common IPOP overlay.  100
+tests were run for each of the various network sizes.  Due to the lack of
+guarantees, while deploying PlanetLab, we set each PlanetLab node to randomly
+decide, if it would connect to the private overlay. The public network size of
+PlanetLab for each of these pools averaged around 600 for the duration of the
+experiment.  Our results are presented in
+Figure~\ref{fig:private_bootstrapping}.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=3in]{figs/bootstrap.eps}
-\caption{}
+\includegraphics[width=3in]{figs/private.eps}
+\caption{CDF of time to bootstrap a private overlay node in a private overlay
+of the specified size using a public planetlab pool consisting of 600 nodes.}
 \label{fig:private_bootstrapping}
 \end{figure}
 
-There are two important observations to be made.  First, the
-PlanetLab side of the experiment is extremely limited in the smaller sized
-networks, as the system stayed static and a poorly connected peer can shift the
-results significantly.  We have only included the results to show that the
-techniques do scale for large systems.  Second, through simulation of the
-bootstrapping, we discovered that the use of the simplistic algorithm described earlier
-sometimes would result in partitioned overlays.  The cause was due to peers
-determining from a random subset of the peers they initiated connections with
-that they were connected to the complete overlay, but in reality, they were
-forming partitions.  Because the peers thought they were fully connected, the
-overlays would never fix the partitioning.  To address this, we have set it so
-that peers occassionally query the DHT entry to determine if there is a peer in
-the list that should be directly connected to them but is not.  If such a peer
-exists, the searching peer begins connection procedures with that peer.
+Based upon the results and then comparing later to the results presented in
+Figure~\ref{fig:add_one}, it seems evident that the cost is based upon the
+discovery stage of the private overlay.  Using the results from
+Figure~\ref{fig:add_one}, most nodes in an insecure overlay bootstrap within 2
+seconds, so it appears that discovery is taking approximately 16 to 20 seconds.
+This is not a neglibile cost, but it is reasonable if privacy is important.
 
 \subsection{Overhead of Pathing}
 
 Much like the previous experiment, this one too is used to verify the use of
 the private overlay bootstrapping components for VPN usage.  In this case, the
 pathing technique is evaluated to determine what overheads may exist by using
-the approach.  To determine the overheads, two IPOP virtual networks are deployed on
-resources on the same gigabit LAN using netperf to evaluate both latency and
-throughput.  We ignore the other specifications of the machines as we compare
-both the system with pathing versus the system without pathing.  The results
-are presented in Table~\ref{tab:pathing}.  The results indicate that the use of
-pathing presents negligible overhead for both throughput and latency, justifying the use of this approach to
-to transparently deal with NAT and firewall traversal.
+the approach.  To determine the overheads, two IPOP virtual networks are
+deployed on resources on the same gigabit LAN using netperf to evaluate both
+latency and throughput.  We ignore the other specifications of the machines as
+we compare both the system with pathing versus the system without pathing.  The
+results are presented in Table~\ref{tab:pathing}.  The results indicate that
+the use of pathing presents negligible overhead for both throughput and
+latency, justifying the use of this approach to to transparently deal with NAT
+and firewall traversal.
 
 \begin{table}[ht]
 \centering
 \begin{tabular}{|c||c|c|}
 \hline & Latency (ms) & Throughput (Mbit/s) \\ \hline \hline
-Standard & 0 & 0 \\ \hline
-Pathing & 0 & 0 \\ \hline
+Standard & .303 & 225.27 \\ \hline
+Pathing & .308 & 224.36 \\ \hline
 \end{tabular}
 \caption{Pathing overheads}
 \label{tab:pathing}
@@ -453,12 +455,14 @@ a certificate is valid, while used to secure traffic to that domain.
 Communication with another domain using the same certificate will raise a flag
 and will result in the user not trusting the certificate.  In environments with
 NATs, dynamic IP addresses, or portable devices, typical of P2P systems,
-assigning a certificate to a domain name will be a hassle as it contrains
+assigning a certificate to a domain name will be a hassle as it constrains
 mobility and the type of users in the system. Furthermore, most users are
 unaware of their IP address and changes to it.  Instead, a certificate is
-signed against the user's P2P address.  During the formation of PtP links or
-while parsing EtE messages, the two nodes discover each other's P2P addresses.
-If the addresses do not match the address on the verified certificate, the
+signed against the user's P2P address and unique user name as delegated by the
+CA.  The purpose of the former is for efficiency of revocation as discussed in
+Section~\ref{revocation}.  During the formation of PtP links or while parsing
+EtE messages, the two nodes discover each other's P2P addresses.  If the
+addresses do not match the address on the verified certificate, the
 communication need not proceed further.  
 
 The use of a filter approach requires one change to the core software, such
@@ -466,9 +470,9 @@ that it verifies the identity of the remote side prior to allowing packets to
 traverse the session.  In our system, we did this by means of a callback, which
 presents the underlying sending mechanism, EtE or PtP, and the overlay address
 stored in the certificate.  The receiver of the callback can attempt to cast it
-into known objects. If successul, it will compare the overlay address with the
+into known objects. If successful, it will compare the overlay address with the
 sender type.  If unsuccessful, it ignores the request.  If any callbacks return
-that the sender does not match the identifier, the session is immediatley
+that the sender does not match the identifier, the session is immediately
 closed.
 
 The last consideration comes in the case of EtE communication that provides an
@@ -530,7 +534,7 @@ experiments are presented in Figure~\ref{fig:add_one}.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=3.5in]{figs/addone.eps}
+\includegraphics[width=3in]{figs/addone.eps}
 \caption{Time in seconds for a single node to join a secure (dtls) and insecure
 (nosec) structured overlay, using both PlanetLab (plab) and the Simulator
 (sim).}
@@ -540,7 +544,7 @@ experiments are presented in Figure~\ref{fig:add_one}.
 \subsubsection{Bootstrapping an Overlay}
 
 The purpose of this experiment is to determine how quickly an overlay using
-DTLS can bootstrap in comparision to one that does not given that there are no
+DTLS can bootstrap in comparison to one that does not given that there are no
 existing participants.  Nodes in this evaluation are randomly given information
 about 5 different nodes in the overlay and then all attempt to connect with
 each other at the same time.  The evaluation completes after the entire overlay
@@ -550,7 +554,7 @@ Figure~\ref{fig:bootstrap_eval}.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=3.5in]{figs/bootstrap.eps}
+\includegraphics[width=3in]{figs/bootstrap.eps}
 \caption{Time in seconds for a secure (dtls) and insecure (nosec) structured
 overlay to bootstrap, given that all nodes bootstrap simulataneously.}
 \label{fig:bootstrap_eval}
@@ -574,10 +578,11 @@ dominate connection time.  For example, in Brunet, two peers must communicate
 via the overlay prior to forming a connection, and the system differentiates
 between bootstrapping connections and overlay connections.  Thus even though a
 peer may have a bootstrapping connection, it will need to go through the entire
-process to form an overlay connection with a peer.  The decision for this
-process was to keep the code simple and easier to maintain.
+process to form an overlay connection with a peer.  While this may lead to
+inefficiencies, this simplification keeps the software more maintainable and
+easier to understand.
 
-\section{Handling User Revocation in a Secure Overlay}
+\section{Handling User Revocation}
 \label{revocation}
 
 Unlike decentralized systems that use shared secrets, in which the creator of
@@ -668,36 +673,26 @@ summarize, the overlay is recursively partitioned amongst the nodes at each hop
 in the broadcast.  By doing so, all nodes receive the broadcast without
 receiving duplicate broadcast messages.
 
-\subsection{Evaluation of Revocation Models}
+\subsection{Evaluation of Broadcast}
 
-%Figure~\ref{fig:revocation} presents the time required to perform a revocation
-%using the simulator described in Section~\ref{security.evaluation}.  After the
-%system establishes steady state, a random node is selected to be revoked.  This
-%evaluation measures the time to perform such a revocation.  In the case of a
-%broadcast a broadcast revocation, this is the time for a message to be
-%distributed to the entire overlay, whereas in the case of DHT, it is the time
-%to perform the DHT insertion.
+We performed an evaluation on the broadcast using the simulation to determine
+how quickly peers in the overlay would receive the message.  The tested network
+sizes ranged from 2 to 256 in powers of 2.  The tests were evaluations were
+performed 100 times for each network size.  The CDF of hops for each node are
+presented in Figure~\ref{fig:broadcast}.  The results make it quite clear that
+the broadcast can efficiently distribute a revocation much more quickly than
+$\log(N)$ time.
 
-%The results seem to indicate that in terms of time, network size and bandwidth
-%scale well together.  In contrast, the network traffic scales significantly
-%better in DHT experiments, though the approach can be inefficient for
-%environments consisting of malicious and colluding peers.  In a DHT revocation,
-%revoked peers can attempt to connect with new peers who do not know about the
-%revocation, causing each of them to query the DHT to discover the revocation.
-%If this becomes the case, the DHT method will quickly become inefficient.  On
-%the other hand, the broadcast cannot ensure that all nodes receive the message,
-%due to overlay network stability issues, peers may not be included in the
-%broadcast.  As such the best approach may be to store a revocation in the DHT
-%but notify all peers of a revocation via a broadcast.  Broadcast is efficient
-%with bandwidth both for the broadcasting peer and the overlay.  The
-%broadcasting peer only sends out as many packets as connections it has, while
-%the tree formed by broadcast spans exactly N-1 connections.  In other words,
-%the network traffic required to do a broadcast on this tree is the minimum
-%amount of communication necessary to reach all nodes in the broadcast range.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=3in]{figs/broadcast.eps}
+\caption{Overlay broadcast time CDF.}
+\label{fig:broadcast}
+\end{figure}
 
 \begin{figure*}[ht]
 \centering
-\includegraphics[width=3in,angle=-90]{figs/groupvpn.ps}
+\includegraphics[width=2.75in,angle=-90]{figs/groupvpn.ps}
 \caption{Process in bootstrapping a new GroupVPN instance.}
 \label{fig:groupvpn}
 \end{figure*}
@@ -708,7 +703,7 @@ In contrast to the DHT solution, broadcast revocation occurs only once and does
 not leave state behind.  Thus the broadcast is not a complete solution, as new
 peers connected to the overlay or those who missed the broadcast message will
 be unaware of a revocation.  Furthermore, if an overlay is shared by many VPNs,
-it may prevent overlay broadcasting or itself may be inefficient.  
+it may prevent overlay broadcasting or itself may be inefficient.
 
 The DHT solution by itself may also not sufficient as revocations may be lost
 over time as the entries must have their leases renewed in the DHT.  To address
@@ -727,6 +722,13 @@ central authority to review certificate requests can be used to limit a single
 user from obtaining too many certificates as well as ensuring uniform
 distribution of that user's P2P addresses, further hampering the likelihood of
 a Sybil attack.  The ability to automate this is left as future work.
+
+One way to mitigate sybil attacks using the broadcast approach is to bundle
+colluding offenders into a single revocation message.  That would prevent those
+from colluding together to prevent each other's revocations.  Furthermore,
+while not emphasized above, revocation in our system revokes by user name and
+not individual certificates.  Combined these two components limit sybil attacks
+against broadcast.
 
 \section{Managing and Configuring the VPN}
 \label{groupvpn}
@@ -821,17 +823,25 @@ The current implementation does not support a set of rendezvous nodes, though
 doing so would make the approach much more like ours.  In addition, the system
 relies on traditional distribution of a CRL to handle revocation.
 
-The last VPN we discuss is Tinc~\cite{tinc}.  Tinc is a mature, open source
-VPN, dating back to the early part of 2000.  Tinc is a decentralized VPN, which
-requires that users manually organize an overlay and the Tinc uses its own
-routing protocols to determine optimum paths.  In comparison to our approach,
-Tinc cannot be used to allow peers to bootstrap private VPNs from an existing
-VPN, nor does Tinc automatically handle churn in the VPN.  If a node connecting
-two separate pieces of the VPN overlay goes offline, the VPN will be
-partitioned until a user manually creates a link connecting the pieces.
-Furthermore, Tinc does not form direct connections for improved latency and
-throughput reasons, thus members acting as routes in the overlay incur the
-price of acting as packet forwarders.
+Tinc~\cite{tinc} is a mature, open source VPN, dating back to the early part of
+2000.  Tinc is a decentralized VPN, which requires that users manually organize
+an overlay and the Tinc uses its own routing protocols to determine optimum
+paths.  In comparison to our approach, Tinc cannot be used to allow peers to
+bootstrap private VPNs from an existing VPN, nor does Tinc automatically handle
+churn in the VPN.  If a node connecting two separate pieces of the VPN overlay
+goes offline, the VPN will be partitioned until a user manually creates a link
+connecting the pieces.  Furthermore, Tinc does not form direct connections for
+improved latency and throughput reasons, thus members acting as routes in the
+overlay incur the price of acting as packet forwarders.
+
+The last VPN, we discuss is the most similar like our's, its called
+N2N~\cite{n2n}.  N2N uses unstructured p2p techniques to form an Ethernet based
+VPN.  While their approach has built-in NAT traversal, like our's, it requires
+that users deploy their own bootstrap and limits security to a single
+pre-shared key for the entire VPN, thus users cannot be revoked.  Since N2N
+provides Ethernet, users must provide their own mechanism for IP address
+allocation, while discovery utilizes overlay broadcasting.  Thus there are
+concerns that as systems get larger, N2N may not be very efficient.
 
 \subsection{P2P Systems}
 
@@ -929,9 +939,9 @@ Clemson University and Purdue have opted for this approach over centralized
 VPNs as the basis of their future distributed compute clusters and have
 actively tested networks of over 700 nodes.
 
-%\small{
+\small{
 \bibliographystyle{IEEEtran}
 \bibliography{GroupVPN}
-%}
+}
 
 \end{document}
