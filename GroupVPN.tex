@@ -48,22 +48,22 @@
 \maketitle
 \begin{abstract}
 
-Decentralized and P2P (peer-to-peer) VPNs (virtual private networks) are
-becoming quite popular to connect users in small to medium collaborative
-environments, such as academia, businesses, and homes.  In the realm of VPNs,
-there exist centralized, decentralized, and P2P solutions.  Centralized systems
-require a single entity to provide and manage VPN server(s); decentralized
-approaches allow more than one entity to share the management responsibility
-for the VPN infrastructure, while existing P2P approaches rely on a centralized
-infrastructure but allow users to bypass it to form direct low-latency,
-high-throughput links between peers.  In this paper, we describe a novel VPN
-architecture that can claim to be both decentralized and P2P, using methods
-that lower the entry barrier for VPN deployment compared to other VPN
-approaches.  Our solution extends existing work on IP-over-P2P (IPOP) overlay
-networks to address challenges of configuration, management, bootstrapping, and
-security.  We present the first implementation and analysis of a P2P system
-secured by DTLS (datagram transport layer security) along with decentralized
-techniques for revoking user access.
+Decentralized and P2P (peer-to-peer) VPNs (virtual private networks) have
+recently become quite popular for connecting users in small to medium
+collaborative environments, such as academia, businesses, and homes.  In the
+realm of VPNs, there exist centralized, decentralized, and P2P solutions.
+Centralized systems require a single entity to provide and manage VPN
+server(s); decentralized approaches allow more than one entity to share the
+management responsibility for the VPN infrastructure, while existing P2P
+approaches rely on a centralized infrastructure but allow users to bypass it to
+form direct low-latency, high-throughput links between peers.  In this paper,
+we describe a novel VPN architecture that can claim to be both decentralized
+and P2P, using methods that lower the entry barrier for VPN deployment compared
+to other VPN approaches.  Our solution extends existing work on IP-over-P2P
+(IPOP) overlay networks to address challenges of configuration, management,
+bootstrapping, and security.  We present the first implementation and analysis
+of a P2P system secured by DTLS (datagram transport layer security) along with
+decentralized techniques for revoking user access.
 
 \end{abstract}
 
@@ -96,10 +96,10 @@ our Archer~\cite{archer} project.  Archer provides a dynamic and decentralized
 Grid environment for computer architecture researchers to share and access
 voluntary compute cycles with each other.  Use of centralized systems would
 limit the scope of Archer and require dedicated administration, whereas
-decentralized solutions require manual configuration of links between peers,
-which is beyond the scope of the target users.  Current P2P VPN approaches
-either lack scalability or proper security components to be useful for VPN
-approaches.
+existing decentralized solutions require manual configuration of links between
+peers, which is beyond the scope of Archer's target users.  Current P2P VPN
+approaches either lack scalability or proper security components to be useful
+for VPN approaches.
 
 We began our original foray into user-friendly VPN approaches with
 IPOP~\cite{ipop}.  Previous work on IPOP focused on the routing mechanisms and
@@ -118,9 +118,9 @@ concept to support bootstrapping from public infrastructures and overlays into
 private P2P overlays whose membership is limited to an individual VPN user
 base.  The key concept behind our work is based upon Castro et
 al.~\cite{one_ring}, who suggests a single overlay for bootstrapping service
-overlays.  However, if a private overlay by itself is secured only by
-obfuscation, malicious peers may eventually discover, join, and compromise the
-overlay.  As such, we present the first implementation and evaluation of an
+overlays.  However, an overlay secured only by ambiguity, obfuscation, or lack
+of relevance may eventually be discovered and compromised by malicious
+individuals.  As such, we present the first implementation and evaluation of an
 overlay with secure communication both between end points in the P2P overlay
 (e.g. VPN nodes) as well as between nodes connected by overlay edges.  Security
 requires a means for peer revocation; however, current revocation techniques
@@ -181,7 +181,7 @@ to coordinate decentralized organization.
 
 \begin{figure*}[ht]
 \centering
-\includegraphics[width=2.75in,angle=-90]{figs/bootstrap_brunet_light.ps}
+\includegraphics[width=2.5in,angle=-90]{figs/bootstrap_brunet_light.ps}
 \caption{Bootstrapping a private overlay using Brunet}
 \label{fig:bootstrap}
 \end{figure*}
@@ -276,8 +276,8 @@ CPU delays on processing.
 
 \section{Towards Private Overlays}
 
-Many users of IPOP began by trying the shared overlay and, once comfortable,
-attempt to host their own infrastructure.  Some are successful without
+Many users of IPOP began by using the shared overlay and, once comfortable,
+move towards hosting their own infrastructure.  Some are successful without
 assistance from us, while a majority are not.  The most common issue preventing
 users from hosting their own independent IPOP systems was the result of network
 configuration issues.  In short, users were able to easily join the shared
@@ -306,66 +306,109 @@ node forms bootstrapping connections via the public overlay.  At which point,
 overlay bootstrapping proceeds as normal.  The entire process is represented in
 Figure~\ref{fig:bootstrap}.
 
-In a small private overlay, there is a reasonable chance that not a single node
-in that overlay has a public address, making it difficult for the overlay to
-provide its own form of NAT traversal services.  Rather than having a special
-case for NAT traversal for the private overlays that differentiates from the
-public overlay it bootstrapped from, the two share underlying TCP and UDP
-sockets.  This mechanism, referred to as {\em ``pathing''}, allows a single UDP
-socket and listening TCP socket to create links for many overlays.  This is
-only possible due to the generic transports library of the Brunet P2P overlay,
-which does not differentiate UDP, TCP, or even relayed links.  Thus during link
-establishment, the pathing system acts as a proxy, by intercepting a link
-creation request from a specific entity, mapping that to a path, and then
-requesting from the remote entity a link for that path.  The underlying link is
-then wrapped by pathing and given to the correct overlay node.  Resulting in a
-completely transparent multiplexing of a TCP and UDP socket enabling the NAT
-traversal in one overlay to benefit the other.  Furthermore, once a link has
-been established, the pathing information is irrelevant, limiting the overhead
-into the system to a single round trip time in the bootstrapping phase.
+In a small private overlay, there is a possibility that none of the members
+have a public address, making it difficult to provide overlay based NAT
+traversal.  Rather than having a special case for NAT traversal for private
+overlays, our model has the private overlay share TCP and UDP sockets with the
+public overlay.  This mechanism, referred to as {\em ``pathing''}, allows
+multiplexing a single UDP socket and listening TCP socket by many overlays.
+This is only possible due to the generic transports library of the Brunet P2P
+overlay, which does not differentiate UDP, TCP, or even relayed links.  Pathing
+works as a proxy, intercepting a link creation request from a local entity,
+mapping that to a path, and then requesting from the remote entity a link for
+that path.  The underlying link is then wrapped by pathing and given to the
+correct overlay node, resulting in a completely transparent multiplexing of a
+TCP and UDP sockets, thereby enabling the NAT traversal in one overlay to
+benefit the other.  Once a link has been established, the pathing information
+is irrelevant, limiting the overhead into the system to a single message
+exchange during link establishment.
 
 \subsection{Time to Bootstrap a Private Overlay}
 
 In our previous work~\cite{p2p10}, we only verified that generic private P2P
 overlays could be bootstrapped using a small set of resources behind NATs.
-Here we focus on the overheads in bootstrapping GroupVPNs.  This evaluation
-uses both PlanetLab to determine the delay in bootstrapping an IPOP-only
-overlay from a public shared overlay in contrast to a common IPOP overlay.  100
-tests were run for each of the various network sizes.  Due to the lack of
-guarantees, while deploying PlanetLab, we set each PlanetLab node to randomly
-decide, if it would connect to the private overlay. The public network size of
-PlanetLab for each of these pools averaged around 600 for the duration of the
-experiment.  Our results are presented in
-Figure~\ref{fig:private_bootstrapping}.
+Here we focus on the overheads in bootstrapping private GroupVPNs overlays.
+The time to bootstrap can be derived analytically by considering the minimum
+steps to become connected to the private overlay and the average delay between
+peers.  In Brunet, peers begin by forming leaf or bootstrapping connections and
+use these to communicate with the neighbor or peer in the P2P network nearest
+to their P2P address.  The process to form a connection can be done in as few
+as 4 messages and up to 5, if the peers only know each other's P2P address,
+which is the case for neighbor connections.
+
+Assuming the initiating peer already has IP address information for the remote
+peer, the initiating peer sends to the remote peer a message expressing the
+desire for a connection.  The remote node responds by either rejecting the
+request or committing to the connection.  In the follow up exchange, the
+initiating peer commits to forming the connection and the remote peer confirms
+reception.  The two phase commit process is used to handle the complexity that
+ensues when multiple simultaneous connection attempts occur in parallel.  All
+these messages take $1$ hop, since they are direct links between peers.
+
+When peers only have each other's P2P address and the initiating peer is behind
+a NAT, it may take fifth and sometimes a sixth message.  These messages are
+requests for the remote peers IP addresses as well as asking the peer to
+connect with the initiating peer, addressing the case where the remote peer is
+behind a NAT and cannot handle inbound messages.  Since these messages are
+routed over the overlay, they take $\log(N)$ hops, where $N$ is the network
+size of the public overlay.
+
+A similar process occurs for the private overlay bootstrapping, though the
+first step is to acquire P2P addresses of other participants through the DHT,
+an operation typically taking $2 *\log(N)$ time.  In this case, the leaf
+connections do not communicate directly, rather, they use the public overlay,
+meaning that some of the $1$ time operations above, now take $\log(N)$.
+Finally, the initial step of finding the nearest remote peer in the private
+overlay takes $\log(N) + \log(n)$, where $n$ is the network size of the private
+overlay.
+
+Given this model, the hop count for each operation individually is: public
+overlay bootstrapping takes $8 + \log(N)$, DHT operations take $2 * \log(N)$,
+and private overlay bootstrapping takes $4 + 5 * \log(N) + \log(n)$.  So the
+entire private overlay bootstrapping takes $12 + 8 * \log(N) + \log(n)$ hops.
+Clearly, dominating overhead in bootstrapping the private overlay is the time
+it takes to perform overlay operations on the private overlay ($\log(N)$).
+Thus assuming a network size of 512 public and 8 private, a node should be
+connected within 87 hops or 8.7 seconds using the 100 ms time used in the
+simulator.
+
+To evaluate the actual code base, we employed tests using both PlanetLab and
+the simulator.  100 tests were run for each of the various network sizes.
+Though due to difficulty in controlling network sizes in PlanetLab, we set each
+PlanetLab node to randomly decide if it would connect to the private overlay.
+The network sizes were then plugged into the simulator and the analytical
+model.  The average public network size for each of these tests was 600.  Our
+results are presented in Figure~\ref{fig:private_bootstrapping}.  Note:  we
+performed measurements for many more private network sizes, but all the results
+were so similar that it did not introduce anything of interest and are omitted
+from our plots.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=3in]{figs/private.eps}
+\includegraphics[width=2.5in]{figs/private.eps}
 \caption{CDF of time to bootstrap a private overlay node in a private overlay
-of the specified size using a public planetlab pool consisting of 600 nodes.}
+of the specified size using a public overlay consisting of 600 nodes.}
 \label{fig:private_bootstrapping}
 \end{figure}
 
-Based upon the results and then comparing later to the results presented in
-Figure~\ref{fig:add_one}, it seems evident that the cost is based upon the
-discovery stage of the private overlay.  Using the results from
-Figure~\ref{fig:add_one}, most nodes in an insecure overlay bootstrap within 2
-seconds, so it appears that discovery is taking approximately 16 to 20 seconds.
-This is not a neglibile cost, but it is reasonable if privacy is important.
+Based upon the results presented in Figure~\ref{fig:private_bootstrapping}, the
+bootstrapping time for implementations performs better than the analytical
+model, most likely due to the simplicity of the analytical model.  It is of
+interest that while the simulator results tend to be in a well defined zone,
+the PlanetLab results have a few outliers with long bootstrap times.  This is
+no doubt a result of timeouts in the system and nodes thought to be online are
+offline, two issues we have not considered in this work.
 
 \subsection{Overhead of Pathing}
 
-Much like the previous experiment, this one too is used to verify the use of
-the private overlay bootstrapping components for VPN usage.  In this case, the
-pathing technique is evaluated to determine what overheads may exist by using
-the approach.  To determine the overheads, two IPOP virtual networks are
-deployed on resources on the same gigabit LAN using netperf to evaluate both
-latency and throughput.  We ignore the other specifications of the machines as
-we compare both the system with pathing versus the system without pathing.  The
-results are presented in Table~\ref{tab:pathing}.  The results indicate that
-the use of pathing presents negligible overhead for both throughput and
-latency, justifying the use of this approach to to transparently deal with NAT
-and firewall traversal.
+Much like the previous experiment, this verifies that the pathing technique has
+negligible overheads for VPN usage.  To determine the overheads, two GroupVPNs
+are deployed on resources on the same gigabit LAN.  Then netperf is used to
+evaluate both latency and throughput.  We ignore other specifications of the
+machines as the system without pathing is used as the baseline.  The results,
+Table~\ref{tab:pathing}, indicate that the use of pathing presents negligible
+overhead for both throughput and latency, justifying the use of this approach
+to transparently deal with NAT and firewall traversal.
 
 \begin{table}[ht]
 \centering
@@ -382,23 +425,19 @@ Pathing & .308 & 224.36 \\ \hline
 \label{security}
 
 Structured overlays are difficult to secure and a private overlay does not
-imply that it is safe from malicious users if it provides no means to limit
-access to the system.  Malicious users can pollute the DHT, send bogus
-messages, and even prevent the overlay from functioning, rendering the VPN
-useless.  To address this in means that make sense for VPNs and common users,
-we have employed a public key infrastructure (PKI) to encrypt and authenticate
-both communication between peers as well as communication between peers through
-the overlay, called point-to-point (PtP) and end-to-end (EtE) communication,
-respectively.
+security if it provides no means to limit access to the system.  Malicious
+users can pollute the DHT, send bogus messages, and even prevent the overlay
+from functioning, rendering the VPN useless.  To address this in means that
+make sense for VPNs and common users, we have employed a public key
+infrastructure (PKI) to encrypt and authenticate both communication between
+peers as well as communication across the overlay, called point-to-point (PtP)
+and end-to-end (EtE) communication, respectively.
 
-The motivation for using a PKI is that users can either pre-exchange public
-keys through a trusted medium or place their trust into a third party known as
-a certificate authority (CA).  Unlike other security systems, in particular a
-key distribution center, which relies on a middleman to establish secure
-sessions, a CA system enables two peers who have previously obtained a CA
-signed certificate to establish a trusted relationship directly.  So not only
-can peers form a relationship directly, they can do so without requiring that
-the CA be online.
+Use of a PKI motivates from the ability to authenticate without a third party,
+typical of many key distribution centers (KDC) used by other VPNs.  A PKI can
+use either pre-exchange public keys or a certificate authority (CA) to provides
+signed public keys.  Thus peers can form a relationship directly without
+requiring the CA to be online.
 
 The reasons for securing PtP and EtE are different.  Securing PtP communication
 prevents unauthorized access to the overlay, as peers must authenticate with
@@ -439,7 +478,7 @@ of peers.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=3.25in]{figs/secure_sender_stack_generic.png.eps}
+\includegraphics[width=3in]{figs/secure_sender_stack_generic.png.eps}
 \caption{An example of the abstraction of senders and receivers using a EtE 
 secured chat application.  Each receiver and sender use the same abstracted
 model and thus the chat application requires only high-level changes, such
@@ -534,7 +573,7 @@ experiments are presented in Figure~\ref{fig:add_one}.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=3in]{figs/addone.eps}
+\includegraphics[width=2.5in]{figs/addone.eps}
 \caption{Time in seconds for a single node to join a secure (dtls) and insecure
 (nosec) structured overlay, using both PlanetLab (plab) and the Simulator
 (sim).}
@@ -554,7 +593,7 @@ Figure~\ref{fig:bootstrap_eval}.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=3in]{figs/bootstrap.eps}
+\includegraphics[width=2.5in]{figs/bootstrap.eps}
 \caption{Time in seconds for a secure (dtls) and insecure (nosec) structured
 overlay to bootstrap, given that all nodes bootstrap simulataneously.}
 \label{fig:bootstrap_eval}
@@ -571,16 +610,15 @@ between bootstrapping into an overlay with and without security remains nearly
 the same.  Clearly this motivates the use of security if time to connect is the
 most pressing question.
 
-While staring at the graphs, we were quite surprised by how little the time to
-bootstrap a secure overlay was than an insecure overlay.  What we realized is
-that complex connection handshaking, as implemented in Brunet, can easily
-dominate connection time.  For example, in Brunet, two peers must communicate
-via the overlay prior to forming a connection, and the system differentiates
-between bootstrapping connections and overlay connections.  Thus even though a
-peer may have a bootstrapping connection, it will need to go through the entire
-process to form an overlay connection with a peer.  While this may lead to
-inefficiencies, this simplification keeps the software more maintainable and
-easier to understand.
+The time to bootstrap a secure overlay was not significantly more than that of
+an insecure overlay.  What we realized is that complex connection handshaking,
+as implemented in Brunet, seems to dominate connection establishment time.  For
+example, in Brunet, two peers must communicate via the overlay prior to forming
+a connection, and the system differentiates between bootstrapping connections
+and overlay connections.  Thus even though a peer may have a bootstrapping
+connection, it will need to go through the entire process to form an overlay
+connection with a peer.  While this may lead to inefficiencies, this
+simplification keeps the software more maintainable and easier to understand.
 
 \section{Handling User Revocation}
 \label{revocation}
@@ -685,14 +723,14 @@ $\log(N)$ time.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=3in]{figs/broadcast.eps}
+\includegraphics[width=2.5in]{figs/broadcast.eps}
 \caption{Overlay broadcast time CDF.}
 \label{fig:broadcast}
 \end{figure}
 
 \begin{figure*}[ht]
 \centering
-\includegraphics[width=2.75in,angle=-90]{figs/groupvpn.ps}
+\includegraphics[width=2.5in,angle=-90]{figs/groupvpn.ps}
 \caption{Process in bootstrapping a new GroupVPN instance.}
 \label{fig:groupvpn}
 \end{figure*}
@@ -867,17 +905,6 @@ UDP.  Thus their approach is limited to securing environments that are not
 behind NATs and firewalls that would prevent direct TCP links from forming
 between peers.
 
-\subsection{Certificate Authorities}
-
-The RobotCA~\cite{robotca} provides an automated approach for decentralized
-PKI.  A RobotCAs receives request via e-mail, verifies that the sender's e-mail
-address and embedded PGP key match, signs the request, and mails it back to the
-sender.  RobotCAs are only as secure as the underlying e-mail infrastructure
-and provide no guarantees about the person beyond their ownership of an e-mail
-address.  A RobotCA does not provide features to limit the signing of
-certificates nor does it provide user-friendly or intuitive mechanisms for
-certificate revocation.
-
 \section{Conclusions}
 \label{conclusions}
 
@@ -904,40 +931,32 @@ revocation techniques.  Furthermore, we plan on investigating the use of
 overlay broadcasting for IP broadcasting and multicasting, though the current
 approach places an unfair burden on the first few hops of a broadcast.
 
-% the paragraph below is not fitting well in the conclusion; comparison with N2N for example comes out of nowhere. have a short paragraph simply describing the GroupVPN has been tested in a practical environment in Archer - I guess you have that in the last paragraph.
+Without the functionality of GroupVPN, projects like the Grid Appliances and
+its flagship application, Archer~\cite{archer}, would be impractical.  Archer
+consists of over 500 resources from 5 different universities, including
+University of Florida, Florida State University, Northeastern University,
+University of Minnesota, and University of Texas.  In the past year, since
+Archer came online, over 100 unique users have contributed and taken advantage
+of the voluntary computing cycles.  A new user to the system begins by creating
+an account at \url{Grid-Appliance.org} and requesting membership in the Archer
+GroupVPN group.  Once access has been granted, users can obtain configuration
+data used by the Grid Appliance initialization scripts to seamlessly add
+resources to the grid.  This method allows independent submission sites, unlike
+most grid systems that have a shared submission site, which require dedicated
+administrators.  The use of existing decentralized VPNs in Archer and the Grid
+Appliance would be severely limiting.  In the case of N2N, at least one peer
+would have to maintain the bootstrap service and address allocations for the
+VPN.  Tinc would require users to manually configure their networking overlays.
+While Compagnol and Hamachi require the use of well known centralized peers.  
 
-Without the functionality of GroupVPN, projects like Archer~\cite{archer}, would
-be impractical.  Archer consists of over 500 resources from 5 different
-universities, including University of Florida, Florida State University,
-Northeastern University, University of Minnesota, and University of Texas.  In
-the past year, since Archer came online, over 100 unique users have contributed
-and taken advantage of the voluntary computing cycles.  A new user to the
-system begins by creating an account at \url{Grid-Appliance.org} and requesting
-membership in the Archer GroupVPN group.  Once access has been granted, users
-can obtain configuration data used by the Grid Appliance initialization scripts
-to seamlessly add resources to the grid.  This method allows independent
-submission sites, unlike most grid systems that have a shared submission site,
-which require dedicated administrators.  Most users connect to the system using
-a pre-configured virtual machine appliance, so that they do not need to be
-experts in grid systems to take advantage of Archer.  Enabling this using
-decentralized VPNs would be difficult as the user would need to create manual
-links to the rest of the system for each new resource.  N2N may work, but the
-network size of Archer is larger than the recommendations made by N2N and would
-still require the setup of address allocation facilities.  In general, all
-existing approaches would fail besides those with centralized components,
-because, at the time of this writing, all of Archer's resources are behind
-NATs.  Even though centralized could be used, it would require additional
-dedicated resources and management, limiting access if the central component
-went offline.  
-
-The GroupVPN has been used as the virtual network for the Grid Appliance, which
-is the basis of Archer and, in general, enables the creation of decentralized,
-collaborative environments for computing grids.  Recently, grids at La Jolla
-Institute for Allergy and Immunology and two in Eastern Europe went live using
-GroupVPN without receiving any technical support from us.  Researchers at
-Clemson University and Purdue have opted for this approach over centralized
-VPNs as the basis of their future distributed compute clusters and have
-actively tested networks of over 700 nodes.
+The GroupVPN has been used as the virtual network for the Grid Appliance,
+enabling the creation of decentralized, collaborative environments for
+computing grids.  Recently, grids at La Jolla Institute for Allergy and
+Immunology and two in Eastern Europe went live using GroupVPN without receiving
+any technical support from us.  Researchers at Clemson University and Purdue
+have opted for this approach over centralized VPNs as the basis of their future
+distributed compute clusters and have actively tested networks of over 700
+nodes.
 
 \small{
 \bibliographystyle{IEEEtran}
